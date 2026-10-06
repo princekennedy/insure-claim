@@ -4,15 +4,15 @@ FROM node:22-alpine AS builder
 WORKDIR /build
 
 # Copy package files first for better layer caching
-COPY frontend/package.json frontend/package-lock.json ./
-COPY frontend/next.config.ts ./
-COPY frontend/tsconfig.json ./
-COPY frontend/postcss.config.mjs ./
-COPY frontend/eslint.config.mjs ./
+COPY package.json package-lock.json ./
+COPY next.config.ts ./
+COPY tsconfig.json ./
+COPY postcss.config.mjs ./
+COPY eslint.config.mjs ./
 
 # Copy source code
-COPY frontend/app ./app
-COPY frontend/public ./public
+COPY app ./app
+COPY public ./public
 
 # Install dependencies and build
 RUN npm ci && npm run build
