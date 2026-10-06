@@ -1,0 +1,42 @@
+# InsureClaim Portal - local development stack
+#
+#   docker compose up -d db
+#
+# then run the Spring Boot API on :8080 and the Next.js app on :3000.
+#
+# The container listens on 5432 internally but is published on 55432 because the
+# host already runs native PostgreSQL services that occupy 5432 and 5433.
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: insureclaim-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: insureclaim
+      POSTGRES_USER: insureclaim
+      POSTGRES_PASSWORD: insureclaim
+      # Deterministic collation so ORDER BY on text columns is reproducible.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "55432:5432"
+    volumes:
+      - insureclaim-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureclaim -d insureclaim"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer:5
+    container_name: insureclaim-adminer
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+
+volumes:
+  insureclaim-db-data:
