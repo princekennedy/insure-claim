@@ -11,6 +11,7 @@ import com.britam.insureclaim.garage.Garage
 import com.britam.insureclaim.garage.GarageFeedbackRequest
 import com.britam.insureclaim.garage.GarageFeedbackResponse
 import com.britam.insureclaim.garage.GarageRepository
+import com.britam.insureclaim.garage.GarageService
 import com.britam.insureclaim.garage.RepairJobRepository
 import com.britam.insureclaim.garage.toPublicResponse
 import com.britam.insureclaim.garage.toStaffResponse
@@ -33,6 +34,7 @@ class GarageFeedbackService(
 	private val garageRepository: GarageRepository,
 	private val repairJobRepository: RepairJobRepository,
 	private val claimRepository: ClaimRepository,
+	private val garageService: GarageService,
 ) {
 
 	companion object {
@@ -127,7 +129,9 @@ class GarageFeedbackService(
 	/**
 	 * Rewrites the garage's rolling aggregates from the raw feedback rows.
 	 * Assignment rather than accumulation, so a replayed repair cannot inflate
-	 * the totals.
+	 * the totals. The performance band is re-scored here too: complaints are
+	 * what pull a garage onto the watchlist, and they arrive with feedback, not
+	 * with the next repair job.
 	 */
 	@Transactional
 	fun recomputeGarage(garage: Garage) {
@@ -138,5 +142,6 @@ class GarageFeedbackService(
 		garage.recomputeRating(sum, count)
 		garage.complaintCount = feedbackRepository.countComplaintsForGarage(garage.id ?: 0L, complaintRating)
 		garageRepository.save(garage)
+		garageService.refreshGarageScore(garage)
 	}
 }

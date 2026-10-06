@@ -66,17 +66,15 @@ insureclaim:
     # Score above which an alert is raised automatically (0-100).
     auto-alert-threshold: 60
     high-risk-threshold: 80
-garage:
-  # Rolling window used to flag underperforming service providers.
-  performance-window-days: 90
-  underperforming-rating-threshold: 3.0
-  underperforming-complaint-threshold: 5
-  watch-rating-threshold: 3.5
-  poor-rating-threshold: 2.5
-  watch-complaint-threshold: 2
-  suspension-complaint-threshold: 8
-  slow-turnaround-days: 14
-  minimum-rating-count: 3
+  garage:
+    # Rolling window used when averaging repair turnaround.
+    performance-window-days: 90
+    underperforming-rating-threshold: 3.0
+    underperforming-complaint-threshold: 5
+    suspension-complaint-threshold: 8
+    watch-rating-threshold: 3.5
+    slow-turnaround-days: 14
+    minimum-rating-count: 3
   chatbot:
     enabled: ${CHATBOT_ENABLED:true}
     # When an API key is supplied the chatbot is proxied to an LLM provider.

@@ -1,11 +1,19 @@
 # InsureClaim Portal - local development stack
 #
+# Run the full stack:
+#   docker compose up -d
+#
+# Or run just the database:
 #   docker compose up -d db
 #
-# then run the Spring Boot API on :8080 and the Next.js app on :3000.
+# Services:
+#   - db: PostgreSQL 17 (port 55432 -> 5432)
+#   - adminer: Database admin UI (port 8081)
+#   - backend: Spring Boot API (port 8080)
+#   - frontend: Next.js app (port 3000)
 #
-# The container listens on 5432 internally but is published on 55432 because the
-# host already runs native PostgreSQL services that occupy 5432 and 5433.
+# The database container listens on 5432 internally but is published on 55432 because
+# the host already runs native PostgreSQL services that occupy 5432 and 5433.
 
 services:
   db:
@@ -37,6 +45,44 @@ services:
         condition: service_healthy
     ports:
       - "8081:8080"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: insureclaim-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/insureclaim
+      SPRING_DATASOURCE_USERNAME: insureclaim
+      SPRING_DATASOURCE_PASSWORD: insureclaim
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    container_name: insureclaim-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NODE_ENV: production
 
 volumes:
   insureclaim-db-data:

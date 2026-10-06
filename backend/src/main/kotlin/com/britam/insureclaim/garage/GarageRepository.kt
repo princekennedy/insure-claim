@@ -18,10 +18,12 @@ interface GarageRepository : JpaRepository<Garage, Long> {
 		"""
 		SELECT g FROM Garage g
 		WHERE g.active = true
-			AND (:city IS NULL OR LOWER(g.city) = LOWER(:city))
-			AND (:query IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :query, '%'))
-				OR LOWER(g.city) LIKE LOWER(CONCAT('%', :query, '%')))
-			ORDER BY g.ratingAverage DESC, g.name ASC
+			AND LOWER(g.city) = LOWER(COALESCE(:city, g.city))
+			AND (
+				LOWER(g.name) LIKE LOWER(CONCAT('%', COALESCE(:query, ''), '%'))
+				OR LOWER(g.city) LIKE LOWER(CONCAT('%', COALESCE(:query, ''), '%'))
+			)
+		ORDER BY g.ratingAverage DESC, g.name ASC
 		""",
 	)
 	fun searchActive(
@@ -64,9 +66,27 @@ interface RepairJobRepository : JpaRepository<RepairJob, Long> {
 
 	fun findByReferenceCode(referenceCode: String): Optional<RepairJob>
 
-	fun findByGarageIdOrderByAssignedAtDesc(garageId: Long, pageable: Pageable): Page<RepairJob>
+	/**
+	 * Staff queue: optionally narrowed to one garage, always narrowed to an
+	 * explicit set of statuses so the page total matches what is returned.
+	 */
+	@Query(
+		"""
+		SELECT j FROM RepairJob j
+		JOIN FETCH j.garage
+		JOIN FETCH j.claim
+		WHERE (:garageId IS NULL OR j.garage.id = :garageId)
+			AND j.status IN :statuses
+		ORDER BY j.assignedAt DESC
+		""",
+	)
+	fun search(
+		@Param("garageId") garageId: Long?,
+		@Param("statuses") statuses: Collection<RepairJobStatus>,
+		pageable: Pageable,
+	): Page<RepairJob>
 
-	fun countByGarageIdAndStatusNot(garageId: Long, status: RepairJobStatus): Long
+	fun countByGarageIdAndStatus(garageId: Long, status: RepairJobStatus): Long
 
 	@Query("SELECT j FROM RepairJob j JOIN FETCH j.garage JOIN FETCH j.claim WHERE j.id = :jobId")
 	fun findByIdWithDetails(@Param("jobId") jobId: Long): Optional<RepairJob>

@@ -163,7 +163,7 @@ class GarageService(
 			"Claim {} assigned to garage {} as job {} by {}",
 			moved.claimNumber, garage.code, saved.referenceCode, actor.email,
 		)
-		return saved.toResponse(canSubmitFeedback = false)
+		return saved.toResponse(canSubmitFeedback = feedbackAllowed(moved))
 	}
 
 	@Transactional(readOnly = true)
@@ -199,24 +199,22 @@ class GarageService(
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100))
 		val resolvedGarageId = garageId
 			?: if (actor.role.isStaff()) null else throw ForbiddenException("Customers cannot list repair jobs")
-		val statusFilter = status ?: RepairJobStatus.entries.filter { !it.isFinished }
-
-		val source = when {
-			resolvedGarageId != null -> repairJobRepository.findByGarageIdOrderByAssignedAtDesc(resolvedGarageId, pageable)
-			else -> repairJobRepository.findAll(pageable)
+		val statuses = if (status != null) {
+			setOf(status)
+		} else {
+			RepairJobStatus.entries.filter { !it.isFinished }.toSet()
 		}
-		// The derived query cannot filter on status, so narrow the page here and
-		// report only what is actually returned.
-		val filtered = source.content.filter { it.status in statusFilter }
+
+		val source = repairJobRepository.search(resolvedGarageId, statuses, pageable)
 		return PageResponse(
-			content = filtered.map { it.toResponse(canSubmitFeedback = false) },
+			content = source.content.map { it.toResponse(canSubmitFeedback = false) },
 			page = source.number,
 			size = source.size,
 			totalElements = source.totalElements,
 			totalPages = source.totalPages,
 			first = source.isFirst,
 			last = source.isLast,
-			empty = filtered.isEmpty(),
+			empty = source.isEmpty,
 		)
 	}
 
@@ -274,7 +272,7 @@ class GarageService(
 
 		refreshGarageScore(saved.garage)
 		log.info("Repair job {} moved {} -> {} by {}", saved.referenceCode, from, request.status, actor.email)
-		return saved.toResponse(canSubmitFeedback = request.status == RepairJobStatus.COMPLETED)
+		return saved.toResponse(canSubmitFeedback = feedbackAllowed(saved.claim))
 	}
 
 	@Transactional
@@ -323,11 +321,11 @@ class GarageService(
 	 */
 	@Transactional
 	fun refreshGarageScore(garage: Garage) {
-		val since = Instant.now().minus(Duration.ofDays(properties.garageScoreWindowDays.toLong()))
+		val since = Instant.now().minus(Duration.ofDays(properties.performanceWindowDays.toLong()))
 		val completed = repairJobRepository.findCompletedSince(since)
 			.filter { it.garage.id == garage.id }
 
-		garage.jobsCompleted = repairJobRepository.countByGarageIdAndStatusNot(
+		garage.jobsCompleted = repairJobRepository.countByGarageIdAndStatus(
 			garage.id ?: 0L,
 			RepairJobStatus.DELIVERED,
 		).toInt()
@@ -340,6 +338,8 @@ class GarageService(
 	/**
 	 * Thresholds are deliberately conservative: a garage is only punished for
 	 * sustained, evidence-backed weakness so one bad job cannot suspend a panel.
+	 * All of them live in `insureclaim.garage` so the insurer can tune them
+	 * without a redeploy.
 	 */
 	internal fun scoreGarage(garage: Garage): GaragePerformanceStatus {
 		if (!garage.active) return GaragePerformanceStatus.SUSPENDED
@@ -349,21 +349,25 @@ class GarageService(
 		val turnaround = garage.avgTurnaroundDays
 
 		return when {
-			complaints >= properties.garageSuspensionComplaintThreshold ->
+			complaints >= properties.suspensionComplaintThreshold ->
 				GaragePerformanceStatus.SUSPENDED
-			complaints >= properties.garageWatchComplaintThreshold ||
-				(ratingCountMeaningful(garage) && rating < properties.garagePoorRatingThreshold) ||
-				(turnaround != null && turnaround > properties.garageSlowTurnaroundDays) ->
+
+			complaints >= properties.underperformingComplaintThreshold ||
+				(ratingCountMeaningful(garage) && rating < properties.underperformingRatingThreshold) ||
+				(turnaround != null && turnaround > properties.slowTurnaroundDays) ->
 				GaragePerformanceStatus.UNDERPERFORMING
+
 			complaints >= 1 ||
-				(ratingCountMeaningful(garage) && rating < properties.garageWatchRatingThreshold) ->
+				(ratingCountMeaningful(garage) && rating < properties.watchRatingThreshold) ->
 				GaragePerformanceStatus.WATCH
+
 			else -> GaragePerformanceStatus.GOOD
 		}
 	}
 
 	/** A 1-star average off a single review is noise, not a trend. */
-	private fun ratingCountMeaningful(garage: Garage): Boolean = garage.ratingCount >= 3
+	private fun ratingCountMeaningful(garage: Garage): Boolean =
+		garage.ratingCount >= properties.minimumRatingCount
 
 	private fun nextReferenceCode(): String {
 		while (true) {

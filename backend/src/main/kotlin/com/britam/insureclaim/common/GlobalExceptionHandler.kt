@@ -87,7 +87,7 @@ class GlobalExceptionHandler {
 		ex: MissingServletRequestParameterException,
 		request: HttpServletRequest,
 	): ResponseEntity<ApiErrorResponse> =
-		build(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER", ex.message ?: "Missing request parameter", request)
+		build(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER", ex.message, request)
 
 	@ExceptionHandler(HttpRequestMethodNotSupportedException::class)
 	fun handleMethodNotAllowed(

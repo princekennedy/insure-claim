@@ -20,6 +20,8 @@ import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserAccountService
 import com.britam.insureclaim.vehicle.Vehicle
 import com.britam.insureclaim.vehicle.VehicleRepository
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import jakarta.persistence.criteria.Predicate
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -58,6 +60,24 @@ class ClaimService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 	private val secureRandom = SecureRandom()
+
+	@field:PersistenceContext
+	private lateinit var entityManager: EntityManager
+
+	/**
+	 * Controllers load a claim through a short read-only transaction, so by the
+	 * time a mutating call arrives that instance is detached and its lazy
+	 * collections cannot be touched. Re-reading it here puts the claim in the
+	 * session that is about to do the work. Claims already loaded by another
+	 * transactional service (garage, KYC) are managed and pass straight through.
+	 */
+	private fun attached(claim: Claim): Claim {
+		if (entityManager.contains(claim)) return claim
+		val id = claim.id ?: throw NotFoundException("Claim", 0L)
+		// Fetch the associations the response mapping reads so they are loaded
+		// while the session is still open.
+		return claimRepository.findByIdWithDetails(id).orElseThrow { NotFoundException("Claim", id) }
+	}
 
 	/**
 	 * Validates cover, files the claim and immediately screens it for fraud.
@@ -246,6 +266,7 @@ class ClaimService(
 	 * driving the follow-on work (KYC gate, fraud screening, settlement).
 	 */
 	fun transition(claim: Claim, target: ClaimStatus, request: UpdateClaimStatusRequest, actor: User): Claim {
+		val claim = attached(claim)
 		val from = claim.status
 
 		if (from == target) {
@@ -374,6 +395,7 @@ class ClaimService(
 		documentType: ClaimDocumentType,
 		actor: User,
 	): ClaimDocument {
+		val claim = attached(claim)
 		if (file.isEmpty) {
 			throw BusinessRuleException("The uploaded file is empty", "EMPTY_FILE")
 		}
@@ -408,6 +430,7 @@ class ClaimService(
 	}
 
 	fun deleteDocument(claim: Claim, documentId: Long, actor: User): ClaimDocument {
+		val claim = attached(claim)
 		val document = claimDocumentRepository.findById(documentId)
 			.orElseThrow { NotFoundException("Document", documentId) }
 		if (document.claim.id != claim.id) {

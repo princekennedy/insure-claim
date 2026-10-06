@@ -17,10 +17,12 @@ interface UserRepository : JpaRepository<User, Long> {
 	@Query(
 		"""
 		SELECT u FROM User u
-		WHERE (:query IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :query, '%'))
-			OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))
-			OR LOWER(COALESCE(u.nic, '')) LIKE LOWER(CONCAT('%', :query, '%')))
-			AND (:role IS NULL OR u.role = :role)
+		WHERE (
+			LOWER(u.fullName) LIKE LOWER(CONCAT('%', COALESCE(:query, ''), '%'))
+			OR LOWER(u.email) LIKE LOWER(CONCAT('%', COALESCE(:query, ''), '%'))
+			OR LOWER(COALESCE(u.nic, '')) LIKE LOWER(CONCAT('%', COALESCE(:query, ''), '%'))
+		)
+		AND u.role = COALESCE(:role, u.role)
 		""",
 	)
 	fun search(

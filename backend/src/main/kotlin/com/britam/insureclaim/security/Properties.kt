@@ -37,16 +37,16 @@ data class FraudProperties(
 
 @ConfigurationProperties(prefix = "insureclaim.garage")
 data class GarageProperties(
+	/** Rolling window used when averaging repair turnaround. */
 	val performanceWindowDays: Int = 90,
+	/** Ratings below this count as underperforming. */
 	val underperformingRatingThreshold: java.math.BigDecimal = java.math.BigDecimal("3.0"),
+	/** Complaints at or above this count as underperforming. */
 	val underperformingComplaintThreshold: Int = 5,
+	/** Complaints at or above this pull the garage off the panel. */
+	val suspensionComplaintThreshold: Int = 8,
 	/** Ratings below this put a garage on the watchlist. */
 	val watchRatingThreshold: java.math.BigDecimal = java.math.BigDecimal("3.5"),
-	/** Ratings below this count as underperforming. */
-	val poorRatingThreshold: java.math.BigDecimal = java.math.BigDecimal("2.5"),
-	/** Complaints at or above this count as underperforming, at or above the suspension value it is pulled off the panel. */
-	val watchComplaintThreshold: Int = 2,
-	val suspensionComplaintThreshold: Int = 8,
 	/** Average turnaround above this is treated as slow service. */
 	val slowTurnaroundDays: java.math.BigDecimal = java.math.BigDecimal("14"),
 	/** Ratings are only trusted once this many exist. */
