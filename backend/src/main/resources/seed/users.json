@@ -1,0 +1,30 @@
+{
+  "entity": "users",
+  "description": "Portal accounts. Passwords are never stored here - every account takes the value of INSURECLAIM_SEED_PASSWORD, and the whole file is skipped when that is unset.",
+  "items": [
+    {
+      "email": "insurer.admin@britam.lk",
+      "fullName": "Nimal Perera",
+      "phone": "+94771000001",
+      "nic": "19801234567",
+      "role": "INSURER_ADMIN",
+      "enabled": true
+    },
+    {
+      "email": "claims.agent@britam.lk",
+      "fullName": "Ayesha Fernando",
+      "phone": "+94771000002",
+      "nic": "19901234567",
+      "role": "AGENT",
+      "enabled": true
+    },
+    {
+      "email": "demo.customer@britam.lk",
+      "fullName": "Chamika Silva",
+      "phone": "+94771000003",
+      "nic": "19951234567",
+      "role": "CUSTOMER",
+      "enabled": true
+    }
+  ]
+}

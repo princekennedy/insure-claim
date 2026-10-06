@@ -9,11 +9,17 @@
 # Services:
 #   - db: PostgreSQL 17 (port 55432 -> 5432)
 #   - adminer: Database admin UI (port 8081)
+#   - minio: MinIO object storage (port 9001 -> 9000)
+#   - minio-console: MinIO web console (port 9002 -> 9001)
 #   - backend: Spring Boot API (port 8080)
 #   - frontend: Next.js app (port 3000)
 #
 # The database container listens on 5432 internally but is published on 55432 because
 # the host already runs native PostgreSQL services that occupy 5432 and 5433.
+#
+# To use MinIO for file storage:
+#   1. Set MINIO_ENABLED=true in backend environment
+#   2. The backend will automatically connect to the minio service
 
 services:
   db:
@@ -69,6 +75,72 @@ services:
       timeout: 10s
       retries: 3
 
+  minio:
+    image: minio/minio:RELEASE.2025-09-15T17-27-07Z
+    container_name: insureclaim-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: insureclaim
+      MINIO_ROOT_PASSWORD: insureclaim123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - insureclaim-minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio-console:
+    image: minio/mc:RELEASE.2025-09-15T17-27-07Z
+    container_name: insureclaim-minio-setup
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["sh", "-c", "
+      mc alias set myminio http://minio:9000 insureclaim insureclaim123;
+      mc mb --ignore-existing myminio/insureclaim;
+      mc anonymous set download myminio/insureclaim || true;
+      exit 0;
+    "]
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: insureclaim-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/insureclaim
+      SPRING_DATASOURCE_USERNAME: insureclaim
+      SPRING_DATASOURCE_PASSWORD: insureclaim
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_FLYWAY_ENABLED: "true"
+      # MinIO Configuration
+      MINIO_ENABLED: "true"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: insureclaim
+      MINIO_SECRET_KEY: insureclaim123
+      MINIO_BUCKET: insureclaim
+      MINIO_USE_HTTPS: "false"
+      MINIO_URL_BASE: http://localhost:9000
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   frontend:
     build:
       context: ..
@@ -86,3 +158,4 @@ services:
 
 volumes:
   insureclaim-db-data:
+  insureclaim-minio-data:

@@ -1,0 +1,86 @@
+{
+  "entity": "garages",
+  "description": "InsureClaim Portal :: panel garage network (reference data)",
+  "items": [
+    {
+      "code": "GAR-COL-01",
+      "name": "Britam Express Panel - Colombo 01",
+      "address": "128 Galle Road",
+      "city": "Colombo",
+      "contactPhone": "0112345671",
+      "contactEmail": "colombo01@garage.britam.lk",
+      "panelRating": 4.70,
+      "active": true
+    },
+    {
+      "code": "GAR-COL-02",
+      "name": "Britam Express Panel - Colombo 02",
+      "address": "45 Bauddhaloka Mw",
+      "city": "Colombo",
+      "contactPhone": "0112345672",
+      "contactEmail": "colombo02@garage.britam.lk",
+      "panelRating": 4.40,
+      "active": true
+    },
+    {
+      "code": "GAR-COL-03",
+      "name": "AutoCare Bodyworks",
+      "address": "320 Peeradesi Road",
+      "city": "Colombo",
+      "contactPhone": "0112345673",
+      "contactEmail": "autocare@garage.britam.lk",
+      "panelRating": 4.10,
+      "active": true
+    },
+    {
+      "code": "GAR-KTM-01",
+      "name": "Island Motors Kandy",
+      "address": "18 Colombo Street",
+      "city": "Kandy",
+      "contactPhone": "0812345671",
+      "contactEmail": "kandy01@garage.britam.lk",
+      "panelRating": 4.60,
+      "active": true
+    },
+    {
+      "code": "GAR-GAL-01",
+      "name": "Southern Auto Works",
+      "address": "240 Galle Road",
+      "city": "Galle",
+      "contactPhone": "0912345671",
+      "contactEmail": "galle01@garage.britam.lk",
+      "panelRating": 4.30,
+      "active": true
+    },
+    {
+      "code": "GAR-JAF-01",
+      "name": "Northern Motor Services",
+      "address": "90 Jaffna Road",
+      "city": "Jaffna",
+      "contactPhone": "0212345671",
+      "contactEmail": "jaffna01@garage.britam.lk",
+      "panelRating": 4.20,
+      "active": true
+    },
+    {
+      "code": "GAR-NEG-01",
+      "name": "Lanka Auto Technicians",
+      "address": "56 Nawalawewa Road",
+      "city": "Negombo",
+      "contactPhone": "0312345671",
+      "contactEmail": "negombo01@garage.britam.lk",
+      "panelRating": 3.90,
+      "active": true
+    },
+    {
+      "code": "GAR-KUR-01",
+      "name": "Highland Motors Kurunegala",
+      "address": "7 Bazaar Street",
+      "city": "Kurunegala",
+      "contactPhone": "0372345671",
+      "contactEmail": "kurunegala01@garage.britam.lk",
+      "panelRating": 4.00,
+      "active": true
+    }
+  ]
+}

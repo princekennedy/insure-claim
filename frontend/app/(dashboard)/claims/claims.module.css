@@ -1,0 +1,120 @@
+.page {
+  max-width: 1200px;
+}
+
+.newButton {
+  text-decoration: none;
+}
+
+.claimsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.claimLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.claimCard {
+  padding: 1.25rem;
+  cursor: pointer;
+}
+
+.claimHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.claimInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.claimNumber {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.claimType {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.claimMeta {
+  display: flex;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+.claimMeta svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.claimAmounts {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.amount {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.claimProgress {
+  margin-bottom: 0.75rem;
+}
+
+.garageInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}

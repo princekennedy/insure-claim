@@ -1,0 +1,90 @@
+.page {
+  max-width: 960px;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.docType {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.docNumber {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+
+.docName {
+  font-size: 0.875rem;
+  color: #374151;
+  margin: 0 0 0.5rem;
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0;
+}
+
+.resubmit {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.uploads {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.uploadItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.875rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.uploadTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.uploadItem input {
+  font-size: 0.75rem;
+}
+
+.uploadHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.submitRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}

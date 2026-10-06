@@ -1,0 +1,26 @@
+{
+  "entity": "vehicles",
+  "description": "Vehicles registered to seeded customers.",
+  "items": [
+    {
+      "ownerEmail": "demo.customer@britam.lk",
+      "registrationNumber": "KAB-4821",
+      "make": "Toyota",
+      "model": "Hilux",
+      "year": 2021,
+      "color": "Silver",
+      "chassisNumber": "MR0FZ29G101234567",
+      "engineNumber": "2GD-FTV-0012345"
+    },
+    {
+      "ownerEmail": "demo.customer@britam.lk",
+      "registrationNumber": "CBA-9034",
+      "make": "Honda",
+      "model": "Vezel",
+      "year": 2023,
+      "color": "White",
+      "chassisNumber": "RU3-1234567",
+      "engineNumber": "L15Z2-9988776"
+    }
+  ]
+}

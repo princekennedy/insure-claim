@@ -1,5 +1,6 @@
 package com.britam.insureclaim.claim
 
+import com.britam.insureclaim.common.AuditContext
 import com.britam.insureclaim.common.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -9,6 +10,8 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.PrePersist
+import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import java.time.Instant
 
@@ -108,6 +111,24 @@ class ClaimPublicToken(
 	@Column(name = "expires_at", nullable = false)
 	var expiresAt: Instant = Instant.now(),
 ) {
+
+	@Column(name = "created_by")
+	var createdBy: Long? = null
+
+	@Column(name = "updated_by")
+	var updatedBy: Long? = null
+
+	@PrePersist
+	protected fun stampCreatedBy() {
+		val actor = AuditContext.actorId()
+		if (createdBy == null) createdBy = actor
+		if (updatedBy == null) updatedBy = actor ?: createdBy
+	}
+
+	@PreUpdate
+	protected fun stampUpdatedBy() {
+		AuditContext.actorId()?.let { updatedBy = it }
+	}
 
 	fun isUsable(now: Instant = Instant.now()): Boolean = expiresAt.isAfter(now)
 }

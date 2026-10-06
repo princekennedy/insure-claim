@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InsureClaim Frontend
+
+Next.js 16.3.8 frontend for the InsureClaim Portal motor insurance claims platform.
+
+## Tech Stack
+
+- **Framework:** Next.js 16.3.8 (App Router)
+- **React:** 19.2.8
+- **Language:** TypeScript 5
+- **Styling:** Tailwind CSS 4
+- **State Management:** React Hooks + Context
+
+## Project Structure
+
+```
+frontend/
+├── app/
+│   ├── (auth)/            # Authentication pages
+│   │   ├── login/         # Login page
+│   │   └── register/      # Registration page
+│   ├── (dashboard)/       # Dashboard pages (protected)
+│   │   ├── layout.tsx     # Dashboard layout with sidebar
+│   │   ├── dashboard/     # Main dashboard
+│   │   ├── claims/        # Claims list & detail pages
+│   │   ├── vehicles/      # Vehicle management
+│   │   ├── policies/      # Policy management
+│   │   ├── kyc/           # KYC verification
+│   │   ├── garages/       # Garage browsing
+│   │   └── feedback/      # Feedback management
+│   ├── api/               # API route handlers (optional)
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home redirect
+├── lib/
+│   ├── components/
+│   │   ├── ui/            # Reusable UI components
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── progress-bar.tsx
+│   │   │   ├── spinner.tsx
+│   │   │   ├── empty-state.tsx
+│   │   │   ├── page-header.tsx
+│   │   │   ├── alert.tsx
+│   │   │   └── dialog.tsx
+│   │   ├── layout/        # Layout components
+│   │   │   ├── app-layout.tsx   # Main app layout with sidebar
+│   │   │   └── auth-layout.tsx  # Auth pages layout
+│   │   ├── claims/        # Claims-specific components
+│   │   ├── garage/        # Garage-specific components
+│   │   └── kyc/           # KYC-specific components
+│   ├── services/          # API services
+│   │   ├── api.ts         # Base API client
+│   │   ├── auth.ts        # Authentication service
+│   │   ├── claims.ts      # Claims service
+│   │   ├── vehicles.ts    # Vehicles service
+│   │   ├── policies.ts    # Policies service
+│   │   ├── kyc.ts         # KYC service
+│   │   └── garages.ts     # Garages & feedback service
+│   └── types/             # TypeScript types
+│       ├── auth.ts        # Auth types
+│       ├── vehicle.ts     # Vehicle types
+│       ├── policy.ts      # Policy types
+│       ├── claim.ts       # Claim types
+│       ├── garage.ts      # Garage types
+│       ├── kyc.ts         # KYC types
+│       └── feedback.ts    # Feedback types
+├── public/                # Static assets
+├── next.config.ts         # Next.js configuration
+├── tailwind.config.ts     # Tailwind configuration
+└── tsconfig.json          # TypeScript configuration
+```
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Available Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Create a `.env.local` file in the frontend directory:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Components
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### UI Components
 
-## Deploy on Vercel
+All UI components are in `lib/components/ui/` and follow a consistent pattern:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Button:** Primary, secondary, danger, ghost variants with loading state
+- **Input:** Text input with label, error, and hint support
+- **Select:** Dropdown with custom styling
+- **Textarea:** Multi-line text input
+- **Card:** Container with header, content, and footer slots
+- **Badge:** Status labels with color variants
+- **Avatar:** User avatar with initials fallback
+- **ProgressBar:** Progress indicator with percentage
+- **Spinner:** Loading indicator
+- **EmptyState:** Placeholder for empty lists
+- **PageHeader:** Page title with optional actions
+- **Alert:** Info, success, warning, error messages
+- **Dialog:** Modal dialog with overlay
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Service Layer
+
+The API service layer (`lib/services/`) provides typed methods for all backend endpoints with automatic authentication handling.
+
+```typescript
+import { login, getMyClaims } from '@/lib/services';
+
+// Authentication
+const { accessToken, refreshToken } = await login({
+  email: 'user@example.com',
+  password: 'password123',
+});
+
+// API calls (tokens managed automatically)
+const claims = await getMyClaims(0, 20);
+```
+
+## Integration with Backend
+
+The frontend expects a running backend at the URL specified by `NEXT_PUBLIC_API_URL`. See the root [readme.md](../readme.md) for backend setup instructions.
+
+## License
+
+Proprietary - Britam Insurance PLC

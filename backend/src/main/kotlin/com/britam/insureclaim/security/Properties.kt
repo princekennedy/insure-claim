@@ -71,5 +71,16 @@ data class ChatbotProperties(
 data class StorageProperties(
 	val uploadDir: String = "./data/uploads",
 	val maxFileSizeBytes: Long = 10L * 1024 * 1024,
-	val allowedContentTypes: List<String> = listOf("image/jpeg", "image/png", "image/pdf"),
+	val allowedContentTypes: List<String> = listOf("image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"),
+
+	// MinIO/S3-compatible object storage configuration
+	val minioEnabled: Boolean = false,
+	val minioEndpoint: String = "localhost:9000",
+	val minioAccessKey: String = "minioadmin",
+	val minioSecretKey: String = "minioadmin",
+	val minioBucket: String = "insureclaim",
+	val minioUseHttps: Boolean = false,
+	val minioUrlExpirySeconds: Int = 3600,
+	val minioPublicBucket: Boolean = false,
+	val minioUrlBase: String = "http://localhost:9000",
 )

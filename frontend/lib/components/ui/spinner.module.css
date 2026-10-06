@@ -1,0 +1,64 @@
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+
+.svg {
+  animation: spin 1s linear infinite;
+}
+
+.size-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.size-sm .svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.size-md {
+  width: 2rem;
+  height: 2rem;
+}
+
+.size-md .svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.size-lg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.size-lg .svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.pageLoader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+}
+
+.message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

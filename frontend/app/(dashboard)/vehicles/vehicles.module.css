@@ -1,0 +1,55 @@
+.page {
+  max-width: 1200px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.vehicleCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.reg {
+  text-transform: uppercase;
+}
+
+.model {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0 0 0.75rem;
+}
+
+.detail {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0.25rem 0;
+}
+
+.detail strong {
+  color: #374151;
+}
+
+.actions {
+  padding: 1rem 1.25rem;
+  margin-top: auto;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}

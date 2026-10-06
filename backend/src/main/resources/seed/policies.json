@@ -1,0 +1,32 @@
+{
+  "entity": "policies",
+  "description": "Motor cover for the seeded vehicles, so a freshly migrated database can file claims without hand-written SQL.",
+  "items": [
+    {
+      "customerEmail": "demo.customer@britam.lk",
+      "vehicleRegistration": "KAB-4821",
+      "policyNumber": "POL-2026-MTR0001",
+      "insurerName": "Britam Insurance PLC",
+      "productCode": "MOTOR_COMPREHENSIVE",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "premiumAmount": 185000.00,
+      "sumInsured": 8500000.00,
+      "excessAmount": 25000.00,
+      "status": "ACTIVE"
+    },
+    {
+      "customerEmail": "demo.customer@britam.lk",
+      "vehicleRegistration": "CBA-9034",
+      "policyNumber": "POL-2026-MTR0002",
+      "insurerName": "Britam Insurance PLC",
+      "productCode": "MOTOR_COMPREHENSIVE",
+      "startDate": "2025-07-01",
+      "endDate": "2027-06-30",
+      "premiumAmount": 240000.00,
+      "sumInsured": 12000000.00,
+      "excessAmount": 35000.00,
+      "status": "ACTIVE"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.percentage {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.track {
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.size-sm {
+  height: 0.375rem;
+}
+
+.size-md {
+  height: 0.5rem;
+}
+
+.size-lg {
+  height: 0.75rem;
+}
+
+.fill {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
