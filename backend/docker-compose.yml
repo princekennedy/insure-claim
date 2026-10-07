@@ -1,8 +1,8 @@
 ﻿services:
   backend:
     build:
-      context: ..
-      dockerfile: backend/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: insureclaim-backend
     restart: unless-stopped
     ports:
