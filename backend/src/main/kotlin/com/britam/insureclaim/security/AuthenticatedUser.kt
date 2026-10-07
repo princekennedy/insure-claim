@@ -1,6 +1,5 @@
 ﻿package com.britam.insureclaim.security
 
-import com.britam.insureclaim.role.Role
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails

@@ -1,7 +1,7 @@
 package com.britam.insureclaim.security
 
 import com.britam.insureclaim.common.UnauthorizedException
-import com.britam.insureclaim.role.Role
+import com.britam.insureclaim.common.UnauthorizedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
@@ -24,7 +24,7 @@ class CurrentUserResolver {
 
 	fun requireEmail(): String = require().email
 
-	fun requireRole(): Role = require().role
+	fun requireRole(): String = require().role
 
 	fun isStaff(): Boolean = require().isStaff
 }

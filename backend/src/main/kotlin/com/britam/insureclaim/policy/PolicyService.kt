@@ -5,8 +5,6 @@ import com.britam.insureclaim.common.ConflictException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.common.ValidationException
-import com.britam.insureclaim.role.Role
-
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.VehicleRepository
@@ -35,7 +33,7 @@ class PolicyService(
 	fun create(request: CreatePolicyRequest): PolicyAdminResponse {
 		val customer = userRepository.findById(request.customerId!!)
 			.orElseThrow { NotFoundException("Customer", request.customerId) }
-		if (customer.role != Role.CUSTOMER) {
+		if (customer.role != com.britam.insureclaim.role.CUSTOMER) {
 			throw BusinessRuleException("Cover can only be issued to a customer account", "POLICY_CUSTOMER_ONLY")
 		}
 

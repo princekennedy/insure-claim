@@ -31,16 +31,14 @@ class JwtAuthenticationFilter(
 				if (account == null) {
 					log.debug("Token references unknown user ${parsed.userId}")
 				} else if (!account.isUsable()) {
-					log.debug("Rejecting token for unusable account ${account.id}")
-				} else if (account.role?.code != parsed.role) {
+					log.debug("Rejecting token for unusable account ${account.id}")						} else if (account.role != parsed.role) {
 					log.debug("Rejecting token with stale role for account ${account.id}")
-				} else {
-					val principal = AuthenticatedUser(
-						id = account.id ?: 0L,
-						email = account.email,
-						role = account.role ?: com.britam.insureclaim.role.Role.CUSTOMER,
-						displayName = account.fullNameOrEmail(),
-					)
+				} else {							val principal = AuthenticatedUser(
+								id = account.id ?: 0L,
+								email = account.email,
+								role = account.role,
+								displayName = account.fullNameOrEmail(),
+							)
 					val authentication = UsernamePasswordAuthenticationToken(
 						principal,
 						null,
