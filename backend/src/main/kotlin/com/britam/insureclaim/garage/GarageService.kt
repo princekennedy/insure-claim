@@ -404,8 +404,4 @@ class GarageService(
 	)
 
 	private fun String?.trimOrNull(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
-
-fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
-
-fun com.britam.insureclaim.user.User.canViewAllClaims(): Boolean = this.role?.canViewAllClaims() ?: false
 }

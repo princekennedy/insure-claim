@@ -188,4 +188,3 @@ data class TrackingLinkResponse(
 	val path: String,
 )
 
-fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false

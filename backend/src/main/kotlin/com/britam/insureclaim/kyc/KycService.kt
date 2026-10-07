@@ -202,12 +202,9 @@ class KycService(
 			verification.expiresAt = null
 		}
 
-		val saved = kycRepository.save(verification)
-		log.info("KYC {} {} by {}", saved.id, if (approved) "approved" else "rejected", reviewer.email)
-		return saved.toResponse()
+		val saved = kycRepository.save(verification)			log.info("KYC {} {} by {}", saved.id, if (approved) "approved" else "rejected", reviewer.email)
+			return saved.toResponse()
 	}
-
-	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
 
 	@Transactional(readOnly = true)
 	fun queue(status: KycStatus?, page: Int, size: Int): PageResponse<KycVerificationResponse> {

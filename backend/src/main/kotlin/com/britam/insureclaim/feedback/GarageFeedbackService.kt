@@ -44,6 +44,8 @@ class GarageFeedbackService(
 	/** A score of 2 or lower, or an explicit "would not recommend". */
 	private val complaintRating = BigDecimal("2.00")
 
+	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
+
 	@Transactional
 	fun submit(claimId: Long, request: GarageFeedbackRequest, actor: User): GarageFeedbackResponse {
 		val claim = claimRepository.findByIdWithDetails(claimId)

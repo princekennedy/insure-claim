@@ -71,11 +71,6 @@ class KycVerification(
 	@JoinColumn(name = "claim_id")
 	var claim: Claim? = null,
 
-	init {
-		if (claim != null) claim.id = claim.id ?: 0L
-	}
-
-
 	@Enumerated(EnumType.STRING)
 	@Column(name = "document_type", nullable = false, length = 32)
 	var documentType: KycDocumentType = KycDocumentType.NIC,
@@ -129,8 +124,7 @@ class KycVerification(
 	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	var updatedAt: Instant = Instant.now(),
-)
-{
+) {
 
 	/**
 	 * Offline name check used when no verification provider is configured. The
