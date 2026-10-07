@@ -653,6 +653,10 @@ class ClaimService(
 	}
 }
 /** Public projection of an uploaded document, shared with the claim controller. */
+fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
+
+fun com.britam.insureclaim.user.User.canViewAllClaims(): Boolean = this.role?.canViewAllClaims() ?: false
+
 fun ClaimDocument.toResponse(): ClaimDocumentResponse = ClaimDocumentResponse(
 	id = id ?: 0L,
 	documentType = documentType,

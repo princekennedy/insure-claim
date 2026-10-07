@@ -28,15 +28,15 @@ class Claim(
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "policy_id", nullable = false)
-	var policy: Policy = Policy(),
+	var policy: Policy = Policy().apply { id = 0L },
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "customer_id", nullable = false)
-	var customer: User = User(),
+	var customer: User = User().apply { id = 0L },
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "vehicle_id", nullable = false)
-	var vehicle: Vehicle = Vehicle(),
+	var vehicle: Vehicle = Vehicle().apply { id = 0L },
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "incident_type", nullable = false, length = 32)

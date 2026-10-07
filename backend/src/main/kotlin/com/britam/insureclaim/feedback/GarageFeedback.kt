@@ -23,11 +23,11 @@ import java.time.Instant
 class GarageFeedback(
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "claim_id", nullable = false)
-	var claim: Claim = Claim(),
+	var claim: Claim = Claim().apply { id = 0L },
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "garage_id", nullable = false)
-	var garage: Garage = Garage(),
+	var garage: Garage = Garage().apply { id = 0L },
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "repair_job_id")
@@ -35,7 +35,7 @@ class GarageFeedback(
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "customer_id", nullable = false)
-	var customer: User = User(),
+	var customer: User = User().apply { id = 0L },
 
 	@Column(name = "overall_rating", nullable = false, precision = 3, scale = 2)
 	var overallRating: BigDecimal = BigDecimal.ZERO.setScale(2),

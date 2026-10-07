@@ -14,8 +14,8 @@ COPY eslint.config.mjs ./
 COPY app ./app
 COPY public ./public
 
-# Install dependencies and build
-RUN npm ci && npm run build
+# Install dependencies and build (eslint v9 is incompatible with eslint-config-next ^14; pin and legacy flags)
+RUN npm ci --legacy-peer-deps && npm run build
 
 # Production stage: run the optimized Next.js server
 FROM node:22-alpine

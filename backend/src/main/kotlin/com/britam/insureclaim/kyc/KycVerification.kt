@@ -64,12 +64,17 @@ enum class KycStatus {
 class KycVerification(
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "user_id", nullable = false)
-	var user: User = User(),
+	var user: User = User().apply { id = 0L },
 
 	/** Optional link to the claim that triggered this KYC request. */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "claim_id")
 	var claim: Claim? = null,
+
+	init {
+		if (claim != null) claim.id = claim.id ?: 0L
+	}
+
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "document_type", nullable = false, length = 32)
@@ -124,7 +129,8 @@ class KycVerification(
 	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	var updatedAt: Instant = Instant.now(),
-) : BaseEntity() {
+)
+{
 
 	/**
 	 * Offline name check used when no verification provider is configured. The

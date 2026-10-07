@@ -20,7 +20,7 @@ import java.time.Instant
 class RefreshToken(
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "user_id", nullable = false)
-	var user: User = User(),
+	var user: User = User().apply { id = 0L },
 
 	@Column(name = "token_hash", nullable = false, unique = true, length = 128)
 	var tokenHash: String = "",

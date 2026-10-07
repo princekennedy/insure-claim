@@ -39,11 +39,11 @@ class Policy(
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "customer_id", nullable = false)
-	var customer: User = User(),
+	var customer: User = User().apply { id = 0L },
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "vehicle_id", nullable = false)
-	var vehicle: Vehicle = Vehicle(),
+	var vehicle: Vehicle = Vehicle().apply { id = 0L },
 
 	@Column(name = "insurer_name", nullable = false, length = 160)
 	var insurerName: String = DEFAULT_INSURER,

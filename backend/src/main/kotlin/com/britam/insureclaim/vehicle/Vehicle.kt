@@ -15,7 +15,7 @@ import java.time.LocalDate
 class Vehicle(
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "owner_id", nullable = false)
-	var owner: User = User(),
+	var owner: User = User().apply { id = 0L },
 
 	@Column(name = "registration_number", nullable = false, unique = true, length = 32)
 	var registrationNumber: String = "",
