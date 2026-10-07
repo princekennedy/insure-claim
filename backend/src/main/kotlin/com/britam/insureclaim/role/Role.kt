@@ -51,6 +51,14 @@ class Role(
 		/** Convenience constant for customer role — matches AuthService.Role.CUSTOMER usage. */
 		val CUSTOMER: Role
 			get() = fromCode("CUSTOMER")
+
+		/** Convenience constants used by SecurityConfig: Role.ADMIN.name, Role.AGENT.name, Role.INSURER_ADMIN.name. */
+		val ADMIN: Role
+			get() = fromCode("ADMIN")
+		val AGENT: Role
+			get() = fromCode("AGENT")
+		val INSURER_ADMIN: Role
+			get() = fromCode("INSURER_ADMIN")
 	}
 }
 

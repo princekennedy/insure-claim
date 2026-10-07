@@ -1,5 +1,6 @@
 package com.britam.insureclaim.user
 
+import com.britam.insureclaim.role.Role
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

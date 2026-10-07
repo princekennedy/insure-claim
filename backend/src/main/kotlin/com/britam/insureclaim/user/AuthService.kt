@@ -43,7 +43,7 @@ class AuthService(
 			fullName = request.fullName.trim(),
 			phone = request.phone?.trim(),
 			nic = request.nic?.trim()?.uppercase(),
-			role = Role.CUSTOMER,
+			role = com.britam.insureclaim.role.Role.CUSTOMER,
 			enabled = true,
 		)
 		val saved = userRepository.save(user)
