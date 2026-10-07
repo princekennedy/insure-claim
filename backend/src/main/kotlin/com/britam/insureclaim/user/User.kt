@@ -1,11 +1,9 @@
-package com.britam.insureclaim.user
+﻿package com.britam.insureclaim.user
 
 import com.britam.insureclaim.common.AuditableVersionedEntity
+import com.britam.insureclaim.role.Role
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.Instant
 
@@ -14,6 +12,9 @@ import java.time.Instant
 class User(
 	@Column(name = "email", nullable = false, unique = true, length = 255)
 	var email: String = "",
+
+	@Column(name = "password", nullable = false, length = 255)
+	var password: String = "",
 
 	@Column(name = "password_hash", nullable = false, length = 255)
 	var passwordHash: String = "",
@@ -26,8 +27,9 @@ class User(
 
 	@Column(name = "nic", length = 32)
 	var nic: String? = null,
+
 	@Column(name = "role", nullable = false, length = 32)
-	var role: String = com.britam.insureclaim.role.Role.CUSTOMER.code,
+	var role: String = Role.CUSTOMER.code,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
@@ -47,9 +49,12 @@ class User(
 	fun isLocked(now: Instant = Instant.now()): Boolean = lockedUntil?.isAfter(now) == true
 	fun isUsable(): Boolean = enabled && !isLocked()
 	fun fullNameOrEmail(): String = fullName.ifBlank { email }
-	fun initials(): String = fullName.ifBlank { email.take(2).uppercase() }
-	fun isStaff(): Boolean = role in com.britam.insureclaim.role.STAFF_CODES
-	fun canViewAllClaims(): Boolean = isStaff()
+	fun initials(): String = fullName
+		.split(' ')
+		.filter { it.isNotBlank() }
+		.take(2)
+		.joinToString("") { it.first().uppercase() }
+		.ifBlank { email.take(2).uppercase() }
 }
 
 data class UserSummary(

@@ -33,7 +33,7 @@ class PolicyService(
 	fun create(request: CreatePolicyRequest): PolicyAdminResponse {
 		val customer = userRepository.findById(request.customerId!!)
 			.orElseThrow { NotFoundException("Customer", request.customerId) }
-		if (customer.role?.code != "CUSTOMER") {
+		if (customer.role != "CUSTOMER") {
 			throw BusinessRuleException("Cover can only be issued to a customer account", "POLICY_CUSTOMER_ONLY")
 		}
 

@@ -280,7 +280,7 @@ class KycService(
 		val systemActor = User().apply {
 			email = SYSTEM_ACTOR_EMAIL
 			passwordHash = ""
-			fullName = "Digital KYC"				this.role = com.britam.insureclaim.role.Role().apply { code = "ADMIN" }
+			fullName = "Digital KYC"				this.role = "ADMIN"
 		}
 		waiting.forEach { claim ->
 			claimService.transition(
