@@ -18,7 +18,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <Link href="/claims" className={styles.navLink}>File a Claim</Link>
             <Link href="/track" className={styles.navLink}>Track Claim</Link>
             <Link href="/feedback" className={styles.navLink}>Feedback</Link>
-            <Link href="/auth/login" className={styles.navButton}>Sign In</Link>
+            <Link href="/login" className={styles.navButton}>Sign In</Link>
           </nav>
         </div>
       </header>
@@ -38,7 +38,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <Link href="/claims">File a Claim</Link>
             <Link href="/track">Track Claim</Link>
             <Link href="/feedback">Feedback</Link>
-            <Link href="/auth/login">Sign In</Link>
+            <Link href="/login">Sign In</Link>
           </div>
           <p className={styles.footerCopy}>
             Britam Insurance PLC - Motor Insurance Claims Platform

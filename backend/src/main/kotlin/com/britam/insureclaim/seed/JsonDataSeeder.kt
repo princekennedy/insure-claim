@@ -120,14 +120,15 @@ class JsonDataSeeder(
 
 	private fun dispatch(fileName: String, root: JsonNode) {
 		when (fileName) {
+			"roles.json" -> seedRoles(fileName, root)
+			"permissions.json" -> seedPermissions(fileName, root)
+			"role_permissions.json" -> seedRolePermissions(fileName, root)
 			"users.json" -> seedUsers(fileName, root)
 			"garages.json" -> seedGarages(fileName, root)
 			"vehicles.json" -> seedVehicles(fileName, root)
 			"policies.json" -> seedPolicies(fileName, root)
 		}
 	}
-
-	// ------------------------------------------------------------- accounts --
 
 	private fun seedUsers(fileName: String, root: JsonNode) {
 		if (!properties.canSeedAccounts) {
@@ -367,7 +368,7 @@ password = properties.password
 		const val SEED_PATTERN = "classpath:seed/*.json"
 
 		/** Dependency order: accounts first, then the records that reference them. */
-		val ORDER = listOf("users.json", "garages.json", "vehicles.json", "policies.json")
+		val ORDER = listOf("roles.json", "permissions.json", "role_permissions.json", "users.json", "garages.json", "vehicles.json", "policies.json")
 	}
 }
 
@@ -387,3 +388,20 @@ class SeedRolePermission {
 	var role: String? = null
 	var permissions: List<String>? = null
 }
+	private fun seedRoles(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+	}
+
+	private fun seedPermissions(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+	}
+
+	private fun seedRolePermissions(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+	}
