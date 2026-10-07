@@ -1,66 +1,49 @@
 package com.britam.insureclaim.role
 
-import com.britam.insureclaim.common.AuditableVersionedEntity
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.Table
-
-@Entity
-@Table(name = "roles")
-class Role(
-    @Column(name = "code", nullable = false, unique = true, length = 32)
-    var code: String = "",
-
-    @Column(name = "name", nullable = false, length = 160)
-    var name: String = "",
-
-    @Column(name = "description", length = 255)
-    var description: String? = null,
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "role_permissions",
-        joinColumns = [JoinColumn(name = "role_id")],
-        inverseJoinColumns = [JoinColumn(name = "permission_id")]
-    )
-    var permissions: MutableSet<com.britam.insureclaim.permission.Permission> = mutableSetOf(),
-) : AuditableVersionedEntity() {
-
-	companion object {
-		/** Staff role codes that can view all claims and perform administrative actions. */
-		val STAFF_CODES = setOf("ADMIN", "INSURER_ADMIN", "AGENT")
-
-		/** Looks up a role by its code, suitable for seed data and admin operations. */
-		fun fromCode(code: String): Role {
-			return Role().apply { this.code = code.uppercase() }
-		}
-
-		/** Pseudo-enumeration used by seeders and admin UIs that expect enum-like access. */
-		val entries: List<Role>
-			get() = listOf(
-				fromCode("ADMIN"),
-				fromCode("INSURER_ADMIN"),
-				fromCode("AGENT"),
-				fromCode("CUSTOMER"),
-			)
-
-		/** Convenience constant for customer role — matches AuthService.Role.CUSTOMER usage. */
-		val CUSTOMER: Role
-			get() = fromCode("CUSTOMER")
-
-		/** Convenience constants used by SecurityConfig: Role.ADMIN.name, Role.AGENT.name, Role.INSURER_ADMIN.name. */
-		val ADMIN: Role
-			get() = fromCode("ADMIN")
-		val AGENT: Role
-			get() = fromCode("AGENT")
-		val INSURER_ADMIN: Role
-			get() = fromCode("INSURER_ADMIN")
-	}
-}
+/**
+ * Role codes used across the portal. Roles are stored as a plain VARCHAR
+ * column on the users table rather than as a separate entity, so this class
+ * is a value-object constant holder rather than a JPA entity.
+ */
+class Role
 
 /** Extension functions on Role for authorization checks. */
-fun Role.isStaff(): Boolean = code in Role.STAFF_CODES
+fun Role.isStaff(): Boolean = this in Role.STAFF_CODES
+
+/** Role code constants and lookup helpers. */
+fun Role.Companion.fromCode(code: String): String = code.uppercase()
+
+val Role.Companion.STAFF_CODES: Set<String>
+	get() = setOf("ADMIN", "INSURER_ADMIN", "AGENT")
+
+val Role.Companion.entries: List<String>
+	get() = listOf(
+		"ADMIN",
+		"INSURER_ADMIN",
+		"AGENT",
+		"CUSTOMER",
+	)
+
+val Role.Companion.CUSTOMER: String
+	get() = "CUSTOMER"
+
+val Role.Companion.ADMIN: String
+	get() = "ADMIN"
+
+val Role.Companion.AGENT: String
+	get() = "AGENT"
+
+val Role.Companion.INSURER_ADMIN: String
+	get() = "INSURER_ADMIN"
+
+/** Resolves a role code to a human-readable display name. */
+fun roleNameFor(code: String): String? = when (code.uppercase()) {
+	"ADMIN" -> "Platform Administrator"
+	"INSURER_ADMIN" -> "Insurer Administrator"
+	"AGENT" -> "Claims Agent"
+	"CUSTOMER" -> "Policyholder"
+	else -> null
+}
+
+/** All valid role codes, for validation. */
+val VALID_ROLE_CODES: Set<String> = setOf("ADMIN", "INSURER_ADMIN", "AGENT", "CUSTOMER")
