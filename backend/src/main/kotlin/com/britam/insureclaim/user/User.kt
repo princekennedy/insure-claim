@@ -26,7 +26,7 @@ class User(
 
 	@Column(name = "nic", length = 32)
 	var nic: String? = null,	@Column(name = "role", nullable = false, length = 32)
-	var role: String = com.britam.insureclaim.role.CUSTOMER,
+	var role: String = com.britam.insureclaim.role.CUSTOMER.code,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,

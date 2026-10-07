@@ -31,7 +31,7 @@ class AuthService(
 	private val maxFailedAttempts = 5
 	private val lockoutDuration: Duration = Duration.ofMinutes(15)
 
-	private fun getCustomerRole(): String = com.britam.insureclaim.role.CUSTOMER
+	private fun getCustomerRole(): String = com.britam.insureclaim.role.CUSTOMER.code
 
 	fun register(request: RegisterRequest): TokenResponse {
 		validatePasswordStrength(request.password)
@@ -140,7 +140,7 @@ class AuthService(
 		pageable: Pageable,
 	): Page<User> = userRepository.search(
 		query = query?.trim()?.takeIf { it.isNotBlank() },
-		role = role,
+		role = role?.code,
 		pageable = pageable,
 	)
 

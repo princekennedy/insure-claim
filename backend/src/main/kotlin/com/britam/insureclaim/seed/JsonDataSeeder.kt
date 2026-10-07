@@ -148,26 +148,26 @@ class JsonDataSeeder(
 				val role = parseRole(fileName, seed.role)
 				val existing = userRepository.findByEmailIgnoreCase(email).orElse(null)
 				if (existing != null) {
-					if (existing.role != role) {
-						logger.warn(
-							"Seed {}: {} already exists with role {}; seed says {} - left untouched",
-							fileName,
-							email,
-							existing.role,
-							role,
-						)
-					}
-					present++
-					return@forEach
+				if (existing.role != role.code) {
+					logger.warn(
+						"Seed {}: {} already exists with role {}; seed says {} - left untouched",
+						fileName,
+						email,
+						existing.role,
+						role.code,
+					)
 				}
-				userRepository.save(
-					User().apply {
-						this.email = email
-						passwordHash = encodedPassword
-						this.fullName = fullName
-						phone = seed.phone
-						nic = seed.nic
-						this.role = role
+				present++
+				return@forEach
+			}
+			userRepository.save(
+				User().apply {
+					this.email = email
+					passwordHash = encodedPassword
+					this.fullName = fullName
+					phone = seed.phone
+					nic = seed.nic
+					this.role = role.code
 						enabled = seed.enabled ?: true
 						emailVerified = true
 					},
@@ -350,9 +350,9 @@ class JsonDataSeeder(
 		}
 	}
 
-	private fun parseRole(fileName: String, value: String?): Role {
+	private fun parseRole(fileName: String, value: String?): com.britam.insureclaim.role.Role {
 		val raw = requireText(fileName, value, "role").uppercase()
-		return Role.entries.firstOrNull { it.code == raw }
+		return com.britam.insureclaim.role.Role.entries.firstOrNull { it.code == raw }
 			?: throw IllegalStateException("Seed file $fileName has an unknown role: $value")
 }
 

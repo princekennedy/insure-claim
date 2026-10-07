@@ -112,7 +112,7 @@ class UserAdminController(
 
 	@Operation(summary = "Change a user's role (insurer admin or platform admin only)")
 	@PutMapping("/{userId}/role")
-	fun changeRole(@PathVariable userId: Long, @RequestParam role: com.britam.insureclaim.role.Role): UserResponse {
+	fun changeRole(@PathVariable userId: Long, @RequestParam role: String): UserResponse {
 		authService.updateRole(userId, role, currentUser.requireId())
 		val updated = authService.findById(userId)
 		return UserResponse.from(updated)
