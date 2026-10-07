@@ -46,7 +46,7 @@ class User(
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false, length = 32)
-	var role: Role = Role.CUSTOMER,
+	@ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)\r\n\t@JoinColumn(name = "role_id")\r\n\tvar role: com.britam.insureclaim.role.Role? = null,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
