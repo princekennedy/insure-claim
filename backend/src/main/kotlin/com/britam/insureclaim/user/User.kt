@@ -1,4 +1,4 @@
-﻿package com.britam.insureclaim.user
+package com.britam.insureclaim.user
 
 import com.britam.insureclaim.common.AuditableVersionedEntity
 import com.britam.insureclaim.role.Role
@@ -15,9 +15,6 @@ class User(
 
 	@Column(name = "password", nullable = false, length = 255)
 	var password: String = "",
-
-	@Column(name = "password_hash", nullable = false, length = 255)
-	var passwordHash: String = "",
 
 	@Column(name = "full_name", nullable = false, length = 160)
 	var fullName: String = "",

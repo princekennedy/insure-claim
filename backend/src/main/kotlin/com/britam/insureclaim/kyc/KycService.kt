@@ -278,7 +278,7 @@ class KycService(
 		if (waiting.isEmpty) return
 		val systemActor = User().apply {
 			email = SYSTEM_ACTOR_EMAIL
-			passwordHash = ""
+			password = ""
 			fullName = "Digital KYC"
 			role = "ADMIN"
 		}

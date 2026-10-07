@@ -41,7 +41,7 @@ class AuthService(
 		}
 		val user = User(
 			email = email,
-			passwordHash = passwordEncoder.encode(request.password)!!,
+			password = passwordEncoder.encode(request.password)!!,
 			fullName = request.fullName.trim(),
 			phone = request.phone?.trim(),
 			nic = request.nic?.trim()?.uppercase(),
@@ -68,7 +68,7 @@ class AuthService(
 		if (!user.enabled) {
 			throw UnauthorizedException("This account has been disabled", "ACCOUNT_DISABLED")
 		}
-		if (!passwordEncoder.matches(request.password, user.passwordHash)) {
+		if (!passwordEncoder.matches(request.password, user.password)) {
 			recordFailedLogin(user, now)
 			throw UnauthorizedException("Invalid email or password", "INVALID_CREDENTIALS")
 		}
@@ -117,14 +117,14 @@ class AuthService(
 
 	fun changePassword(userId: Long, request: ChangePasswordRequest) {
 		val user = findById(userId)
-		if (!passwordEncoder.matches(request.currentPassword, user.passwordHash)) {
+		if (!passwordEncoder.matches(request.currentPassword, user.password)) {
 			throw BusinessRuleException("Current password is incorrect", "WRONG_PASSWORD")
 		}
-		if (passwordEncoder.matches(request.newPassword, user.passwordHash)) {
+		if (passwordEncoder.matches(request.newPassword, user.password)) {
 			throw BusinessRuleException("New password must be different from the current one", "PASSWORD_UNCHANGED")
 		}
 		validatePasswordStrength(request.newPassword)
-		user.passwordHash = passwordEncoder.encode(request.newPassword)!!
+		user.password = passwordEncoder.encode(request.newPassword)!!
 		userRepository.save(user)
 		refreshTokenRepository.findActiveByUser(userId).forEach { it.revoke() }
 	}

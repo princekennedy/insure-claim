@@ -15,9 +15,9 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <span className={styles.logoText}>InsureClaim</span>
           </Link>
           <nav className={styles.nav}>
-            <Link href="/claims" className={styles.navLink}>File a Claim</Link>
+            <Link href="/file-claim" className={styles.navLink}>File a Claim</Link>
             <Link href="/track" className={styles.navLink}>Track Claim</Link>
-            <Link href="/feedback" className={styles.navLink}>Feedback</Link>
+            <Link href="/submit-feedback" className={styles.navLink}>Feedback</Link>
             <Link href="/login" className={styles.navButton}>Sign In</Link>
           </nav>
         </div>
@@ -35,9 +35,9 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <span>InsureClaim Portal</span>
           </div>
           <div className={styles.footerLinks}>
-            <Link href="/claims">File a Claim</Link>
+            <Link href="/file-claim">File a Claim</Link>
             <Link href="/track">Track Claim</Link>
-            <Link href="/feedback">Feedback</Link>
+            <Link href="/submit-feedback">Feedback</Link>
             <Link href="/login">Sign In</Link>
           </div>
           <p className={styles.footerCopy}>

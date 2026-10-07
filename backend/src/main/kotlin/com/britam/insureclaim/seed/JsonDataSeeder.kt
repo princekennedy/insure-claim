@@ -5,6 +5,7 @@ import com.britam.insureclaim.garage.GarageRepository
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.policy.PolicyRepository
 import com.britam.insureclaim.policy.PolicyStatus
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.Vehicle
@@ -34,6 +35,7 @@ class SeedGarage {
 
 class SeedUser {
     var email: String? = null
+    var password: String? = null
     var fullName: String? = null
     var phone: String? = null
     var nic: String? = null
@@ -81,6 +83,11 @@ class JsonDataSeeder(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val resolver = PathMatchingResourcePatternResolver()
 
+    companion object {
+        private const val SEED_PATTERN = "classpath:seed/*.json"
+        private val ORDER = listOf("users.json", "garages.json", "vehicles.json", "policies.json")
+    }
+
     override fun run(args: ApplicationArguments) {
         if (!properties.enabled) {
             logger.info("JSON seeding is disabled (insureclaim.seed.enabled=false)")
@@ -111,6 +118,46 @@ class JsonDataSeeder(
         }
     }
 
+    // ── helpers ──────────────────────────────────────────────────────────
+
+    private fun <T> items(fileName: String, root: JsonNode, clazz: Class<T>): List<T> {
+        val arrayNode = root.path("items").takeIf { it.isArray }
+            ?: root.takeIf { it.isArray }
+            ?: throw IllegalStateException("Seed $fileName: expected a top-level array or an 'items' array")
+        val list = mutableListOf<T>()
+        for (element in arrayNode) {
+            list.add(objectMapper.treeToValue(element, clazz))
+        }
+        return list
+    }
+
+    private fun requireText(fileName: String, value: String?, fieldName: String): String =
+        value?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("Seed $fileName: '$fieldName' is required and must not be blank")
+
+    private fun parseRole(fileName: String, code: String?): Role {
+        val raw = code?.uppercase()?.trim()
+            ?: throw IllegalStateException("Seed $fileName: 'role' is required")
+        return try {
+            Role.fromCode(raw)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalStateException("Seed $fileName: unknown role '$raw'", e)
+        }
+    }
+
+    private fun requireAccountsSeedable(fileName: String): Boolean {
+        if (!properties.canSeedAccounts) {
+            logger.warn(
+                "Skipping {} - no seed password configured. Set INSURECLAIM_SEED_PASSWORD to seed accounts.",
+                fileName,
+            )
+            return false
+        }
+        return true
+    }
+
+    // ── seeders ─────────────────────────────────────────────────────────
+
     private fun seedUsers(fileName: String, root: JsonNode) {
         if (!properties.canSeedAccounts) {
             logger.warn(
@@ -119,12 +166,16 @@ class JsonDataSeeder(
             )
             return
         }
-        val encodedPassword = passwordEncoder.encode(properties.password)
-            ?: throw IllegalStateException("Password encoder could not hash the seed password")
         var inserted = 0
         var present = 0
         transactionTemplate.executeWithoutResult {
             items(fileName, root, SeedUser::class.java).forEach { seed ->
+                val rawPassword = seed.password ?: properties.password
+                if (rawPassword.isBlank()) {
+                    throw IllegalStateException("Seed $fileName: password is required for ${seed.email}")
+                }
+                val encodedPassword = passwordEncoder.encode(rawPassword)!!
+
                 val email = requireText(fileName, seed.email, "email").lowercase()
                 val fullName = requireText(fileName, seed.fullName, "fullName")
                 val role = parseRole(fileName, seed.role)
@@ -145,7 +196,7 @@ class JsonDataSeeder(
                 userRepository.save(
                     User().apply {
                         this.email = email
-                        passwordHash = encodedPassword
+                        password = encodedPassword
                         this.fullName = fullName
                         phone = seed.phone
                         nic = seed.nic
@@ -201,5 +252,95 @@ class JsonDataSeeder(
         transactionTemplate.executeWithoutResult {
             items(fileName, root, SeedVehicle::class.java).forEach { seed ->
                 val registration = requireText(fileName, seed.registrationNumber, "registrationNumber")
-                val owner = userRepository.findByEmailIgnoreCase(
-                    req
+                val ownerEmail = requireText(fileName, seed.ownerEmail, "ownerEmail").lowercase()
+                val owner = userRepository.findByEmailIgnoreCase(ownerEmail).orElse(null)
+                if (owner == null) {
+                    logger.warn("Seed {}: owner {} not found for vehicle {} - skipped", fileName, ownerEmail, registration)
+                    orphaned++
+                    return@forEach
+                }
+                if (vehicleRepository.findByRegistrationNumberIgnoreCase(registration).isPresent) {
+                    present++
+                    return@forEach
+                }
+                vehicleRepository.save(
+                    Vehicle().apply {
+                        this.owner = owner
+                        registrationNumber = registration
+                        make = seed.make ?: ""
+                        model = seed.model ?: ""
+                        year = seed.year ?: 0
+                        color = seed.color
+                        chassisNumber = seed.chassisNumber
+                        engineNumber = seed.engineNumber
+                    },
+                )
+                inserted++
+            }
+        }
+        if (orphaned > 0) {
+            logger.warn("Seed {}: {} vehicles skipped (owner not found)", fileName, orphaned)
+        }
+        logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+    }
+
+    private fun seedPolicies(fileName: String, root: JsonNode) {
+        if (!requireAccountsSeedable(fileName)) return
+        var inserted = 0
+        var present = 0
+        var skipped = 0
+        transactionTemplate.executeWithoutResult {
+            items(fileName, root, SeedPolicy::class.java).forEach { seed ->
+                val policyNumber = requireText(fileName, seed.policyNumber, "policyNumber")
+                val customerEmail = requireText(fileName, seed.customerEmail, "customerEmail").lowercase()
+                val vehicleReg = requireText(fileName, seed.vehicleRegistration, "vehicleRegistration")
+
+                if (policyRepository.findByPolicyNumber(policyNumber).isPresent) {
+                    present++
+                    return@forEach
+                }
+                val customer = userRepository.findByEmailIgnoreCase(customerEmail).orElse(null)
+                if (customer == null) {
+                    logger.warn("Seed {}: customer {} not found for policy {} - skipped", fileName, customerEmail, policyNumber)
+                    skipped++
+                    return@forEach
+                }
+                val vehicle = vehicleRepository.findByRegistrationNumberIgnoreCase(vehicleReg).orElse(null)
+                if (vehicle == null) {
+                    logger.warn("Seed {}: vehicle {} not found for policy {} - skipped", fileName, vehicleReg, policyNumber)
+                    skipped++
+                    return@forEach
+                }
+                val status = seed.status?.let {
+                    try {
+                        PolicyStatus.valueOf(it.uppercase())
+                    } catch (_: IllegalArgumentException) {
+                        logger.warn("Seed {}: unknown status '{}' for policy {} - defaulting to ACTIVE", fileName, it, policyNumber)
+                        PolicyStatus.ACTIVE
+                    }
+                } ?: PolicyStatus.ACTIVE
+
+                policyRepository.save(
+                    Policy().apply {
+                        this.policyNumber = policyNumber
+                        this.customer = customer
+                        this.vehicle = vehicle
+                        insurerName = seed.insurerName ?: Policy.DEFAULT_INSURER
+                        productCode = seed.productCode ?: Policy.DEFAULT_PRODUCT
+                        startDate = seed.startDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
+                        endDate = seed.endDate?.let { LocalDate.parse(it) } ?: LocalDate.now().plusYears(1)
+                        premiumAmount = seed.premiumAmount ?: BigDecimal.ZERO
+                        sumInsured = seed.sumInsured ?: BigDecimal.ZERO
+                        excessAmount = seed.excessAmount ?: BigDecimal.ZERO
+                        this.status = status
+                    },
+                )
+                inserted++
+            }
+        }
+        if (skipped > 0) {
+            logger.warn("Seed {}: {} policies skipped (missing references)", fileName, skipped)
+        }
+        logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+    }
+}
