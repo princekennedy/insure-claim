@@ -11,7 +11,6 @@ import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.common.ValidationException
 import com.britam.insureclaim.storage.LocalFileStorageService
-import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserAccountService
 import org.slf4j.LoggerFactory
@@ -23,15 +22,6 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
-/**
- * Digital identity verification required before a claim can be assessed.
- *
- * Submissions are screened locally first: the document number must be
- * structurally valid, the printed name must match the account holder and the
- * date of birth must be plausible. Clean submissions clear instantly so a
- * payout is not held up; anything ambiguous is parked in the staff queue with the
- * reason attached rather than silently rejected.
- */
 @Service
 @Transactional
 class KycService(
@@ -41,12 +31,9 @@ class KycService(
 	private val accountService: UserAccountService,
 	private val storageService: LocalFileStorageService,
 ) {
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	private val minimumClaimantAge = 18
-
-	// ------------------------------------------------------------ customer ----
 
 	fun submit(
 		userId: Long,
@@ -56,7 +43,7 @@ class KycService(
 		selfie: MultipartFile?,
 	): KycVerificationResponse {
 		val customer = accountService.requireCustomer(userId)
-		if (customer.role.isStaff()) {
+		if (customer.isStaff()) {
 			throw BusinessRuleException("Staff accounts do not submit identity documents", "STAFF_CANNOT_SUBMIT_KYC")
 		}
 		if (frontImage == null) {
@@ -69,8 +56,6 @@ class KycService(
 		val documentNumber = request.documentNumber.trim().uppercase()
 		val fullName = request.fullNameOnDocument.trim()
 
-		// One row per document type per customer (`uq_kyc_user_document`), so a
-		// fresh submission overwrites the previous one instead of adding history.
 		val existing = kycRepository.findByUserIdAndDocumentType(userId, request.documentType).orElse(null)
 		if (existing != null && existing.status.isBlocking) {
 			throw ConflictException(
@@ -101,7 +86,9 @@ class KycService(
 			dateOfBirth = request.dateOfBirth,
 		)
 
-		val verification = existing ?: KycVerification(user = customer)
+		val verification = existing ?: KycVerification().apply {
+			this.user = customer
+		}
 		verification.apply {
 			this.user = customer
 			this.claim = claim
@@ -116,8 +103,6 @@ class KycService(
 			this.failureReason = screening.reason
 			this.confidenceScore = screening.confidence
 			this.expiresAt = screening.expiresAt
-			// Automatic rejections are fixable data-entry problems, so the customer
-			// may retry; staff rejections decide their own resubmission policy.
 			this.resubmissionAllowed = screening.status == KycStatus.REJECTED
 			this.verifiedBy = null
 			this.verifiedAt = null
@@ -152,12 +137,6 @@ class KycService(
 		return verification.toResponse()
 	}
 
-	// --------------------------------------------------------------- staff ----
-
-	/**
-	 * Manual decision on a parked submission. Rejecting without a resubmit path
-	 * closes the request outright; otherwise the customer may correct and retry.
-	 */
 	fun decide(
 		verificationId: Long,
 		reviewer: User,
@@ -165,7 +144,7 @@ class KycService(
 		reason: String?,
 		resubmitAllowed: Boolean,
 	): KycVerificationResponse {
-		if (!reviewer.role.isStaff()) {
+		if (!reviewer.isStaff()) {
 			throw ForbiddenException("Only insurer staff can decide a verification")
 		}
 		val verification = kycRepository.findById(verificationId)
@@ -192,8 +171,6 @@ class KycService(
 			)
 			releaseClaimsAwaitingKyc(verification.user)
 		} else {
-			// A "resubmit allowed" rejection still closes this record; the flag is
-			// what tells the customer they may send a corrected document.
 			verification.status = KycStatus.REJECTED
 			verification.resubmissionAllowed = resubmitAllowed
 			verification.failureReason = reason?.trim()?.takeIf { it.isNotEmpty() }
@@ -202,8 +179,9 @@ class KycService(
 			verification.expiresAt = null
 		}
 
-		val saved = kycRepository.save(verification)			log.info("KYC {} {} by {}", saved.id, if (approved) "approved" else "rejected", reviewer.email)
-			return saved.toResponse()
+		val saved = kycRepository.save(verification)
+		log.info("KYC {} {} by {}", saved.id, if (approved) "approved" else "rejected", reviewer.email)
+		return saved.toResponse()
 	}
 
 	@Transactional(readOnly = true)
@@ -215,9 +193,8 @@ class KycService(
 		}
 	}
 
-	/** Streams one document image to a reviewer; never exposed to customers. */
 	fun image(verificationId: Long, side: KycImageSide, reviewer: User): ImagePayload {
-		if (!reviewer.role.isStaff()) {
+		if (!reviewer.isStaff()) {
 			throw ForbiddenException("Only insurer staff can open identity document images")
 		}
 		val verification = kycRepository.findById(verificationId)
@@ -234,21 +211,13 @@ class KycService(
 		)
 	}
 
-	// ------------------------------------------------------------ internals ----
-
 	private data class Screening(
 		val status: KycStatus,
 		val reason: String?,
 		val confidence: BigDecimal,
-		/** Set only when the submission clears screening outright. */
 		val expiresAt: LocalDate?,
 	)
 
-	/**
-	 * Runs the checks available without a third-party identity provider. Only a
-	 * clearly unusable document is auto-rejected; everything else waits for a
-	 * human so a false negative cannot delay a legitimate payout.
-	 */
 	private fun applyAutomatedScreening(
 		user: User,
 		documentType: KycDocumentType,
@@ -256,13 +225,12 @@ class KycService(
 		fullName: String,
 		dateOfBirth: LocalDate?,
 	): Screening {
-		val candidate = KycVerification(
-			user = user,
-			documentType = documentType,
-			documentNumber = documentNumber,
-			fullNameOnDoc = fullName,
-			dateOfBirth = dateOfBirth,
-		)
+		val candidate = KycVerification()
+		candidate.user = user
+		candidate.documentType = documentType
+		candidate.documentNumber = documentNumber
+		candidate.fullNameOnDoc = fullName
+		candidate.dateOfBirth = dateOfBirth
 
 		if (!candidate.structurallyValidNumber()) {
 			return Screening(
@@ -300,11 +268,6 @@ class KycService(
 		return Screening(KycStatus.VERIFIED, null, STRUCTURAL_PASS_CONFIDENCE, expiryFor(documentType))
 	}
 
-	/**
-	 * Identity is the gate in front of assessment, so a fresh approval moves any
-	 * claim that has been waiting on it. The transition is attributed to the
-	 * automated check rather than the customer, who cannot trigger it.
-	 */
 	private fun releaseClaimsAwaitingKyc(customer: User) {
 		val customerId = customer.id ?: return
 		val waiting = claimRepository.findByCustomerIdAndStatusInOrderBySubmittedAtDesc(
@@ -314,12 +277,12 @@ class KycService(
 		)
 		if (waiting.isEmpty) return
 
-		val systemActor = User(
-			email = SYSTEM_ACTOR_EMAIL,
-			passwordHash = "",
-			fullName = "Digital KYC",
-			role = com.britam.insureclaim.role.Role.ADMIN,
-		)
+		val systemActor = User().apply {
+			email = SYSTEM_ACTOR_EMAIL
+			passwordHash = ""
+			fullName = "Digital KYC"
+			this.role = com.britam.insureclaim.role.Role.ADMIN
+		}
 		waiting.forEach { claim ->
 			claimService.transition(
 				claim = claim,

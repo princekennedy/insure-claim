@@ -20,10 +20,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 
-/**
- * Everything a signed-in customer can do to their own profile, vehicles and
- * policies, plus the numbers shown on their dashboard.
- */
 @Service
 @Transactional
 class UserAccountService(
@@ -34,10 +30,7 @@ class UserAccountService(
 	private val kycRepository: KycVerificationRepository,
 	private val supportConcernRepository: SupportConcernRepository,
 ) {
-
 	private val maxVehiclesPerCustomer = 10
-
-	// ------------------------------------------------------------ profile ----
 
 	fun updateProfile(userId: Long, request: UpdateProfileRequest): User {
 		val user = userRepository.findById(userId).orElseThrow { NotFoundException("User", userId) }
@@ -46,8 +39,6 @@ class UserAccountService(
 		request.nic?.let { user.nic = it.trim().uppercase() }
 		return userRepository.save(user)
 	}
-
-	// ----------------------------------------------------------- vehicles ----
 
 	fun listVehicles(userId: Long): List<VehicleResponse> =
 		vehicleRepository.findByOwnerId(userId)
@@ -118,8 +109,6 @@ class UserAccountService(
 		vehicleRepository.delete(vehicle)
 	}
 
-	// ----------------------------------------------------------- policies ----
-
 	@Transactional(readOnly = true)
 	fun listPolicies(userId: Long): List<PolicyResponse> {
 		val today = LocalDate.now()
@@ -138,8 +127,6 @@ class UserAccountService(
 		ensureOwnership(userId, policy.customer.id)
 		return PolicyResponse.from(policy)
 	}
-
-	// ---------------------------------------------------------- dashboard ----
 
 	@Transactional(readOnly = true)
 	fun customerSummary(userId: Long): CustomerSummary {
@@ -164,8 +151,6 @@ class UserAccountService(
 		)
 	}
 
-	// ------------------------------------------------------------ helpers ----
-
 	private fun requireReadableVehicle(userId: Long, vehicleId: Long): Vehicle {
 		val vehicle = vehicleRepository.findById(vehicleId)
 			.orElseThrow { NotFoundException("Vehicle", vehicleId) }
@@ -173,16 +158,14 @@ class UserAccountService(
 		return vehicle
 	}
 
-	/** Staff may act on any customer's record; customers only on their own. */
 	private fun ensureOwnership(actingUserId: Long, ownerId: Long?) {
 		if (actingUserId == ownerId) return
 		val acting = userRepository.findById(actingUserId).orElseThrow { NotFoundException("User", actingUserId) }
-		if (!acting.role?.isStaff() == true) {
+		if (!acting.isStaff()) {
 			throw ForbiddenException("This record belongs to another customer")
 		}
 	}
 
-	/** Resolves the policy covering a vehicle, refusing claims on uncovered vehicles. */
 	fun requirePolicyForVehicle(customerId: Long, vehicleId: Long): Policy =
 		policyRepository.findByCustomerAndVehicle(customerId, vehicleId)
 			.orElseThrow {
@@ -198,5 +181,5 @@ class UserAccountService(
 	fun requireCustomer(customerId: Long): User = requireUser(customerId)
 
 	fun isStaff(userId: Long): Boolean =
-		userRepository.findById(userId).map { it.role?.isStaff() ?: false }.orElse(false)
+		userRepository.findById(userId).map { it.isStaff() }.orElse(false)
 }

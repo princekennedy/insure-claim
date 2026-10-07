@@ -11,7 +11,6 @@ import com.britam.insureclaim.common.ForbiddenException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.GarageProperties
-import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserAccountService
 import org.slf4j.LoggerFactory
@@ -24,13 +23,6 @@ import java.security.SecureRandom
 import java.time.Duration
 import java.time.Instant
 
-/**
- * Garage directory, repair-job lifecycle and post-repair feedback.
- *
- * Every method that maps a response is transactional on purpose: `open-in-view`
- * is disabled, so `claim.vehicle`, `job.garage` and `feedback.garage` are lazy
- * and cannot be touched once the session closes.
- */
 @Service
 class GarageService(
 	private val garageRepository: GarageRepository,
@@ -40,16 +32,12 @@ class GarageService(
 	private val accountService: UserAccountService,
 	private val properties: GarageProperties,
 ) {
-
 	companion object {
 		private val log = LoggerFactory.getLogger(GarageService::class.java)
 		private val random = SecureRandom()
 
-		/** Reference the garage and customer both quote on the phone. */
 		private const val REFERENCE_PREFIX = "RJ"
 	}
-
-	// ------------------------------------------------------------ directory ---
 
 	@Transactional(readOnly = true)
 	fun searchGarages(
@@ -71,10 +59,6 @@ class GarageService(
 		return GarageResponse.from(garage)
 	}
 
-	/**
-	 * Garages the insurer should act on: low ratings, complaints, slow
-	 * turnaround or simply not finishing the work they accepted.
-	 */
 	@Transactional(readOnly = true)
 	fun performanceWatchlist(): List<GaragePerformanceSummary> {
 		val activeStatuses = RepairJobStatus.entries.filter { !it.isFinished }
@@ -103,12 +87,6 @@ class GarageService(
 			)
 	}
 
-	// ---------------------------------------------------------- assignment ---
-
-	/**
-	 * Hands an approved claim to a panel garage. The claim and the repair job
-	 * move together so the customer never sees one without the other.
-	 */
 	@Transactional
 	fun assignGarage(claimId: Long, request: AssignGarageRequest, actor: User): RepairJobResponse {
 		requireStaff(actor, "Only insurer staff can assign a garage")
@@ -144,13 +122,9 @@ class GarageService(
 			approvedAmount = request.approvedAmount ?: request.quotedAmount,
 			estimatedDays = request.estimatedDays,
 			warrantyDays = request.warrantyDays,
-			notes = request.notes?.trim()?.takeIf { it.isNotEmpty() },				assignedAt = Instant.now(),
-			)
-
-	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
-
-	fun com.britam.insureclaim.user.User.canViewAllClaims(): Boolean = this.role?.canViewAllClaims() ?: false
-
+			notes = request.notes?.trim()?.takeIf { it.isNotEmpty() },
+			assignedAt = Instant.now(),
+		)
 		val saved = repairJobRepository.save(job)
 
 		val moved = claimService.transition(
@@ -174,7 +148,7 @@ class GarageService(
 	fun jobForClaim(claimId: Long, actor: User): RepairJobResponse? {
 		val claim = claimRepository.findByIdWithDetails(claimId)
 			.orElseThrow { NotFoundException("Claim", claimId) }
-		if (!actor.role.canViewAllClaims() && claim.customer.id != actor.id) {
+		if (!actor.canViewAllClaims() && claim.customer.id != actor.id) {
 			throw ForbiddenException("You do not have access to this claim")
 		}
 		return repairJobRepository.findByClaimId(claimId)
@@ -186,7 +160,7 @@ class GarageService(
 	fun getJob(jobId: Long, actor: User): RepairJobResponse {
 		val job = requireJob(jobId)
 		val claimCustomerId = job.claim.customer.id
-		if (!actor.role.canViewAllClaims() && claimCustomerId != actor.id) {
+		if (!actor.canViewAllClaims() && claimCustomerId != actor.id) {
 			throw ForbiddenException("You do not have access to this repair job")
 		}
 		return job.toResponse(canSubmitFeedback = feedbackAllowed(job.claim))
@@ -202,7 +176,7 @@ class GarageService(
 	): PageResponse<RepairJobResponse> {
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100))
 		val resolvedGarageId = garageId
-			?: if (actor.role.isStaff()) null else throw ForbiddenException("Customers cannot list repair jobs")
+			?: if (actor.isStaff()) null else throw ForbiddenException("Customers cannot list repair jobs")
 		val statuses = if (status != null) {
 			setOf(status)
 		} else {
@@ -222,12 +196,6 @@ class GarageService(
 		)
 	}
 
-	// ------------------------------------------------------------- lifecycle --
-
-	/**
-	 * Moves the repair along and keeps the claim in step. Turnaround and job
-	 * counters are refreshed here so garage scoring never lags the data.
-	 */
 	@Transactional
 	fun updateJob(jobId: Long, request: UpdateRepairJobRequest, actor: User): RepairJobResponse {
 		requireStaff(actor, "Only insurer staff can update a repair job")
@@ -305,24 +273,17 @@ class GarageService(
 		return saved.toResponse(canSubmitFeedback = false)
 	}
 
-	// --------------------------------------------------------------- helpers --
-
 	private fun requireStaff(actor: User, message: String) {
-		if (!actor.role.isStaff()) throw ForbiddenException(message)
+		if (!actor.isStaff()) throw ForbiddenException(message)
 	}
 
 	private fun requireJob(jobId: Long): RepairJob =
 		repairJobRepository.findByIdWithDetails(jobId)
 			.orElseThrow { NotFoundException("Repair job", jobId) }
 
-	/** Feedback unlocks once the vehicle is back with the customer. */
 	private fun feedbackAllowed(claim: Claim): Boolean =
 		claim.status == ClaimStatus.SETTLED || claim.status == ClaimStatus.CLOSED
 
-	/**
-	 * Recomputes the rolling garage score from the jobs it has actually run.
-	 * Ratings are handled separately by the feedback service.
-	 */
 	@Transactional
 	fun refreshGarageScore(garage: Garage) {
 		val since = Instant.now().minus(Duration.ofDays(properties.performanceWindowDays.toLong()))
@@ -339,12 +300,6 @@ class GarageService(
 		garageRepository.save(garage)
 	}
 
-	/**
-	 * Thresholds are deliberately conservative: a garage is only punished for
-	 * sustained, evidence-backed weakness so one bad job cannot suspend a panel.
-	 * All of them live in `insureclaim.garage` so the insurer can tune them
-	 * without a redeploy.
-	 */
 	internal fun scoreGarage(garage: Garage): GaragePerformanceStatus {
 		if (!garage.active) return GaragePerformanceStatus.SUSPENDED
 
@@ -369,7 +324,6 @@ class GarageService(
 		}
 	}
 
-	/** A 1-star average off a single review is noise, not a trend. */
 	private fun ratingCountMeaningful(garage: Garage): Boolean =
 		garage.ratingCount >= properties.minimumRatingCount
 

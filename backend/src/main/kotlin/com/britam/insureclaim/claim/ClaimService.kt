@@ -178,7 +178,7 @@ class ClaimService(
 	fun findAccessible(claimId: Long, actor: User): Claim {
 		val claim = claimRepository.findByIdWithDetails(claimId)
 			.orElseThrow { NotFoundException("Claim", claimId) }
-		if (!actor.role.canViewAllClaims() && claim.customer.id != actor.id) {
+		if (!actor.canViewAllClaims() && claim.customer.id != actor.id) {
 			// Deliberately a 403 rather than a 404 so the API does not become a
 			// claim-existence oracle for other customers' ids.
 			throw ForbiddenException("You do not have access to this claim")
@@ -189,7 +189,7 @@ class ClaimService(
 	fun findByNumber(claimNumber: String, actor: User): Claim {
 		val claim = claimRepository.findByClaimNumber(claimNumber.trim().uppercase())
 			.orElseThrow { NotFoundException("Claim", claimNumber) }
-		if (!actor.role.canViewAllClaims() && claim.customer.id != actor.id) {
+		if (!actor.canViewAllClaims() && claim.customer.id != actor.id) {
 			throw ForbiddenException("You do not have access to this claim")
 		}
 		return claim
@@ -211,7 +211,7 @@ class ClaimService(
 		page: Int,
 		size: Int,
 	): PageResponse<ClaimSummaryResponse> {
-		val scopedToCustomer = !actor.role.canViewAllClaims()
+		val scopedToCustomer = !actor.canViewAllClaims()
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100), Sort.by("submittedAt").descending())
 
 		val spec = Specification<Claim> { root, _, cb ->
@@ -278,7 +278,7 @@ class ClaimService(
 				"ILLEGAL_STATUS_TRANSITION",
 			)
 		}
-		if (!actor.role.isStaff() && target !in ClaimStatus.CUSTOMER_TRANSITIONS[from].orEmpty()) {
+		if (!actor.isStaff() && target !in ClaimStatus.CUSTOMER_TRANSITIONS[from].orEmpty()) {
 			throw ForbiddenException("You cannot move this claim to ${target.isCustomerVisibleLabel}")
 		}
 
@@ -504,7 +504,7 @@ class ClaimService(
 		}
 
 		val repair = activeRepairJob(claim)?.let(::toRepairSummary)
-		val allowedTargets = if (actor.role.isStaff()) {
+		val allowedTargets = if (actor.isStaff()) {
 			ClaimStatus.allowedNextStates(claim.status)
 		} else {
 			ClaimStatus.CUSTOMER_TRANSITIONS[claim.status].orEmpty()
@@ -517,12 +517,12 @@ class ClaimService(
 			incidentLocalDate = claim.incidentLocalDate,
 			reportedByPolice = claim.reportedByPolice,
 			thirdPartyInvolved = claim.thirdPartyInvolved,
-			fraudScore = if (actor.role.isStaff()) claim.fraudScore else 0,
+			fraudScore = if (actor.isStaff()) claim.fraudScore else 0,
 			customer = ClaimPartyResponse(
 				id = claim.customer.id ?: 0L,
 				fullName = claim.customer.fullName,
-				email = if (actor.role.isStaff()) claim.customer.email else "",
-				phone = if (actor.role.isStaff()) claim.customer.phone else null,
+				email = if (actor.isStaff()) claim.customer.email else "",
+				phone = if (actor.isStaff()) claim.customer.phone else null,
 			),
 			vehicle = ClaimVehicleResponse(
 				id = claim.vehicle.id ?: 0L,
@@ -539,7 +539,7 @@ class ClaimService(
 				.filter { it != claim.status }
 				.map { ClaimStageOption(it, it.isCustomerVisibleLabel) },
 			repair = repair,
-			fraudAlerts = if (actor.role.isStaff()) {
+			fraudAlerts = if (actor.isStaff()) {
 				fraudDetectionService.alertsForClaim(claim.id ?: 0L)
 			} else {
 				emptyList()

@@ -146,7 +146,7 @@ class ClaimController(
 	): ResponseEntity<ClaimDocumentResponse> {
 		val actor = accountService.requireCustomer(currentUser.requireId())
 		val claim = claimService.findAccessible(claimId, actor)
-		if (!actor.role.isStaff() && claim.status.isTerminal) {
+		if (!actor.isStaff() && claim.status.isTerminal) {
 			throw BusinessRuleException(
 				"Evidence cannot be added to a ${claim.status.isCustomerVisibleLabel.lowercase()} claim",
 				"CLAIM_CLOSED",
