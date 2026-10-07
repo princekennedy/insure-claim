@@ -2,8 +2,6 @@
 
 CREATE TABLE fraud_alerts (
     id            BIGSERIAL PRIMARY KEY,
-    created_by    BIGINT,
-    updated_by    BIGINT,
     claim_id      BIGINT       NOT NULL REFERENCES claims (id) ON DELETE CASCADE,
     rule_code     VARCHAR(48)  NOT NULL,
     category      VARCHAR(32)  NOT NULL,
@@ -29,8 +27,6 @@ CREATE INDEX idx_fraud_alerts_severity ON fraud_alerts (severity, created_at DES
 
 CREATE TABLE chat_conversations (
     id            BIGSERIAL PRIMARY KEY,
-    created_by    BIGINT,
-    updated_by    BIGINT,
     user_id       BIGINT       REFERENCES users (id) ON DELETE SET NULL,
     reference     VARCHAR(48)  NOT NULL,
     claim_id      BIGINT       REFERENCES claims (id) ON DELETE SET NULL,
@@ -52,8 +48,6 @@ CREATE INDEX idx_chat_conversations_escalated ON chat_conversations (escalated)
 
 CREATE TABLE chat_messages (
     id                 BIGSERIAL PRIMARY KEY,
-    created_by    BIGINT,
-    updated_by    BIGINT,
     conversation_id    BIGINT       NOT NULL REFERENCES chat_conversations (id) ON DELETE CASCADE,
     sender             VARCHAR(16)  NOT NULL,
     content            TEXT         NOT NULL,
@@ -69,8 +63,6 @@ CREATE INDEX idx_chat_messages_conversation ON chat_messages (conversation_id, c
 -- Concerns raised through the chatbot that need a human response.
 CREATE TABLE support_concerns (
     id                 BIGSERIAL PRIMARY KEY,
-    created_by    BIGINT,
-    updated_by    BIGINT,
     conversation_id    BIGINT       REFERENCES chat_conversations (id) ON DELETE SET NULL,
     user_id            BIGINT       REFERENCES users (id) ON DELETE SET NULL,
     claim_id           BIGINT       REFERENCES claims (id) ON DELETE SET NULL,
