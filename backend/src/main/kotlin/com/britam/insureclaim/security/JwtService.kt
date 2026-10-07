@@ -36,7 +36,7 @@ class JwtService(private val properties: JwtProperties) {
 			get() = Duration.between(Instant.now(), expiresAt).seconds.coerceAtLeast(0)
 	}
 
-	fun issueAccessToken(userId: Long, email: String, role: com.britam.insureclaim.role.Role): IssuedToken {
+	fun issueAccessToken(userId: Long, email: String, role: String): IssuedToken {
 		val now = Instant.now()
 		val expiry = now.plus(properties.accessTokenTtl)
 		val claims = JWTClaimsSet.Builder()
@@ -47,7 +47,7 @@ class JwtService(private val properties: JwtProperties) {
 			.issueTime(Date.from(now))
 			.expirationTime(Date.from(expiry))
 			.claim("email", email)
-			.claim("role", role.code)
+			.claim("role", role)
 			.claim("typ", "access")
 			.build()
 

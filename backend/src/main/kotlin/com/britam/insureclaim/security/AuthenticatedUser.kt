@@ -11,12 +11,12 @@ import org.springframework.security.core.userdetails.UserDetails
 class AuthenticatedUser(
 	val id: Long,
 	val email: String,
-	val role: Role,
+	val role: String,
 	private val displayName: String,
 ) : UserDetails {
 
 	override fun getAuthorities(): Collection<GrantedAuthority> =
-		listOf(SimpleGrantedAuthority("ROLE_${role.code}"), SimpleGrantedAuthority("SCOPE_${role.code.lowercase()}"))
+		listOf(SimpleGrantedAuthority("ROLE_${role}"), SimpleGrantedAuthority("SCOPE_${role.lowercase()}"))
 
 	override fun getPassword(): String? = null
 
@@ -31,10 +31,10 @@ class AuthenticatedUser(
 	override fun isEnabled(): Boolean = true
 
 	val isStaff: Boolean
-		get() = role.code in setOf("ADMIN", "INSURER_ADMIN", "AGENT")
+		get() = role in setOf("ADMIN", "INSURER_ADMIN", "AGENT")
 
 	val name: String
 		get() = displayName
 
-	override fun toString(): String = "AuthenticatedUser(id=$id, role=${role.code})"
+	override fun toString(): String = "AuthenticatedUser(id=$id, role=$role)"
 }

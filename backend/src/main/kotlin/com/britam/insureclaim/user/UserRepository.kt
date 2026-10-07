@@ -1,6 +1,5 @@
 package com.britam.insureclaim.user
 
-import com.britam.insureclaim.role.Role
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -28,12 +27,12 @@ interface UserRepository : JpaRepository<User, Long> {
 	)
 	fun search(
 		@Param("query") query: String?,
-		@Param("role") role: Role?,
+		@Param("role") role: String?,
 		pageable: Pageable,
 	): Page<User>
 
 	@Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.enabled = true")
-	fun countActiveByRole(@Param("role") role: Role): Long
+	fun countActiveByRole(@Param("role") role: String): Long
 }
 
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {

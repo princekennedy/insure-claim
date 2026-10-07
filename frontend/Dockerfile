@@ -13,6 +13,7 @@ COPY eslint.config.mjs ./
 # Copy source code
 COPY app ./app
 COPY public ./public
+COPY lib ./lib
 
 # Install dependencies and build (eslint v9 is incompatible with eslint-config-next ^14; pin and legacy flags)
 RUN npm ci --legacy-peer-deps && npm run build

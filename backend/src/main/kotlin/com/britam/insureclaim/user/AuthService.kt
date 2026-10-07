@@ -24,7 +24,6 @@ class AuthService(
 	private val refreshTokenRepository: RefreshTokenRepository,
 	private val passwordEncoder: PasswordEncoder,
 	private val jwtService: JwtService,
-	private val roleRepository: com.britam.insureclaim.role.RoleRepository,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -32,9 +31,7 @@ class AuthService(
 	private val maxFailedAttempts = 5
 	private val lockoutDuration: Duration = Duration.ofMinutes(15)
 
-	private fun getCustomerRole(): com.britam.insureclaim.role.Role =
-		roleRepository.findByCodeIgnoreCase("CUSTOMER")
-			.orElseThrow { IllegalStateException("Customer role is not seeded") }
+	private fun getCustomerRole(): String = com.britam.insureclaim.role.CUSTOMER
 
 	fun register(request: RegisterRequest): TokenResponse {
 		validatePasswordStrength(request.password)
@@ -147,7 +144,10 @@ class AuthService(
 		pageable = pageable,
 	)
 
-	fun updateRole(targetUserId: Long, role: com.britam.insureclaim.role.Role, actingUserId: Long) {
+	fun updateRole(targetUserId: Long, role: String, actingUserId: Long) {
+		if (role !in com.britam.insureclaim.role.VALID_ROLE_CODES) {
+			throw BusinessRuleException("Unknown role: $role", "INVALID_ROLE")
+		}
 		val user = findById(targetUserId)
 		if (user.id == actingUserId) {
 			throw BusinessRuleException("You cannot change your own role", "SELF_ROLE_CHANGE")

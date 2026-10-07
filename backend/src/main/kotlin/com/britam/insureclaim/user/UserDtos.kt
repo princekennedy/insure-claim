@@ -3,6 +3,7 @@
 import com.britam.insureclaim.claim.ClaimStatus
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.vehicle.Vehicle
+import com.britam.insureclaim.role.roleNameFor
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Max
@@ -67,8 +68,8 @@ data class UserResponse(
 			email = user.email,
 			fullName = user.fullName,
 			phone = user.phone,
-			role = user.role?.code ?: "CUSTOMER",
-			roleName = user.role?.name,
+			role = user.role,
+			roleName = roleNameFor(user.role),
 			enabled = user.enabled,
 			initials = user.initials(),
 			lastLoginAt = user.lastLoginAt,

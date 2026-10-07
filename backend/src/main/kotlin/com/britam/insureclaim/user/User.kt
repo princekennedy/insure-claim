@@ -25,11 +25,8 @@ class User(
 	var phone: String? = null,
 
 	@Column(name = "nic", length = 32)
-	var nic: String? = null,
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "role_id")
-	var role: com.britam.insureclaim.role.Role? = null,
+	var nic: String? = null,	@Column(name = "role", nullable = false, length = 32)
+	var role: String = com.britam.insureclaim.role.CUSTOMER,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
@@ -50,7 +47,7 @@ class User(
 	fun isUsable(): Boolean = enabled && !isLocked()
 	fun fullNameOrEmail(): String = fullName.ifBlank { email }
 	fun initials(): String = fullName.ifBlank { email.take(2).uppercase() }
-	fun isStaff(): Boolean = role?.code in com.britam.insureclaim.role.Role.STAFF_CODES
+	fun isStaff(): Boolean = role in com.britam.insureclaim.role.STAFF_CODES
 	fun canViewAllClaims(): Boolean = isStaff()
 }
 
@@ -58,12 +55,12 @@ data class UserSummary(
 	val id: Long,
 	val email: String,
 	val fullName: String,
-	val role: com.britam.insureclaim.role.Role,
+	val role: String,
 )
 
 fun User.toSummary(): UserSummary = UserSummary(
 	id = id ?: 0L,
 	email = email,
 	fullName = fullName,
-	role = role ?: com.britam.insureclaim.role.Role.CUSTOMER,
+	role = role,
 )
