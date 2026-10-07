@@ -124,7 +124,7 @@ class KycVerification(
 	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	var updatedAt: Instant = Instant.now(),
-) {
+) : BaseEntity() {
 
 	/**
 	 * Offline name check used when no verification provider is configured. The

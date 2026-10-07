@@ -15,6 +15,7 @@ import com.britam.insureclaim.garage.GarageService
 import com.britam.insureclaim.garage.RepairJobRepository
 import com.britam.insureclaim.garage.toPublicResponse
 import com.britam.insureclaim.garage.toStaffResponse
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
@@ -93,14 +94,14 @@ class GarageFeedbackService(
 	@Transactional(readOnly = true)
 	fun forGarage(
 		garageId: Long,
-		actor: User,
+		actor: Role,
 		page: Int,
 		size: Int,
 	): PageResponse<GarageFeedbackResponse> {
 		garageRepository.findById(garageId).orElseThrow { NotFoundException("Garage", garageId) }
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100))
 		val page1 = feedbackRepository.findByGarageIdOrderByCreatedAtDesc(garageId, pageable)
-		val asStaff = actor.isStaff()
+		val asStaff = actor.code in Role.STAFF_CODES
 		return PageResponse(
 			content = page1.content.map { if (asStaff) it.toStaffResponse() else it.toPublicResponse() },
 			page = page1.number,

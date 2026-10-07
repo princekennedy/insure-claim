@@ -50,6 +50,8 @@ class User(
 	fun isUsable(): Boolean = enabled && !isLocked()
 	fun fullNameOrEmail(): String = fullName.ifBlank { email }
 	fun initials(): String = fullName.ifBlank { email.take(2).uppercase() }
+	fun isStaff(): Boolean = role?.code in com.britam.insureclaim.role.Role.STAFF_CODES
+	fun canViewAllClaims(): Boolean = isStaff()
 }
 
 data class UserSummary(
