@@ -1,13 +1,12 @@
-package com.britam.insureclaim.security
+﻿package com.britam.insureclaim.security
 
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 
 /**
- * Authenticated principal carried in the security context. Kept minimal — the
- * role is authoritative and the id is used for ownership checks.
+ * Authenticated principal carried in the security context.
  */
 class AuthenticatedUser(
 	val id: Long,
@@ -17,7 +16,7 @@ class AuthenticatedUser(
 ) : UserDetails {
 
 	override fun getAuthorities(): Collection<GrantedAuthority> =
-		listOf(SimpleGrantedAuthority("ROLE_${role.name}"), SimpleGrantedAuthority("SCOPE_${role.name.lowercase()}"))
+		listOf(SimpleGrantedAuthority("ROLE_${role.code}"), SimpleGrantedAuthority("SCOPE_${role.code.lowercase()}"))
 
 	override fun getPassword(): String? = null
 
@@ -32,10 +31,10 @@ class AuthenticatedUser(
 	override fun isEnabled(): Boolean = true
 
 	val isStaff: Boolean
-		get() = role.isStaff()
+		get() = role.code in setOf("ADMIN", "INSURER_ADMIN", "AGENT")
 
 	val name: String
 		get() = displayName
 
-	override fun toString(): String = "AuthenticatedUser(id=$id, role=$role)"
+	override fun toString(): String = "AuthenticatedUser(id=$id, role=${role.code})"
 }

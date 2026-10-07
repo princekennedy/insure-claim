@@ -10,11 +10,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
-/**
- * Turns a valid `Authorization: Bearer <jwt>` header into an authenticated
- * principal. A missing or bad token is not an error here — the request simply
- * stays anonymous and the authorization rules decide the outcome.
- */
 @Component
 class JwtAuthenticationFilter(
 	private val jwtService: JwtService,
@@ -32,15 +27,13 @@ class JwtAuthenticationFilter(
 		if (token != null && SecurityContextHolder.getContext().authentication == null) {
 			val parsed = jwtService.parse(token)
 			if (parsed != null) {
-				// Re-check the account so a disabled or locked user cannot keep
-				// using an unexpired token.
 				val account = userRepository.findById(parsed.userId).orElse(null)
 				if (account == null) {
-					log.debug("Token references unknown user {}", parsed.userId)
+					log.debug("Token references unknown user ${parsed.userId}")
 				} else if (!account.isUsable()) {
-					log.debug("Rejecting token for unusable account {}", account.id)
-				} else if (account.role != parsed.role) {
-					log.debug("Rejecting token with stale role for account {}", account.id)
+					log.debug("Rejecting token for unusable account ${account.id}")
+				} else if (account.role.code != parsed.role) {
+					log.debug("Rejecting token with stale role for account ${account.id}")
 				} else {
 					val principal = AuthenticatedUser(
 						id = account.id ?: 0L,
@@ -67,7 +60,6 @@ class JwtAuthenticationFilter(
 		if (header != null && header.startsWith("Bearer ", ignoreCase = true)) {
 			return header.substring(7).trim().takeIf { it.isNotEmpty() }
 		}
-		// Supports browser clients that cannot set headers (e.g. img/iframe fetches).
 		request.cookies?.firstOrNull { it.name == ACCESS_COOKIE }?.value?.let { cookieToken ->
 			if (cookieToken.isNotBlank()) return cookieToken
 		}

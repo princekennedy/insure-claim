@@ -17,3 +17,18 @@ class Permission(
     @Column(name = "description", length = 255)
     var description: String? = null,
 ) : AuditableVersionedEntity()
+
+
+data class PermissionSummary(
+    val id: Long,
+    val code: String,
+    val name: String,
+    val description: String?,
+)
+
+fun Permission.toSummary(): PermissionSummary = PermissionSummary(
+    id = id ?: 0L,
+    code = code,
+    name = name,
+    description = description,
+)
