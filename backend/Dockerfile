@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build stage: compile the Spring Boot application
 FROM maven:3.9-eclipse-temurin-21 AS builder
 
@@ -12,7 +13,12 @@ COPY src ./src
 RUN chmod +x ./mvnw
 
 # Build the application (skip tests for faster CI builds; remove -DskipTests for local dev)
-RUN ./mvnw package -DskipTests -B
+# Persistent ~/.m2 cache across builds; retries guard against flaky registry connections
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw package -DskipTests -B \
+    -Dmaven.wagon.http.retryHandler.count=5 \
+    -Dmaven.wagon.http.retryHandler.requestSentEnabled=true \
+    -Dmaven.wagon.rto=120000
 
 # Runtime stage: run the JAR with a slim JRE
 FROM eclipse-temurin:21-jre-alpine
