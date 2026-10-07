@@ -319,7 +319,7 @@ class KycService(
 			email = SYSTEM_ACTOR_EMAIL,
 			passwordHash = "",
 			fullName = "Digital KYC",
-			role = Role.ADMIN,
+			role = com.britam.insureclaim.role.Role.ADMIN,
 		)
 		waiting.forEach { claim ->
 			claimService.transition(

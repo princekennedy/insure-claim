@@ -352,9 +352,9 @@ class JsonDataSeeder(
 
 	private fun parseRole(fileName: String, value: String?): Role {
 		val raw = requireText(fileName, value, "role").uppercase()
-		return Role.entries.firstOrNull { it.name == raw }
+		return Role.entries.firstOrNull { it.code == raw }
 			?: throw IllegalStateException("Seed file $fileName has an unknown role: $value")
-	}
+}
 
 	private fun parseStatus(fileName: String, value: String): PolicyStatus {
 		val raw = value.uppercase()

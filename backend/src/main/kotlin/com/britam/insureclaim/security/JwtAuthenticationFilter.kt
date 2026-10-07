@@ -38,7 +38,7 @@ class JwtAuthenticationFilter(
 					val principal = AuthenticatedUser(
 						id = account.id ?: 0L,
 						email = account.email,
-						role = account.role,
+						role = account.role ?: com.britam.insureclaim.role.Role.CUSTOMER,
 						displayName = account.fullNameOrEmail(),
 					)
 					val authentication = UsernamePasswordAuthenticationToken(

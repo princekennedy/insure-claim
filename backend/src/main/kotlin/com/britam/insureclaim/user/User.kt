@@ -24,6 +24,10 @@ class User(
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "role_id")
 	var role: com.britam.insureclaim.role.Role? = null,
+	
+	fun roleOrNull(): com.britam.insureclaim.role.Role? = role
+
+	fun role(): com.britam.insureclaim.role.Role = role ?: com.britam.insureclaim.role.Role.CUSTOMER
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
 	@Column(name = "email_verified", nullable = false)

@@ -113,7 +113,7 @@ class GarageFeedbackService(
 		garageRepository.findById(garageId).orElseThrow { NotFoundException("Garage", garageId) }
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100))
 		val page1 = feedbackRepository.findByGarageIdOrderByCreatedAtDesc(garageId, pageable)
-		val asStaff = actor.isStaff()
+		val asStaff = actor.code in Role.STAFF_CODES
 		return PageResponse(
 			content = page1.content.map { if (asStaff) it.toStaffResponse() else it.toPublicResponse() },
 			page = page1.number,

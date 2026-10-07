@@ -1,6 +1,7 @@
 package com.britam.insureclaim.user
 
 import com.britam.insureclaim.claim.ClaimStatus
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.vehicle.Vehicle
 import io.swagger.v3.oas.annotations.media.Schema
@@ -67,7 +68,7 @@ data class UserResponse(
 			email = user.email,
 			fullName = user.fullName,
 			phone = user.phone,
-			role = user.role,
+			role = user.role(),
 			enabled = user.enabled,
 			initials = user.initials(),
 			lastLoginAt = user.lastLoginAt,
