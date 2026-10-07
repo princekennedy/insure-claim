@@ -25,8 +25,9 @@ class User(
 	var phone: String? = null,
 
 	@Column(name = "nic", length = 32)
-	var nic: String? = null,	@Column(name = "role", nullable = false, length = 32)
-	var role: String = com.britam.insureclaim.role.CUSTOMER.code,
+	var nic: String? = null,
+	@Column(name = "role", nullable = false, length = 32)
+	var role: String = com.britam.insureclaim.role.Role.CUSTOMER.code,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
