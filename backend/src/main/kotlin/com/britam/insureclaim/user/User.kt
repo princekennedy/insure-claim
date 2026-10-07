@@ -44,9 +44,9 @@ class User(
 	@Column(name = "nic", length = 32)
 	var nic: String? = null,
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "role", nullable = false, length = 32)
-	@ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)\r\n\t@JoinColumn(name = "role_id")\r\n\tvar role: com.britam.insureclaim.role.Role? = null,
+@ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+@JoinColumn(name = "role_id")
+var role: com.britam.insureclaim.role.Role? = null,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
