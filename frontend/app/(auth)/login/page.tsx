@@ -63,15 +63,22 @@ export default function LoginPage() {
         autoComplete="email"
       />
 
-      <Input
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Enter your password"
-        required
-        autoComplete="current-password"
-      />
+      <div className={styles.passwordHeader}>
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          required
+          autoComplete="current-password"
+        />
+        <div style={{ textAlign: 'right', marginTop: '-15px', marginBottom: '15px' }}>
+          <Link href="/forgot-password" className={styles.link} style={{ fontSize: '0.875rem' }}>
+            Forgot password?
+          </Link>
+        </div>
+      </div>
 
       <Button type="submit" fullWidth loading={loading}>
         Sign in
