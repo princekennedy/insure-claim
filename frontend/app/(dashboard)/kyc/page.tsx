@@ -16,7 +16,7 @@ import {
 } from '@/lib/components/ui';
 import { getCurrentKyc, submitKyc } from '@/lib/services/kyc';
 import { KYC_DOCUMENT_TYPE_LABELS } from '@/lib/types/kyc';
-import { formatDateTime } from '@/lib/types/claim';
+import { formatDateTime } from '@/lib/types/claim'; // already correct via claim.ts
 import type { KycVerificationResponse, KycDocumentType } from '@/lib/types';
 import styles from './kyc.module.css';
 
