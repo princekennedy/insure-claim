@@ -21,10 +21,6 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 import java.time.LocalDate
-import com.britam.insureclaim.permission.Permission
-import com.britam.insureclaim.permission.PermissionRepository
-import com.britam.insureclaim.role.RoleEntity
-import com.britam.insureclaim.role.RoleRepository
 
 class SeedGarage {
     var code: String? = null
@@ -72,19 +68,15 @@ class SeedPolicy {
     var status: String? = null
 }
 
-
 class SeedRole {
     var code: String? = null
-    var displayName: String? = null
+    var name: String? = null
     var description: String? = null
-    var active: Boolean? = null
-    var system: Boolean? = null
 }
 
 class SeedPermission {
     var code: String? = null
     var name: String? = null
-    var category: String? = null
     var description: String? = null
 }
 
@@ -101,8 +93,6 @@ class JsonDataSeeder(
     private val garageRepository: GarageRepository,
     private val vehicleRepository: VehicleRepository,
     private val policyRepository: PolicyRepository,
-    private val roleRepository: RoleRepository,
-    private val permissionRepository: PermissionRepository,
     private val passwordEncoder: PasswordEncoder,
     private val transactionTemplate: TransactionTemplate,
 ) : ApplicationRunner {
@@ -112,7 +102,15 @@ class JsonDataSeeder(
 
     companion object {
         private const val SEED_PATTERN = "classpath:seed/*.json"
-        private val ORDER = listOf("roles.json", "permissions.json", "role_permissions.json", "users.json", "garages.json", "vehicles.json", "policies.json")
+        private val ORDER = listOf(
+            "roles.json",
+            "permissions.json",
+            "role_permissions.json",
+            "users.json",
+            "garages.json",
+            "vehicles.json",
+            "policies.json",
+        )
     }
 
     override fun run(args: ApplicationArguments) {
@@ -138,13 +136,13 @@ class JsonDataSeeder(
 
     private fun dispatch(fileName: String, root: JsonNode) {
         when (fileName) {
+            "roles.json" -> seedRoles(fileName, root)
+            "permissions.json" -> seedPermissions(fileName, root)
+            "role_permissions.json" -> seedRolePermissions(fileName, root)
             "users.json" -> seedUsers(fileName, root)
             "garages.json" -> seedGarages(fileName, root)
             "vehicles.json" -> seedVehicles(fileName, root)
             "policies.json" -> seedPolicies(fileName, root)
-            "roles.json" -> seedRoles(fileName, root)
-            "permissions.json" -> seedPermissions(fileName, root)
-            "role_permissions.json" -> seedRolePermissions(fileName, root)
         }
     }
 
@@ -184,6 +182,58 @@ class JsonDataSeeder(
             return false
         }
         return true
+    }
+
+    // ── role / permission seeders (code-only, validated against Role) ────
+
+    private fun seedRoles(fileName: String, root: JsonNode) {
+        var valid = 0
+        items(fileName, root, SeedRole::class.java).forEach { seed ->
+            val code = requireText(fileName, seed.code, "code").uppercase()
+            if (code in Role.VALID_CODES) {
+                valid++
+            } else {
+                logger.warn("Seed {}: role code '{}' is not a canonical role code - ignored", fileName, code)
+            }
+        }
+        logger.info("Seed {}: {} role definitions validated (roles are code-defined, no persistence)", fileName, valid)
+    }
+
+    private fun seedPermissions(fileName: String, root: JsonNode) {
+        var valid = 0
+        items(fileName, root, SeedPermission::class.java).forEach { seed ->
+            requireText(fileName, seed.code, "code")
+            requireText(fileName, seed.name, "name")
+            valid++
+        }
+        logger.info(
+            "Seed {}: {} permission definitions validated (permissions are reserved for future use, no persistence)",
+            fileName,
+            valid,
+        )
+    }
+
+    private fun seedRolePermissions(fileName: String, root: JsonNode) {
+        var grants = 0
+        var unknown = 0
+        items(fileName, root, SeedRolePermission::class.java).forEach { seed ->
+            val roleCode = requireText(fileName, seed.role, "role").uppercase()
+            if (roleCode !in Role.VALID_CODES) {
+                logger.warn("Seed {}: unknown role {} - skipping grant", fileName, roleCode)
+                return@forEach
+            }
+            seed.permissions.orEmpty().forEach { pcode ->
+                val code = pcode?.trim().orEmpty()
+                if (code.isEmpty()) return@forEach
+                grants++
+            }
+        }
+        logger.info(
+            "Seed {}: {} role-permission grants validated ({} unknown roles skipped); permissions are not persisted",
+            fileName,
+            grants,
+            unknown,
+        )
     }
 
     // ── seeders ─────────────────────────────────────────────────────────
@@ -227,7 +277,6 @@ class JsonDataSeeder(
                     User().apply {
                         this.email = email
                         password = encodedPassword
-                        passwordHash = encodedPassword
                         this.fullName = fullName
                         phone = seed.phone
                         nic = seed.nic
@@ -375,78 +424,3 @@ class JsonDataSeeder(
         logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
     }
 }
-
-    private fun seedRoles(fileName: String, root: JsonNode) {
-        var inserted = 0
-        var present = 0
-        transactionTemplate.executeWithoutResult {
-            items(fileName, root, SeedRole::class.java).forEach { seed ->
-                val code = requireText(fileName, seed.code, "code").uppercase()
-                val existing = roleRepository.findByCode(code).orElse(null)
-                if (existing != null) {
-                    present++
-                    return@forEach
-                }
-                roleRepository.save(RoleEntity().apply {
-                    this.code = code
-                    this.displayName = requireText(fileName, seed.displayName, "displayName")
-                    description = seed.description
-                    active = seed.active ?: true
-                    system = seed.system ?: false
-                })
-                inserted++
-            }
-        }
-        logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
-    }
-
-    private fun seedPermissions(fileName: String, root: JsonNode) {
-        var inserted = 0
-        var present = 0
-        transactionTemplate.executeWithoutResult {
-            items(fileName, root, SeedPermission::class.java).forEach { seed ->
-                val code = requireText(fileName, seed.code, "code")
-                val existing = permissionRepository.findByCode(code).orElse(null)
-                if (existing != null) {
-                    present++
-                    return@forEach
-                }
-                permissionRepository.save(Permission().apply {
-                    this.code = code
-                    this.name = requireText(fileName, seed.name, "name")
-                    category = seed.category
-                    description = seed.description
-                })
-                inserted++
-            }
-        }
-        logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
-    }
-
-    private fun seedRolePermissions(fileName: String, root: JsonNode) {
-        var grants = 0
-        transactionTemplate.executeWithoutResult {
-            items(fileName, root, SeedRolePermission::class.java).forEach { seed ->
-                val roleCode = requireText(fileName, seed.role, "role").uppercase()
-                val role = roleRepository.findByCode(roleCode).orElse(null)
-                if (role == null) {
-                    logger.warn("Seed {}: unknown role {} - skipping grant", fileName, roleCode)
-                    return@forEach
-                }
-                seed.permissions?.forEach { pcode ->
-                    if (pcode.isNullOrBlank()) return@forEach
-                    val perm = permissionRepository.findByCode(pcode.trim()).orElse(null)
-                    if (perm == null) {
-                        logger.warn("Seed {}: unknown permission {} for role {} - skipping", fileName, pcode, roleCode)
-                        return@forEach
-                    }
-                    if (role.permissions.none { it.code == perm.code }) {
-                        role.permissions.add(perm)
-                        grants++
-                    }
-                }
-                roleRepository.save(role)
-            }
-        }
-        logger.info("Seed {}: {} permission grants applied", fileName, grants)
-    }
