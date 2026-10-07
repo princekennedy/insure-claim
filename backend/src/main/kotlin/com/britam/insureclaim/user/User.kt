@@ -1,4 +1,4 @@
-package com.britam.insureclaim.user
+﻿package com.britam.insureclaim.user
 import com.britam.insureclaim.common.AuditableVersionedEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -24,10 +24,6 @@ class User(
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "role_id")
 	var role: com.britam.insureclaim.role.Role? = null,
-	
-	fun roleOrNull(): com.britam.insureclaim.role.Role? = role
-
-	fun role(): com.britam.insureclaim.role.Role = role ?: com.britam.insureclaim.role.Role.CUSTOMER
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
 	@Column(name = "email_verified", nullable = false)
@@ -43,14 +39,19 @@ class User(
 	fun isUsable(): Boolean = enabled && !isLocked()
 	fun fullNameOrEmail(): String = fullName.ifBlank { email }
 	fun initials(): String = fullName
+		.split(' ')
+		.filter { it.isNotBlank() }
+		.take(2)
+		.joinToString("") { it.first().uppercase() }
 		.ifBlank { email.take(2).uppercase() }
 }
+
 
 data class UserSummary(
 	val id: Long,
 	val email: String,
 	val fullName: String,
-	val role: com.britam.insureclaim.role.Role,
+	val role: com.britam.insureclaim.role.Role?,
 )
 
 fun User.toSummary(): UserSummary = UserSummary(

@@ -81,6 +81,8 @@ class GarageFeedbackService(
 			recommendAgain = request.recommendAgain,
 		)
 		val saved = feedbackRepository.save(feedback)
+
+	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
 		recomputeGarage(job.garage)
 
 		log.info(

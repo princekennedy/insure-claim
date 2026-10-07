@@ -5,6 +5,7 @@ import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.security.CurrentUserResolver
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import com.britam.insureclaim.role.Role
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.data.domain.PageRequest

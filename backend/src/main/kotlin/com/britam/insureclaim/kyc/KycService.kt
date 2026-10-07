@@ -207,6 +207,8 @@ class KycService(
 		return saved.toResponse()
 	}
 
+	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
+
 	@Transactional(readOnly = true)
 	fun queue(status: KycStatus?, page: Int, size: Int): PageResponse<KycVerificationResponse> {
 		val pageable = PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100))

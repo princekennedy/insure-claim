@@ -27,20 +27,19 @@ class JwtAuthenticationFilter(
 		if (token != null && SecurityContextHolder.getContext().authentication == null) {
 			val parsed = jwtService.parse(token)
 			if (parsed != null) {
-				val account = userRepository.findById(parsed.userId).orElse(null)
-				if (account == null) {
-					log.debug("Token references unknown user ${parsed.userId}")
-				} else if (!account.isUsable()) {
-					log.debug("Rejecting token for unusable account ${account.id}")
-				} else if (account.role.code != parsed.role) {
-					log.debug("Rejecting token with stale role for account ${account.id}")
-				} else {
-					val principal = AuthenticatedUser(
-						id = account.id ?: 0L,
-						email = account.email,
-						role = account.role ?: com.britam.insureclaim.role.Role.CUSTOMER,
-						displayName = account.fullNameOrEmail(),
-					)
+				val account = userRepository.findById(parsed.userId).orElse(null)							if (account == null) {
+								log.debug("Token references unknown user ${parsed.userId}")
+							} else if (!account.isUsable()) {
+								log.debug("Rejecting token for unusable account ${account.id}")
+							} else if (account.role?.code != parsed.role) {
+								log.debug("Rejecting token with stale role for account ${account.id}")
+							} else {								val principal = AuthenticatedUser(
+									id = account.id ?: 0L,
+									email = account.email,
+									role = account.role ?: com.britam.insureclaim.role.Role.CUSTOMER,
+									displayName = account.fullNameOrEmail(),
+								)
+
 					val authentication = UsernamePasswordAuthenticationToken(
 						principal,
 						null,

@@ -4,9 +4,9 @@ import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.ConflictException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.UnauthorizedException
-import com.britam.insureclaim.role.Role
-import com.britam.insureclaim.security.JwtService
+import com.britam.insureclaim.role.Role	import com.britam.insureclaim.security.JwtService
 import org.slf4j.LoggerFactory
+
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder

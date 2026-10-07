@@ -1,11 +1,8 @@
 package com.britam.insureclaim.user
 
 import com.britam.insureclaim.chatbot.ConcernStatus
-import com.britam.insureclaim.role.Role
-
 import com.britam.insureclaim.claim.ClaimRepository
 import com.britam.insureclaim.chatbot.SupportConcernRepository
-import com.britam.insureclaim.claim.ClaimRepository
 import com.britam.insureclaim.claim.ClaimStatus
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.ForbiddenException
@@ -180,7 +177,7 @@ class UserAccountService(
 	private fun ensureOwnership(actingUserId: Long, ownerId: Long?) {
 		if (actingUserId == ownerId) return
 		val acting = userRepository.findById(actingUserId).orElseThrow { NotFoundException("User", actingUserId) }
-		if (!acting.role().isStaff()) {
+		if (!acting.role?.isStaff() == true) {
 			throw ForbiddenException("This record belongs to another customer")
 		}
 	}
@@ -201,5 +198,5 @@ class UserAccountService(
 	fun requireCustomer(customerId: Long): User = requireUser(customerId)
 
 	fun isStaff(userId: Long): Boolean =
-		userRepository.findById(userId).map { it.role().isStaff() }.orElse(false)
+		userRepository.findById(userId).map { it.role?.isStaff() ?: false }.orElse(false)
 }

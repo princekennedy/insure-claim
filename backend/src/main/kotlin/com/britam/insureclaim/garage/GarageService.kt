@@ -144,9 +144,13 @@ class GarageService(
 			approvedAmount = request.approvedAmount ?: request.quotedAmount,
 			estimatedDays = request.estimatedDays,
 			warrantyDays = request.warrantyDays,
-			notes = request.notes?.trim()?.takeIf { it.isNotEmpty() },
-			assignedAt = Instant.now(),
-		)
+			notes = request.notes?.trim()?.takeIf { it.isNotEmpty() },				assignedAt = Instant.now(),
+			)
+
+	fun com.britam.insureclaim.user.User.isStaff(): Boolean = this.role?.isStaff() ?: false
+
+	fun com.britam.insureclaim.user.User.canViewAllClaims(): Boolean = this.role?.canViewAllClaims() ?: false
+
 		val saved = repairJobRepository.save(job)
 
 		val moved = claimService.transition(
