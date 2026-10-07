@@ -65,8 +65,3 @@ fun User.toSummary(): UserSummary = UserSummary(
 	fullName = fullName,
 	role = role ?: com.britam.insureclaim.role.Role.CUSTOMER,
 )
-
-/** Authorization helpers that mirror the Role extension functions. */
-
-fun User.isStaff(): Boolean = role?.code in com.britam.insureclaim.role.Role.STAFF_CODES
-fun User.canViewAllClaims(): Boolean = role?.code in com.britam.insureclaim.role.Role.STAFF_CODES

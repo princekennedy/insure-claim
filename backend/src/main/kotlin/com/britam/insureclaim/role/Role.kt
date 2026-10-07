@@ -64,11 +64,3 @@ class Role(
 
 /** Extension functions on Role for authorization checks. */
 fun Role.isStaff(): Boolean = code in Role.STAFF_CODES
-
-/** Backwards-compatibility: Authorization code that imported `com.britam.insureclaim.user.Role`
- * used `user.role.isStaff()` and `user.role.canViewAllClaims()`. Keep those resolving when the
- * owning entity also defines convenience accessors on its nullable `role` property. */
-/** Authorization helpers that mirror the Role extension functions. */
-
-fun com.britam.insureclaim.user.User.isStaff(): Boolean = role?.isStaff() ?: false
-fun com.britam.insureclaim.user.User.canViewAllClaims(): Boolean = role?.canViewAllClaims() ?: false
