@@ -3,20 +3,27 @@ package com.britam.insureclaim.user
 import com.britam.insureclaim.common.AuditableVersionedEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-
-
+import jakarta.persistence.FetchType
+import jakarta.persistence.JoinColumn\r\nimport jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.Instant
 
-
+enum class Role {
 	/** Policyholder filing and tracking their own claims. */
+	CUSTOMER,
 
 	/** Call-centre / claims handler. Can act on claims but not on configuration. */
+	AGENT,
 
 	/** Insurer staff with analytics and garage oversight access. */
+	INSURER_ADMIN,
 
+	/** Platform administrator. */
+	ADMIN;
 
+	fun isStaff(): Boolean = this != CUSTOMER
 
+	fun canViewAllClaims(): Boolean = this != CUSTOMER
 }
 
 @Entity
@@ -36,10 +43,13 @@ class User(
 
 	@Column(name = "nic", length = 32)
 	var nic: String? = null,
-
 	@ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
 	@JoinColumn(name = "role_id")
 	var role: com.britam.insureclaim.role.Role? = null,
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "role", nullable = false, length = 32)
+	var role: Role = Role.CUSTOMER,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
