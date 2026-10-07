@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDate
+import java.time.Instant
 
 @Tag(name = "Claims", description = "File claims, upload evidence, track progress and manage the claim queue")
 @RestController
@@ -33,7 +34,41 @@ class ClaimController(
 	private val claimService: ClaimService,
 	private val accountService: UserAccountService,
 	private val currentUser: CurrentUserResolver,
+	private val publicTokenRepository: ClaimPublicTokenRepository,
 ) {
+
+	@Operation(
+		summary = "Public claim tracking — no sign-in required",
+		description = "Look up a claim by its public tracking token. Safe to share via email or SMS.",
+	)
+	@GetMapping("/tracking/{token}")
+	fun trackByToken(@PathVariable token: String): ClaimTrackingResponse {
+		val claim = claimService.trackByToken(token)
+		val tokenRecord = publicTokenRepository.findByClaimId(claim.id ?: 0L).orElse(null)
+		return ClaimTrackingResponse(
+			claimNumber = claim.claimNumber,
+			status = claim.status,
+			statusLabel = claim.status.isCustomerVisibleLabel,
+			progressPercent = progressOf(claim.status),
+			incidentType = claim.incidentType,
+			incidentDate = claim.incidentDate,
+			vehicleRegistration = claim.vehicle.registrationNumber,
+			timeline = claim.statusEvents
+				.sortedBy { it.occurredAt }
+				.mapIndexed { index, event ->
+					ClaimTimelineEntry(
+						fromStatus = event.fromStatus,
+						toStatus = event.toStatus,
+						label = event.toStatus.isCustomerVisibleLabel,
+						note = event.note,
+						actorLabel = event.actorLabel,
+						occurredAt = event.occurredAt,
+						isCurrent = index == (claim.statusEvents.size - 1),
+					)
+				},
+			trackingTokenExpiresAt = tokenRecord?.expiresAt ?: Instant.now(),
+		)
+	}
 
 	@Operation(
 		summary = "File a new claim",

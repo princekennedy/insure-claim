@@ -83,12 +83,6 @@ export default function LoginPage() {
           Sign up
         </Link>
       </p>
-
-      <p className={styles.homeLink}>
-        <Link href="/" className={styles.link}>
-          Back to home
-        </Link>
-      </p>
     </form>
   );
 }

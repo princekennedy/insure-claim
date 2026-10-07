@@ -42,3 +42,10 @@
 .link:hover {
   text-decoration: underline;
 }
+
+.homeLink {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  text-align: center;
+  margin: 0;
+}

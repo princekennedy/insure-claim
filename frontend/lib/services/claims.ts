@@ -6,6 +6,7 @@ import type {
   ClaimDetailResponse,
   ClaimDocumentResponse,
   UpdateClaimStatusRequest,
+  ClaimTrackingResponse,
   PageResponse,
 } from '../types';
 
@@ -120,4 +121,14 @@ export async function createTrackingLink(
     `/claims/${claimId}/tracking-link`,
     { method: 'POST' },
   );
+}
+
+export async function getPublicTracking(
+  token: string,
+): Promise<ClaimTrackingResponse> {
+  return request<ClaimTrackingResponse>(`/claims/tracking/${encodeURIComponent(token)}`);
+}
+
+export async function getTrackingByToken(token: string): Promise<ClaimTrackingResponse> {
+  return getPublicTracking(token);
 }

@@ -97,7 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     logout().finally(() => {
-      router.push('/login');
+      router.push('/auth/login');
     });
   };
 
@@ -133,7 +133,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <Link href="/login" onClick={handleLogout} className={styles.navItem}>
+          <Link href="/auth/login" onClick={handleLogout} className={styles.navItem}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />

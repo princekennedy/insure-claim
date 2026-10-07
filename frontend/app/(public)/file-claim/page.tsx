@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Select, Textarea, Card, Alert, Badge } from '@/lib/components/ui';
 import { isAuthenticated } from '@/lib/services/auth';
-import { INCIDENT_TYPE_LABELS, formatDate } from '@/lib/types/claim';
+import { INCIDENT_TYPE_LABELS } from '@/lib/types/claim';
 import styles from './claims.module.css';
 
 export default function PublicFileClaimPage() {
@@ -16,11 +16,13 @@ export default function PublicFileClaimPage() {
   const [formData, setFormData] = useState({
     description: '',
     incidentType: '',
-    incidentDate: formatDate(new Date()),
+    incidentDate: new Date().toISOString().split('T')[0],
     incidentLocation: '',
     estimatedAmount: '',
     reportedByPolice: false,
     thirdPartyInvolved: false,
+    policyNumber: '',
+    vehicleRegistration: '',
   });
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export default function PublicFileClaimPage() {
                   label="Policy Number"
                   type="text"
                   name="policyNumber"
-                  value={formData.policyNumber || ''}
+                  value={formData.policyNumber}
                   onChange={handleChange}
                   placeholder="e.g., POL-2024-001234"
                   hint="From your insurance documents"
@@ -138,7 +140,7 @@ export default function PublicFileClaimPage() {
                 label="Vehicle Registration"
                 type="text"
                 name="vehicleRegistration"
-                value={formData.vehicleRegistration || ''}
+                value={formData.vehicleRegistration}
                 onChange={handleChange}
                 placeholder="e.g., KCB 123J"
                 hint="Your vehicle registration number"

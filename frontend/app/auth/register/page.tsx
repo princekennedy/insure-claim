@@ -122,12 +122,6 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </p>
-
-      <p className={styles.homeLink}>
-        <Link href="/" className={styles.link}>
-          Back to home
-        </Link>
-      </p>
     </form>
   );
 }

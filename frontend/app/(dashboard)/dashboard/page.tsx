@@ -55,8 +55,8 @@ export default function DashboardPage() {
   return (
     <div className={styles.page}>
       <PageHeader
-        title="Dashboard"
-        description="Overview of your insurance claims"
+        title={user ? `Welcome back, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
+        description={user ? "Here's an overview of your insurance claims" : "Overview of your insurance claims"}
       />
 
       <div className={styles.statsGrid}>

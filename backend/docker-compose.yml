@@ -52,29 +52,6 @@ services:
     ports:
       - "8081:8080"
 
-  backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
-    container_name: insureclaim-backend
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/insureclaim
-      SPRING_DATASOURCE_USERNAME: insureclaim
-      SPRING_DATASOURCE_PASSWORD: insureclaim
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_FLYWAY_ENABLED: "true"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   minio:
     image: minio/minio:RELEASE.2025-09-15T17-27-07Z
     container_name: insureclaim-minio
