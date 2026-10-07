@@ -8,6 +8,9 @@ COPY pom.xml mvnw mvnw.cmd ./
 COPY .mvn .mvn
 COPY src ./src
 
+# Maven wrapper needs execute permission inside the container
+RUN chmod +x ./mvnw
+
 # Build the application (skip tests for faster CI builds; remove -DskipTests for local dev)
 RUN ./mvnw package -DskipTests -B
 
