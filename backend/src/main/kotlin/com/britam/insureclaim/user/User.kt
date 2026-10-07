@@ -42,6 +42,12 @@ class User(
 
 	@Column(name = "last_login_at")
 	var lastLoginAt: Instant? = null,
+
+	@Column(name = "reset_token", length = 128)
+	var resetToken: String? = null,
+
+	@Column(name = "reset_token_expires_at")
+	var resetTokenExpiresAt: Instant? = null,
 ) : AuditableVersionedEntity() {
 	fun isLocked(now: Instant = Instant.now()): Boolean = lockedUntil?.isAfter(now) == true
 	fun isUsable(): Boolean = enabled && !isLocked()

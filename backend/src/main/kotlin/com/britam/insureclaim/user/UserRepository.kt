@@ -14,6 +14,8 @@ interface UserRepository : JpaRepository<User, Long> {
 
 	fun existsByEmailIgnoreCase(email: String): Boolean
 
+	fun findByResetToken(resetToken: String): Optional<User>
+
 	@Query(
 		"""
 		SELECT u FROM User u

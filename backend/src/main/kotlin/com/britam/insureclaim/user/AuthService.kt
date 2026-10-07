@@ -129,6 +129,33 @@ class AuthService(
 		refreshTokenRepository.findActiveByUser(userId).forEach { it.revoke() }
 	}
 
+	fun forgotPassword(request: ForgotPasswordRequest) {
+		val email = request.email.trim().lowercase(Locale.ROOT)
+		val user = userRepository.findByEmailIgnoreCase(email).orElse(null) ?: return // Silently return
+		user.resetToken = java.util.UUID.randomUUID().toString()
+		user.resetTokenExpiresAt = Instant.now().plus(Duration.ofHours(1))
+		userRepository.save(user)
+		log.info("Generated password reset token for user {}: {} (simulate sending email)", user.id, user.resetToken)
+	}
+
+	fun resetPassword(request: ResetPasswordRequest) {
+		val user = userRepository.findByResetToken(request.token)
+			.orElseThrow { BusinessRuleException("Invalid or expired reset token", "INVALID_TOKEN") }
+
+		val now = Instant.now()
+		if (user.resetTokenExpiresAt == null || user.resetTokenExpiresAt!!.isBefore(now)) {
+			throw BusinessRuleException("Invalid or expired reset token", "INVALID_TOKEN")
+		}
+
+		validatePasswordStrength(request.newPassword)
+		user.password = passwordEncoder.encode(request.newPassword)!!
+		user.resetToken = null
+		user.resetTokenExpiresAt = null
+		userRepository.save(user)
+		refreshTokenRepository.findActiveByUser(user.id ?: 0L).forEach { it.revoke(now) }
+		log.info("User {} reset their password successfully", user.id)
+	}
+
 	@Transactional(readOnly = true)
 	fun findById(id: Long): User =
 		userRepository.findById(id).orElseThrow { NotFoundException("User", id) }
@@ -188,7 +215,7 @@ class AuthService(
 		ipAddress: String? = null,
 	): TokenResponse {
 		val userId = user.id ?: throw IllegalStateException("User must be persisted before issuing tokens")
-		val role = user.role ?: throw IllegalStateException("User ${user.id} has no assigned role")
+		val role = user.role
 		val access = jwtService.issueAccessToken(userId, user.email, role)
 		val refreshValue = jwtService.newRefreshTokenValue()
 

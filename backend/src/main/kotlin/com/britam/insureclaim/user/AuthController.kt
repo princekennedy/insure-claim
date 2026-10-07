@@ -79,6 +79,20 @@ class AuthController(
 		return ResponseEntity.noContent().build()
 	}
 
+	@Operation(summary = "Request a password reset link")
+	@PostMapping("/forgot-password")
+	fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest): ResponseEntity<Void> {
+		authService.forgotPassword(request)
+		return ResponseEntity.noContent().build()
+	}
+
+	@Operation(summary = "Reset password using a token")
+	@PostMapping("/reset-password")
+	fun resetPassword(@Valid @RequestBody request: ResetPasswordRequest): ResponseEntity<Void> {
+		authService.resetPassword(request)
+		return ResponseEntity.noContent().build()
+	}
+
 	private fun clientIp(request: HttpServletRequest): String =
 		request.getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim()
 			?: request.remoteAddr

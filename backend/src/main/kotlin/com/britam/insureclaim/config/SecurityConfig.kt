@@ -40,7 +40,7 @@ class SecurityConfig(
 				registry
 					.requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
 					.requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-					.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+					.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
 					.requestMatchers("/api/v1/claims/tracking/**").permitAll()
 				.requestMatchers("/api/v1/claims/{claimId}/tracking-link").permitAll()
 

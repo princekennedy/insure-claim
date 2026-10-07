@@ -1,4 +1,4 @@
-﻿package com.britam.insureclaim.user
+package com.britam.insureclaim.user
 
 import com.britam.insureclaim.claim.ClaimStatus
 import com.britam.insureclaim.policy.Policy
@@ -38,6 +38,17 @@ data class RefreshRequest(@field:NotBlank val refreshToken: String)
 @Schema(name = "ChangePasswordRequest")
 data class ChangePasswordRequest(
 	@field:NotBlank val currentPassword: String,
+	@field:NotBlank @field:Size(min = 10, max = 72) val newPassword: String,
+)
+
+@Schema(name = "ForgotPasswordRequest")
+data class ForgotPasswordRequest(
+	@field:Email @field:NotBlank val email: String,
+)
+
+@Schema(name = "ResetPasswordRequest")
+data class ResetPasswordRequest(
+	@field:NotBlank val token: String,
 	@field:NotBlank @field:Size(min = 10, max = 72) val newPassword: String,
 )
 
