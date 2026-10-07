@@ -55,6 +55,9 @@ class User(
 		.take(2)
 		.joinToString("") { it.first().uppercase() }
 		.ifBlank { email.take(2).uppercase() }
+
+	fun isStaff(): Boolean = role in com.britam.insureclaim.role.Role.STAFF_CODES
+	fun canViewAllClaims(): Boolean = isStaff()
 }
 
 data class UserSummary(

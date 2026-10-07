@@ -97,7 +97,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     logout().finally(() => {
-      router.push('/auth/login');
+      router.push('/');
     });
   };
 

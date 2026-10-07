@@ -1,0 +1,23 @@
+﻿{
+  "entity": "permissions",
+  "items": [
+    {"code": "USER_CREATE", "name": "Create User", "description": "Create users"},
+    {"code": "USER_READ", "name": "Read Users", "description": "View users"},
+    {"code": "USER_UPDATE", "name": "Update User", "description": "Update users"},
+    {"code": "USER_DELETE", "name": "Delete User", "description": "Delete users"},
+    {"code": "ROLE_READ", "name": "Read Roles", "description": "View roles"},
+    {"code": "ROLE_MANAGE", "name": "Manage Roles", "description": "Assign/manage roles"},
+    {"code": "PERMISSION_READ", "name": "Read Permissions", "description": "View permissions"},
+    {"code": "CLAIM_READ", "name": "Read Claims", "description": "View claims"},
+    {"code": "CLAIM_CREATE", "name": "Create Claim", "description": "Create claims"},
+    {"code": "CLAIM_UPDATE", "name": "Update Claim", "description": "Update claim status"},
+    {"code": "POLICY_READ", "name": "Read Policies", "description": "View policies"},
+    {"code": "POLICY_MANAGE", "name": "Manage Policies", "description": "Create/update policies"},
+    {"code": "VEHICLE_READ", "name": "Read Vehicles", "description": "View vehicles"},
+    {"code": "VEHICLE_MANAGE", "name": "Manage Vehicles", "description": "Manage vehicles"},
+    {"code": "GARAGE_READ", "name": "Read Garages", "description": "View garages"},
+    {"code": "GARAGE_MANAGE", "name": "Manage Garages", "description": "Manage garages"},
+    {"code": "KYC_READ", "name": "Read KYC", "description": "View KYC"},
+    {"code": "KYC_MANAGE", "name": "Manage KYC", "description": "Review/verify KYC"}
+  ]
+}

@@ -164,6 +164,7 @@ class JsonDataSeeder(
 				User().apply {
 					this.email = email
 					passwordHash = encodedPassword
+password = properties.password
 					this.fullName = fullName
 					phone = seed.phone
 					nic = seed.nic
@@ -368,4 +369,21 @@ class JsonDataSeeder(
 		/** Dependency order: accounts first, then the records that reference them. */
 		val ORDER = listOf("users.json", "garages.json", "vehicles.json", "policies.json")
 	}
+}
+
+class SeedRole {
+	var code: String? = null
+	var name: String? = null
+	var description: String? = null
+}
+
+class SeedPermission {
+	var code: String? = null
+	var name: String? = null
+	var description: String? = null
+}
+
+class SeedRolePermission {
+	var role: String? = null
+	var permissions: List<String>? = null
 }

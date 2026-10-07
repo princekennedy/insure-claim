@@ -31,7 +31,7 @@ class AuthService(
 	private val maxFailedAttempts = 5
 	private val lockoutDuration: Duration = Duration.ofMinutes(15)
 
-	private fun getCustomerRole(): String = com.britam.insureclaim.role.CUSTOMER.code
+	private fun getCustomerRole(): String = "CUSTOMER"
 
 	fun register(request: RegisterRequest): TokenResponse {
 		validatePasswordStrength(request.password)
@@ -145,7 +145,7 @@ class AuthService(
 	)
 
 	fun updateRole(targetUserId: Long, role: String, actingUserId: Long) {
-		if (role !in com.britam.insureclaim.role.VALID_ROLE_CODES) {
+		if (role !in com.britam.insureclaim.role.Role.VALID_CODES) {
 			throw BusinessRuleException("Unknown role: $role", "INVALID_ROLE")
 		}
 		val user = findById(targetUserId)
