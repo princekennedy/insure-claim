@@ -2,7 +2,7 @@ package com.britam.insureclaim.config
 
 import com.britam.insureclaim.security.CorsProperties
 import com.britam.insureclaim.security.JwtAuthenticationFilter
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

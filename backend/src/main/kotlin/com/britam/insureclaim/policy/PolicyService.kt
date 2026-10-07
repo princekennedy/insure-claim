@@ -5,7 +5,7 @@ import com.britam.insureclaim.common.ConflictException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.common.ValidationException
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.VehicleRepository
 import org.springframework.data.domain.PageRequest

@@ -5,7 +5,7 @@ import com.britam.insureclaim.garage.GarageRepository
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.policy.PolicyRepository
 import com.britam.insureclaim.policy.PolicyStatus
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.Vehicle

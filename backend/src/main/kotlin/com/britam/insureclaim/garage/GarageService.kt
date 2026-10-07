@@ -11,7 +11,7 @@ import com.britam.insureclaim.common.ForbiddenException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.GarageProperties
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserAccountService
 import org.slf4j.LoggerFactory

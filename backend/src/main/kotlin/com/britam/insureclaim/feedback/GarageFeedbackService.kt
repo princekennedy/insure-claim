@@ -15,7 +15,7 @@ import com.britam.insureclaim.garage.GarageService
 import com.britam.insureclaim.garage.RepairJobRepository
 import com.britam.insureclaim.garage.toPublicResponse
 import com.britam.insureclaim.garage.toStaffResponse
-import com.britam.insureclaim.user.Role
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.User
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest

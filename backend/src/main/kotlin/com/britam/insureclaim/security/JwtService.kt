@@ -1,6 +1,5 @@
 package com.britam.insureclaim.security
 
-import com.britam.insureclaim.user.Role
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.MACSigner
@@ -16,10 +15,6 @@ import java.util.UUID
 
 /**
  * Issues and validates the stateless access token.
- *
- * The token is intentionally not a session: it carries identity and role only.
- * Anything that must be revocable (sessions, withdrawals) is checked against the
- * database, not the token.
  */
 @Service
 class JwtService(private val properties: JwtProperties) {
@@ -41,7 +36,7 @@ class JwtService(private val properties: JwtProperties) {
 			get() = Duration.between(Instant.now(), expiresAt).seconds.coerceAtLeast(0)
 	}
 
-	fun issueAccessToken(userId: Long, email: String, role: Role): IssuedToken {
+	fun issueAccessToken(userId: Long, email: String, role: com.britam.insureclaim.role.Role): IssuedToken {
 		val now = Instant.now()
 		val expiry = now.plus(properties.accessTokenTtl)
 		val claims = JWTClaimsSet.Builder()
@@ -52,17 +47,16 @@ class JwtService(private val properties: JwtProperties) {
 			.issueTime(Date.from(now))
 			.expirationTime(Date.from(expiry))
 			.claim("email", email)
-			.claim("role", role.name)
+			.claim("role", role.code)
 			.claim("typ", "access")
 			.build()
 
 		val jwt = SignedJWT(JWSHeader.Builder(JWSAlgorithm.HS256).build(), claims)
 		jwt.sign(signer)
-		log.debug("Issued access token for user {} expiring at {}", userId, expiry)
+		log.debug("Issued access token for user ${userId} expiring at ${expiry}")
 		return IssuedToken(token = jwt.serialize(), issuedAt = now, expiresAt = expiry)
 	}
 
-	/** Opaque high-entropy string; only its SHA-256 hash is persisted. */
 	fun newRefreshTokenValue(): String {
 		val bytes = ByteArray(48)
 		java.security.SecureRandom().nextBytes(bytes)
@@ -72,11 +66,10 @@ class JwtService(private val properties: JwtProperties) {
 	data class ParsedToken(
 		val userId: Long,
 		val email: String,
-		val role: Role,
+		val role: String,
 		val expiresAt: Instant,
 	)
 
-	/** Returns null for any malformed, unsigned, expired or foreign token. */
 	fun parse(token: String): ParsedToken? = try {
 		val jwt = SignedJWT.parse(token)
 		if (!jwt.verify(verifier)) {
@@ -85,7 +78,7 @@ class JwtService(private val properties: JwtProperties) {
 		}
 		val claims = jwt.jwtClaimsSet
 		if (claims.issuer != properties.issuer) {
-			log.debug("Rejected token: unexpected issuer {}", claims.issuer)
+			log.debug("Rejected token: unexpected issuer {claims.issuer}")
 			return null
 		}
 		if (claims.getStringClaim("typ") != "access") {
@@ -98,15 +91,15 @@ class JwtService(private val properties: JwtProperties) {
 			return null
 		}
 		val email = claims.getStringClaim("email") ?: return null
-		val role = runCatching { Role.valueOf(claims.getStringClaim("role")) }.getOrNull() ?: return null
+		val roleCode = claims.getStringClaim("role") ?: return null
 		val expiry = claims.expirationTime?.toInstant() ?: return null
 		if (expiry.isBefore(Instant.now())) {
-			log.debug("Rejected token: expired at {}", expiry)
+			log.debug("Rejected token: expired at ${expiry}")
 			return null
 		}
-		ParsedToken(userId = subject, email = email, role = role, expiresAt = expiry)
+		ParsedToken(userId = subject, email = email, role = roleCode, expiresAt = expiry)
 	} catch (ex: Exception) {
-		log.debug("Failed to parse token: {}", ex.message)
+		log.debug("Failed to parse token: ${ex.message}")
 		null
 	}
 

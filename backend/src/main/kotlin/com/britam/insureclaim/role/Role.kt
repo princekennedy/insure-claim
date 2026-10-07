@@ -28,4 +28,33 @@ class Role(
         inverseJoinColumns = [JoinColumn(name = "permission_id")]
     )
     var permissions: MutableSet<com.britam.insureclaim.permission.Permission> = mutableSetOf(),
-) : AuditableVersionedEntity()
+) : AuditableVersionedEntity() {
+
+	companion object {
+		/** Staff role codes that can view all claims and perform administrative actions. */
+		val STAFF_CODES = setOf("ADMIN", "INSURER_ADMIN", "AGENT")
+
+		/** Looks up a role by its code, suitable for seed data and admin operations. */
+		fun fromCode(code: String): Role {
+			return Role().apply { this.code = code.uppercase() }
+		}
+
+		/** Pseudo-enumeration used by seeders and admin UIs that expect enum-like access. */
+		val entries: List<Role>
+			get() = listOf(
+				fromCode("ADMIN"),
+				fromCode("INSURER_ADMIN"),
+				fromCode("AGENT"),
+				fromCode("CUSTOMER"),
+			)
+
+		/** Convenience constant for customer role — matches AuthService.Role.CUSTOMER usage. */
+		val CUSTOMER: Role
+			get() = fromCode("CUSTOMER")
+	}
+}
+
+/** Extension functions on Role for authorization checks. */
+fun Role.isStaff(): Boolean = code in Role.STAFF_CODES
+
+fun Role.canViewAllClaims(): Boolean = code in Role.STAFF_CODES
