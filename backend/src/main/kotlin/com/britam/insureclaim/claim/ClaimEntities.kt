@@ -15,6 +15,7 @@ import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import java.time.Instant
 
+
 /**
  * Immutable audit row for every claim status change. Customers see only the
  * subset flagged [visibleToCustomer] so internal notes stay internal.
