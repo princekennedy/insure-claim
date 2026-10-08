@@ -1,5 +1,7 @@
 package com.britam.insureclaim.claim
 
+import com.britam.insureclaim.common.Auditable
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.CurrentUserResolver
@@ -75,6 +77,7 @@ class ClaimController(
 		description = "Validates that the vehicle has an in-force policy covering the incident date, then screens the claim for fraud.",
 	)
 	@PostMapping
+	@Auditable(action = "CLAIM_CREATE", description = "Filed a new claim", entityType = "CLAIM", entityIdFromResponse = true)
 	fun fileClaim(@Valid @RequestBody request: FileClaimRequest): ResponseEntity<ClaimDetailResponse> {
 		val actor = accountService.requireCustomer(currentUser.requireId())
 		val claim = claimService.fileClaim(actor, request)
@@ -127,6 +130,7 @@ class ClaimController(
 
 	@Operation(summary = "Move a claim to a new status")
 	@PatchMapping("/{claimId}/status")
+	@Auditable(action = "CLAIM_STATUS_UPDATE", description = "Changed claim status", entityType = "CLAIM")
 	fun transition(
 		@PathVariable claimId: Long,
 		@Valid @RequestBody request: UpdateClaimStatusRequest,
@@ -139,6 +143,7 @@ class ClaimController(
 
 	@Operation(summary = "Upload a photo, police report or other evidence")
 	@PostMapping("/{claimId}/documents", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+	@Auditable(action = "CLAIM_DOCUMENT_UPLOAD", description = "Uploaded claim evidence", entityType = "CLAIM")
 	fun uploadDocument(
 		@PathVariable claimId: Long,
 		@RequestPart("file") file: MultipartFile,
@@ -158,6 +163,7 @@ class ClaimController(
 
 	@Operation(summary = "Remove an uploaded document")
 	@DeleteMapping("/{claimId}/documents/{documentId}")
+	@Auditable(action = "CLAIM_DOCUMENT_DELETE", description = "Removed claim evidence", entityType = "CLAIM_DOCUMENT")
 	fun deleteDocument(
 		@PathVariable claimId: Long,
 		@PathVariable documentId: Long,
@@ -170,6 +176,7 @@ class ClaimController(
 
 	@Operation(summary = "Issue or reuse a public tracking link for this claim")
 	@PostMapping("/{claimId}/tracking-link")
+	@Auditable(action = "CLAIM_TRACKING_LINK_CREATE", description = "Issued a public tracking link", entityType = "CLAIM")
 	fun trackingLink(@PathVariable claimId: Long): TrackingLinkResponse {
 		val actor = accountService.requireCustomer(currentUser.requireId())
 		val claim = claimService.findAccessible(claimId, actor)

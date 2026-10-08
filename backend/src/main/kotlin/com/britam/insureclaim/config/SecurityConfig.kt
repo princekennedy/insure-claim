@@ -52,6 +52,7 @@ class SecurityConfig(
 					// is reserved for full administrators here.
 					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.code)
 					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
 
 					// Everything else needs a valid token; ownership is enforced in services.
 					.anyRequest().authenticated()

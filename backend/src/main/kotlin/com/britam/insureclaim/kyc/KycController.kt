@@ -1,5 +1,6 @@
 package com.britam.insureclaim.kyc
 
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.CurrentUserResolver
 import com.britam.insureclaim.user.UserAccountService
@@ -41,6 +42,7 @@ class KycController(
 		consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
 		produces = [MediaType.APPLICATION_JSON_VALUE],
 	)
+@Auditable(action = "KYC_SUBMIT", description = "Submitted identity documents", entityType = "KYC", entityIdFromResponse = true)
 	fun submit(
 		@Parameter(description = "Identity details as a JSON part")
 		@Valid @RequestPart("submission") submission: KycSubmissionRequest,
@@ -90,6 +92,7 @@ class KycReviewController(
 
 	@Operation(summary = "Approve a submission after manual checks")
 	@PostMapping("/verifications/{verificationId}/approve")
+@Auditable(action = "KYC_APPROVE", description = "Approved a KYC submission", entityType = "KYC")
 	fun approve(@PathVariable verificationId: Long): KycVerificationResponse {
 		val reviewer = accountService.requireUser(currentUser.requireId())
 		return kycService.decide(verificationId, reviewer, approved = true, reason = null, resubmitAllowed = false)
@@ -97,6 +100,7 @@ class KycReviewController(
 
 	@Operation(summary = "Reject a submission, optionally allowing a resubmission")
 	@PostMapping("/verifications/{verificationId}/reject")
+@Auditable(action = "KYC_REJECT", description = "Rejected a KYC submission", entityType = "KYC")
 	fun reject(
 		@PathVariable verificationId: Long,
 		@Valid @RequestBody request: KycRejectionRequest,

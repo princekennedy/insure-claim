@@ -1,5 +1,6 @@
 package com.britam.insureclaim.garage
 
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.feedback.GarageFeedbackService
 import com.britam.insureclaim.security.CurrentUserResolver
@@ -84,6 +85,7 @@ class RepairJobController(
 
 	@Operation(summary = "Move a repair to its next stage")
 	@PatchMapping("/{jobId}")
+	@Auditable(action = "REPAIR_JOB_UPDATE", description = "Moved a repair job to a new stage", entityType = "REPAIR_JOB")
 	fun update(
 		@PathVariable jobId: Long,
 		@Valid @RequestBody request: UpdateRepairJobRequest,
@@ -91,6 +93,7 @@ class RepairJobController(
 
 	@Operation(summary = "Cancel a repair that is no longer going ahead")
 	@DeleteMapping("/{jobId}")
+	@Auditable(action = "REPAIR_JOB_CANCEL", description = "Cancelled a repair job", entityType = "REPAIR_JOB")
 	fun cancel(
 		@PathVariable jobId: Long,
 		@Parameter(description = "Why the repair was cancelled") @RequestParam(required = false) reason: String? = null,
@@ -114,6 +117,7 @@ class GarageAssignmentController(
 		description = "Creates the repair job and moves the claim to Garage assigned in one step.",
 	)
 	@PutMapping("/{claimId}/garage")
+	@Auditable(action = "CLAIM_GARAGE_ASSIGN", description = "Assigned a garage to a claim", entityType = "REPAIR_JOB", entityIdFromResponse = true)
 	fun assign(
 		@PathVariable claimId: Long,
 		@Valid @RequestBody request: AssignGarageRequest,

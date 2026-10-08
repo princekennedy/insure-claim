@@ -1,5 +1,6 @@
 package com.britam.insureclaim.policy
 
+import com.britam.insureclaim.common.Auditable
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -26,11 +27,13 @@ class PolicyController(
 
 	@Operation(summary = "Issue a policy for a customer's vehicle")
 	@PostMapping
+	@Auditable(action = "POLICY_CREATE", description = "Issued a policy", entityType = "POLICY", entityIdFromResponse = true)
 	fun create(@Valid @RequestBody request: CreatePolicyRequest): ResponseEntity<PolicyAdminResponse> =
 		ResponseEntity.status(HttpStatus.CREATED).body(policyService.create(request))
 
 	@Operation(summary = "Amend an existing policy")
 	@PutMapping("/{policyId}")
+	@Auditable(action = "POLICY_UPDATE", description = "Amended a policy", entityType = "POLICY")
 	fun update(
 		@PathVariable policyId: Long,
 		@Valid @RequestBody request: UpdatePolicyRequest,

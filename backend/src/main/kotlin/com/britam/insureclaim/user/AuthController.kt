@@ -1,5 +1,6 @@
 package com.britam.insureclaim.user
 
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.security.CurrentUserResolver
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
@@ -32,12 +33,14 @@ class AuthController(
 	)
 	@PostMapping("/register")
 	@SecurityRequirements
+	@Auditable(action = "USER_REGISTER", description = "Registered a new account", entityType = "USER")
 	fun register(@Valid @RequestBody request: RegisterRequest): ResponseEntity<TokenResponse> =
 		ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request))
 
 	@Operation(summary = "Sign in and receive an access + refresh token pair")
 	@SecurityRequirements
 	@PostMapping("/login")
+	@Auditable(action = "AUTH_LOGIN", description = "Signed in")
 	fun login(
 		@Valid @RequestBody request: LoginRequest,
 		httpRequest: HttpServletRequest,
@@ -56,6 +59,7 @@ class AuthController(
 
 	@Operation(summary = "Sign out of the current device")
 	@PostMapping("/logout")
+	@Auditable(action = "AUTH_LOGOUT", description = "Signed out")
 	fun logout(@RequestBody(required = false) request: RefreshRequest?): ResponseEntity<Void> {
 		authService.logout(currentUser.requireId(), request?.refreshToken)
 		return ResponseEntity.noContent().build()
@@ -63,6 +67,7 @@ class AuthController(
 
 	@Operation(summary = "Sign out of every device")
 	@PostMapping("/logout-all")
+	@Auditable(action = "AUTH_LOGOUT_ALL", description = "Signed out of every device")
 	fun logoutAll(): ResponseEntity<Void> {
 		authService.logoutAll(currentUser.requireId())
 		return ResponseEntity.noContent().build()
@@ -74,6 +79,7 @@ class AuthController(
 
 	@Operation(summary = "Change the signed-in user's password")
 	@PostMapping("/change-password")
+	@Auditable(action = "AUTH_PASSWORD_CHANGE", description = "Changed own password", entityType = "USER")
 	fun changePassword(@Valid @RequestBody request: ChangePasswordRequest): ResponseEntity<Void> {
 		authService.changePassword(currentUser.requireId(), request)
 		return ResponseEntity.noContent().build()
@@ -81,6 +87,7 @@ class AuthController(
 
 	@Operation(summary = "Request a password reset link")
 	@PostMapping("/forgot-password")
+	@Auditable(action = "AUTH_PASSWORD_FORGOT", description = "Requested a password reset link")
 	fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest): ResponseEntity<Void> {
 		authService.forgotPassword(request)
 		return ResponseEntity.noContent().build()
@@ -88,6 +95,7 @@ class AuthController(
 
 	@Operation(summary = "Reset password using a token")
 	@PostMapping("/reset-password")
+	@Auditable(action = "AUTH_PASSWORD_RESET", description = "Reset a password with a token")
 	fun resetPassword(@Valid @RequestBody request: ResetPasswordRequest): ResponseEntity<Void> {
 		authService.resetPassword(request)
 		return ResponseEntity.noContent().build()
