@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
@@ -117,6 +117,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
   const [userManagementOpen, setUserManagementOpen] = useState(userManagementActive);
 
+  useEffect(() => {
+    if (userManagementActive) setUserManagementOpen(true);
+  }, [userManagementActive]);
+
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     logout().finally(() => {
@@ -150,7 +154,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     key={item.href}
                     href={item.href}
                     className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
-                    aria-current={pathname === item.href ? 'page' : undefined}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon />
                     <span>{item.label}</span>
@@ -168,30 +172,31 @@ export function AppLayout({ children }: AppLayoutProps) {
               onClick={() => setUserManagementOpen((open) => !open)}
               aria-expanded={userManagementOpen}
               aria-controls="user-management-nav"
-              aria-current={userManagementActive ? 'page' : undefined}
             >
               <AdminIcon />
               <span>User Management</span>
               <ChevronIcon expanded={userManagementOpen} />
             </button>
-            {userManagementOpen && (
-              <div className={styles.subNav} id="user-management-nav">
-                {userManagementItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
-                      aria-current={pathname === item.href ? 'page' : undefined}
-                    >
-                      <span className={styles.subNavMarker} aria-hidden="true" />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+            <div
+              className={styles.subNav}
+              id="user-management-nav"
+              hidden={!userManagementOpen}
+            >
+              {userManagementItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <span className={styles.subNavMarker} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </nav>
 

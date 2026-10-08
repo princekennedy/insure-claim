@@ -1,7 +1,6 @@
 package com.britam.insureclaim.claim
 
 import com.britam.insureclaim.common.Auditable
-import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.CurrentUserResolver

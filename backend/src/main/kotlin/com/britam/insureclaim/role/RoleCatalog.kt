@@ -27,19 +27,19 @@ data class RoleDefinition(
 class RoleCatalog(private val objectMapper: ObjectMapper) {
 
 	fun roles(): List<RoleDefinition> {
-		val definitions = readItems("seed/roles.json").associateBy { it.path("code").asText() }
-		val permissions = readItems("seed/permissions.json")
-			.map { node ->
+		val definitions: Map<String, JsonNode> = readItems("seed/roles.json")
+			.associateBy { it.path("code").asText() }
+		val permissions: Map<String, PermissionDefinition> = readItems("seed/permissions.json")
+			.associate { node ->
 				node.path("code").asText() to PermissionDefinition(
 					code = node.path("code").asText(),
 					name = node.path("name").asText(),
 					description = node.path("description").asText(),
 				)
 			}
-			.toMap()
-		val grants = readItems("seed/role_permissions.json")
+		val grants: Map<String, List<String>> = readItems("seed/role_permissions.json")
 			.associate { node ->
-				node.path("role").asText() to node.path("permissions").map { it.asText() }
+				node.path("role").asText() to node.path("permissions").toList().map { it.asText() }
 			}
 
 		return Role.entries.map { role ->
@@ -48,7 +48,7 @@ class RoleCatalog(private val objectMapper: ObjectMapper) {
 				code = role.code,
 				name = seed?.path("name")?.asText()?.takeIf { it.isNotBlank() } ?: role.name,
 				description = seed?.path("description")?.asText().orEmpty(),
-				permissions = grants[role.code].orEmpty().mapNotNull { permissions[it] },
+				permissions = grants[role.code].orEmpty().mapNotNull { code -> permissions[code] },
 			)
 		}
 	}

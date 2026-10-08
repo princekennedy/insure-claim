@@ -37,7 +37,7 @@ class AuditAspect(private val auditService: AuditService) {
 		var detail: String? = null
 		try {
 			result = proceedingJoinPoint.proceed()
-			status = statusOf(result, request)
+			status = statusOf(result)
 			return result
 		} catch (ex: ApiException) {
 			status = ex.status.value()
@@ -106,10 +106,8 @@ class AuditAspect(private val auditService: AuditService) {
 			}.getOrNull()
 		}
 
-	private fun statusOf(result: Any?, request: HttpServletRequest?): Int =
-		(result as? ResponseEntity<*>)?.statusCode?.value()
-			?: request?.response?.status?.takeIf { it in 100..599 }
-			?: 200
+	private fun statusOf(result: Any?): Int =
+		(result as? ResponseEntity<*>)?.statusCode?.value() ?: 200
 
 	private fun idFromResult(result: Any?): String? {
 		val target = when {
