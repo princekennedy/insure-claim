@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
@@ -11,14 +11,33 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { href: '/claims', label: 'Claims', icon: ClaimsIcon },
-  { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
-  { href: '/policies', label: 'Policies', icon: PolicyIcon },
-  { href: '/kyc', label: 'KYC', icon: KycIcon },
-  { href: '/garages', label: 'Garages', icon: GarageIcon },
-  { href: '/feedback', label: 'Feedback', icon: FeedbackIcon },
+const navGroups = [
+  {
+    label: 'Overview',
+    items: [{ href: '/dashboard', label: 'Dashboard', icon: DashboardIcon }],
+  },
+  {
+    label: 'Claims & Policies',
+    items: [
+      { href: '/claims', label: 'Claims', icon: ClaimsIcon },
+      { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
+      { href: '/policies', label: 'Policies', icon: PolicyIcon },
+      { href: '/kyc', label: 'KYC', icon: KycIcon },
+    ],
+  },
+  {
+    label: 'Service Network',
+    items: [
+      { href: '/garages', label: 'Garages', icon: GarageIcon },
+      { href: '/feedback', label: 'Feedback', icon: FeedbackIcon },
+    ],
+  },
+];
+
+const userManagementItems = [
+  { href: '/users', label: 'Users' },
+  { href: '/roles', label: 'Roles' },
+  { href: '/audit-trail', label: 'Audit Trail' },
 ];
 
 function DashboardIcon() {
@@ -93,6 +112,10 @@ function FeedbackIcon() {
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const userManagementActive = userManagementItems.some(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  );
+  const [userManagementOpen, setUserManagementOpen] = useState(userManagementActive);
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -115,21 +138,61 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <nav className={styles.nav}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          {navGroups.map((group) => (
+            <div className={styles.navGroup} key={group.label}>
+              <p className={styles.groupLabel}>{group.label}</p>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
-              >
-                <Icon />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                    aria-current={pathname === item.href ? 'page' : undefined}
+                  >
+                    <Icon />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+
+          <div className={styles.navGroup}>
+            <p className={styles.groupLabel}>Administration</p>
+            <button
+              type="button"
+              className={`${styles.navItem} ${styles.groupToggle} ${userManagementActive ? styles.navItemActive : ''}`}
+              onClick={() => setUserManagementOpen((open) => !open)}
+              aria-expanded={userManagementOpen}
+              aria-controls="user-management-nav"
+              aria-current={userManagementActive ? 'page' : undefined}
+            >
+              <AdminIcon />
+              <span>User Management</span>
+              <ChevronIcon expanded={userManagementOpen} />
+            </button>
+            {userManagementOpen && (
+              <div className={styles.subNav} id="user-management-nav">
+                {userManagementItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
+                      aria-current={pathname === item.href ? 'page' : undefined}
+                    >
+                      <span className={styles.subNavMarker} aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className={styles.sidebarFooter}>
@@ -154,5 +217,30 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className={styles.content}>{children}</div>
       </main>
     </div>
+  );
+}
+
+function AdminIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="10" cy="7" r="4" />
+      <path d="M20 8v6m3-3h-6" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      className={`${styles.chevron} ${expanded ? styles.chevronExpanded : ''}`}
+      aria-hidden="true"
+    >
+      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+    </svg>
   );
 }

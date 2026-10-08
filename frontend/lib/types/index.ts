@@ -6,5 +6,5 @@ export * from './garage';
 export * from './kyc';
 export * from './page';
 export * from './customer-summary';
+export * from './admin';
 // Feedback types are defined here to avoid conflicts
-
