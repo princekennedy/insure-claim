@@ -23,6 +23,17 @@ interface ClaimRepository :
 		JOIN FETCH c.policy p
 		JOIN FETCH c.vehicle
 		JOIN FETCH c.customer
+		WHERE c.claimNumber = :claimNumber
+		""",
+	)
+	fun findByClaimNumberWithDetails(@Param("claimNumber") claimNumber: String): Optional<Claim>
+
+	@Query(
+		"""
+		SELECT c FROM Claim c
+		JOIN FETCH c.policy p
+		JOIN FETCH c.vehicle
+		JOIN FETCH c.customer
 		WHERE c.id = :claimId
 		""",
 	)
@@ -197,5 +208,17 @@ interface ClaimStatusEventRepository : JpaRepository<ClaimStatusEvent, Long> {
 
 interface ClaimPublicTokenRepository : JpaRepository<ClaimPublicToken, Long> {
 	fun findByToken(token: String): Optional<ClaimPublicToken>
+
+	@Query(
+		"""
+		SELECT t FROM ClaimPublicToken t
+		JOIN FETCH t.claim c
+		JOIN FETCH c.vehicle
+		LEFT JOIN FETCH c.statusEvents
+		WHERE t.token = :token
+		""",
+	)
+	fun findByTokenWithClaimDetails(@Param("token") token: String): Optional<ClaimPublicToken>
+
 	fun findByClaimId(claimId: Long): Optional<ClaimPublicToken>
 }

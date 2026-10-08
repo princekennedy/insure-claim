@@ -60,7 +60,7 @@ class AuthController(
 	@Operation(summary = "Sign out of the current device")
 	@PostMapping("/logout")
 	@Auditable(action = "AUTH_LOGOUT", description = "Signed out")
-	fun logout(@RequestBody(required = false) request: RefreshRequest?): ResponseEntity<Void> {
+	fun logout(@RequestBody(required = false) request: LogoutRequest?): ResponseEntity<Void> {
 		authService.logout(currentUser.requireId(), request?.refreshToken)
 		return ResponseEntity.noContent().build()
 	}

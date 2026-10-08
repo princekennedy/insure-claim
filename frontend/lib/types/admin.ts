@@ -3,6 +3,8 @@ export interface UserSummary {
   email: string;
   fullName: string;
   role: string;
+  enabled: boolean;
+  lastLoginAt: string | null;
 }
 
 export interface PermissionDefinition {

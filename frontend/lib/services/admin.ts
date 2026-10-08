@@ -56,3 +56,15 @@ export function getAuditTrail(
     ),
   );
 }
+
+export function setUserEnabled(userId: number, enabled: boolean): Promise<void> {
+  return authenticatedRequest(() =>
+    request<void>(`/users/${userId}/enabled?enabled=${enabled}`, { method: 'PUT' }),
+  );
+}
+
+export function setUserRole(userId: number, role: string): Promise<void> {
+  return authenticatedRequest(() =>
+    request<void>(`/users/${userId}/role?role=${encodeURIComponent(role)}`, { method: 'PUT' }),
+  );
+}

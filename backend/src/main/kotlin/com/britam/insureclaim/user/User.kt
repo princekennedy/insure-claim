@@ -68,6 +68,8 @@ data class UserSummary(
 	val email: String,
 	val fullName: String,
 	val role: String,
+	val enabled: Boolean,
+	val lastLoginAt: Instant?,
 )
 
 fun User.toSummary(): UserSummary = UserSummary(
@@ -75,4 +77,6 @@ fun User.toSummary(): UserSummary = UserSummary(
 	email = email,
 	fullName = fullName,
 	role = role,
+	enabled = enabled,
+	lastLoginAt = lastLoginAt,
 )

@@ -1,9 +1,11 @@
 package com.britam.insureclaim.audit
 
 import com.britam.insureclaim.common.PageResponse
+import jakarta.persistence.criteria.Predicate
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -42,19 +44,43 @@ class AuditService(private val auditLogRepository: AuditLogRepository) {
 		val pageable = PageRequest.of(
 			page.coerceAtLeast(0),
 			size.coerceIn(1, 100),
-			Sort.by("createdAt").descending(),
+			Sort.by(Sort.Direction.DESC, "createdAt"),
 		)
-		val fromInstant = from?.atStartOfDay()?.toInstant(ZoneOffset.UTC)
-		val toInstant = to?.plusDays(1)?.atStartOfDay()?.toInstant(ZoneOffset.UTC)
-		return PageResponse.map(
-			auditLogRepository.search(
-				query = query?.trim()?.takeIf { it.isNotBlank() },
-				action = action?.trim()?.takeIf { it.isNotBlank() },
-				success = success,
-				from = fromInstant,
-				to = toInstant,
-				pageable = pageable,
-			),
-		) { AuditLogResponse.from(it) }
+
+		val spec = Specification<AuditLog> { root, _, cb ->
+			val predicates = mutableListOf<Predicate>()
+
+			if (!query.isNullOrBlank()) {
+				val pattern = "%${query.trim().lowercase()}%"
+				predicates += cb.or(
+					cb.like(cb.lower(root.get("action")), pattern),
+					cb.like(cb.lower(root.get("description")), pattern),
+					cb.like(cb.lower(cb.coalesce(root.get("actorEmail"), cb.literal(""))), pattern),
+					cb.like(cb.lower(cb.coalesce(root.get("entityId"), cb.literal(""))), pattern),
+					cb.like(cb.lower(root.get("requestPath")), pattern),
+				)
+			}
+			if (!action.isNullOrBlank()) {
+				predicates += cb.equal(root.get<String>("action"), action.trim())
+			}
+			if (success != null) {
+				predicates += cb.equal(root.get<Boolean>("success"), success)
+			}
+			if (from != null) {
+				predicates += cb.greaterThanOrEqualTo(
+					root.get("createdAt"),
+					from.atStartOfDay().atZone(ZoneOffset.UTC).toInstant(),
+				)
+			}
+			if (to != null) {
+				predicates += cb.lessThan(
+					root.get("createdAt"),
+					to.plusDays(1).atStartOfDay().atZone(ZoneOffset.UTC).toInstant(),
+				)
+			}
+			cb.and(*predicates.toTypedArray())
+		}
+
+		return PageResponse.map(auditLogRepository.findAll(spec, pageable)) { AuditLogResponse.from(it) }
 	}
 }

@@ -4,7 +4,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
-import { logout } from '../../services/auth';
+import { getCurrentUser, logout } from '../../services/auth';
+import type { Role } from '../../types/auth';
 import styles from './app-layout.module.css';
 
 interface AppLayoutProps {
@@ -34,10 +35,13 @@ const navGroups = [
   },
 ];
 
+const STAFF_ROLES: readonly Role[] = ['AGENT', 'INSURER_ADMIN', 'ADMIN'];
+const ADMIN_ROLES: readonly Role[] = ['INSURER_ADMIN', 'ADMIN'];
+
 const userManagementItems = [
-  { href: '/users', label: 'Users' },
-  { href: '/roles', label: 'Roles' },
-  { href: '/audit-trail', label: 'Audit Trail' },
+  { href: '/users', label: 'Users', roles: STAFF_ROLES },
+  { href: '/roles', label: 'Roles', roles: STAFF_ROLES },
+  { href: '/audit-trail', label: 'Audit Trail', roles: ADMIN_ROLES },
 ];
 
 function DashboardIcon() {
@@ -112,7 +116,27 @@ function FeedbackIcon() {
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const userManagementActive = userManagementItems.some(
+  const [viewerRole, setViewerRole] = useState<Role | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then((currentUser) => {
+        if (!cancelled) setViewerRole(currentUser.role);
+      })
+      .catch(() => {
+        if (!cancelled) setViewerRole(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visibleManagementItems = viewerRole
+    ? userManagementItems.filter((item) => item.roles.includes(viewerRole))
+    : [];
+  const showAdministration = visibleManagementItems.length > 0;
+  const userManagementActive = visibleManagementItems.some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
   const [userManagementOpen, setUserManagementOpen] = useState(userManagementActive);
@@ -164,40 +188,42 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           ))}
 
-          <div className={styles.navGroup}>
-            <p className={styles.groupLabel}>Administration</p>
-            <button
-              type="button"
-              className={`${styles.navItem} ${styles.groupToggle} ${userManagementActive ? styles.navItemActive : ''}`}
-              onClick={() => setUserManagementOpen((open) => !open)}
-              aria-expanded={userManagementOpen}
-              aria-controls="user-management-nav"
-            >
-              <AdminIcon />
-              <span>User Management</span>
-              <ChevronIcon expanded={userManagementOpen} />
-            </button>
-            <div
-              className={styles.subNav}
-              id="user-management-nav"
-              hidden={!userManagementOpen}
-            >
-              {userManagementItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
-                    aria-current={isActive ? 'page' : undefined}
-                  >
-                    <span className={styles.subNavMarker} aria-hidden="true" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+          {showAdministration && (
+            <div className={styles.navGroup}>
+              <p className={styles.groupLabel}>Administration</p>
+              <button
+                type="button"
+                className={`${styles.navItem} ${styles.groupToggle} ${userManagementActive ? styles.navItemActive : ''}`}
+                onClick={() => setUserManagementOpen((open) => !open)}
+                aria-expanded={userManagementOpen}
+                aria-controls="user-management-nav"
+              >
+                <AdminIcon />
+                <span>User Management</span>
+                <ChevronIcon expanded={userManagementOpen} />
+              </button>
+              <div
+                className={styles.subNav}
+                id="user-management-nav"
+                hidden={!userManagementOpen}
+              >
+                {visibleManagementItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      <span className={styles.subNavMarker} aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
 
         <div className={styles.sidebarFooter}>

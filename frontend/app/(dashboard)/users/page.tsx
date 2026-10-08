@@ -10,7 +10,7 @@ import {
   PageHeader,
   PageLoader,
 } from '@/lib/components/ui';
-import { getUsers } from '@/lib/services/admin';
+import { getUsers, setUserEnabled, setUserRole } from '@/lib/services/admin';
 import type { PageResponse, UserSummary } from '@/lib/types';
 import styles from '../management.module.css';
 
@@ -24,6 +24,18 @@ export default function UsersPage() {
   const [appliedFilters, setAppliedFilters] = useState({ query: '', role: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState('');
+
+  function formatDate(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date);
+  }
 
   const loadUsers = useCallback(async (page: number, filters: typeof appliedFilters) => {
     setLoading(true);
@@ -53,6 +65,32 @@ export default function UsersPage() {
     setQuery('');
     setRole('');
     setAppliedFilters({ query: '', role: '' });
+  }
+
+  async function runUserAction(userId: number, action: () => Promise<unknown>) {
+    setBusyId(userId);
+    setActionError('');
+    try {
+      await action();
+      await loadUsers(result?.page ?? 0, appliedFilters);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'The change could not be saved.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function handleToggle(user: UserSummary) {
+    void runUserAction(user.id, () => setUserEnabled(user.id, !user.enabled));
+  }
+
+  function handleRoleChange(user: UserSummary, nextRole: string) {
+    if (nextRole === user.role) return;
+    const confirmed = window.confirm(
+      `Change ${user.fullName}'s role from ${user.role} to ${nextRole}?`,
+    );
+    if (!confirmed) return;
+    void runUserAction(user.id, () => setUserRole(user.id, nextRole));
   }
 
   return (
@@ -108,6 +146,10 @@ export default function UsersPage() {
         </>
       )}
 
+      {actionError && (
+        <Alert type="error">{actionError}</Alert>
+      )}
+
       {loading && !result ? (
         <PageLoader message="Loading users..." />
       ) : result ? (
@@ -131,7 +173,10 @@ export default function UsersPage() {
                       <th scope="col">Name</th>
                       <th scope="col">Email</th>
                       <th scope="col">Role</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Last login</th>
                       <th scope="col">User ID</th>
+                      <th scope="col">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -139,8 +184,37 @@ export default function UsersPage() {
                       <tr key={user.id}>
                         <td className={styles.primaryCell}>{user.fullName}</td>
                         <td>{user.email}</td>
-                        <td><Badge variant="info" size="sm">{user.role}</Badge></td>
+                        <td>
+                          <select
+                            className={styles.roleSelect}
+                            value={user.role}
+                            disabled={busyId === user.id}
+                            aria-label={`Role for ${user.fullName}`}
+                            onChange={(event) => handleRoleChange(user, event.target.value)}
+                          >
+                            {ROLES.map((roleCode) => (
+                              <option key={roleCode} value={roleCode}>{roleCode}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <Badge variant={user.enabled ? 'success' : 'danger'} size="sm">
+                            {user.enabled ? 'Active' : 'Disabled'}
+                          </Badge>
+                        </td>
+                        <td>{user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}</td>
                         <td>{user.id}</td>
+                        <td>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={user.enabled ? 'danger' : 'secondary'}
+                            loading={busyId === user.id}
+                            onClick={() => handleToggle(user)}
+                          >
+                            {user.enabled ? 'Disable' : 'Enable'}
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

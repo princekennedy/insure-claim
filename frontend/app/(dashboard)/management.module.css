@@ -292,3 +292,18 @@
     width: 100%;
   }
 }
+
+.roleSelect {
+  min-width: 140px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  color: #111827;
+}
+
+.roleSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

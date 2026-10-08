@@ -35,6 +35,9 @@ data class LoginRequest(
 @Schema(name = "RefreshRequest")
 data class RefreshRequest(@field:NotBlank val refreshToken: String)
 
+@Schema(name = "LogoutRequest", description = "Optional refresh token to revoke alongside the session")
+data class LogoutRequest(val refreshToken: String? = null)
+
 @Schema(name = "ChangePasswordRequest")
 data class ChangePasswordRequest(
 	@field:NotBlank val currentPassword: String,
