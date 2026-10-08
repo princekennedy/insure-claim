@@ -45,13 +45,13 @@ class SecurityConfig(
 				.requestMatchers("/api/v1/claims/{claimId}/tracking-link").permitAll()
 
 					// Insurer-only surfaces.
-					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.name, Role.INSURER_ADMIN.name, Role.ADMIN.name)
-					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.name, Role.INSURER_ADMIN.name, Role.ADMIN.name)
+					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
 					// Staff consoles sit under /admin but are not admin-only; each one
 					// states its own roles via @PreAuthorize. Only user administration
 					// is reserved for full administrators here.
-					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.name)
-					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.name, Role.ADMIN.name)
+					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.code)
+					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
 
 					// Everything else needs a valid token; ownership is enforced in services.
 					.anyRequest().authenticated()

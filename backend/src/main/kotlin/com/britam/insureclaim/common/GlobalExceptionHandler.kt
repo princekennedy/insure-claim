@@ -15,6 +15,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.time.Instant
 
 @Schema(name = "ApiError", description = "Uniform error envelope returned by every endpoint")
@@ -95,6 +96,10 @@ class GlobalExceptionHandler {
 		request: HttpServletRequest,
 	): ResponseEntity<ApiErrorResponse> =
 		build(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", "Method not supported for this endpoint", request)
+
+	@ExceptionHandler(NoResourceFoundException::class)
+	fun handleNoResource(ex: NoResourceFoundException, request: HttpServletRequest): ResponseEntity<ApiErrorResponse> =
+		build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Not Found", request)
 
 	@ExceptionHandler(MethodArgumentTypeMismatchException::class)
 	fun handleTypeMismatch(

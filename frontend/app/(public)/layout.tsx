@@ -15,6 +15,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <span className={styles.logoText}>InsureClaim</span>
           </Link>
           <nav className={styles.nav}>
+            <Link href="/" className={styles.navLink}>Home</Link>
             <Link href="/file-claim" className={styles.navLink}>File a Claim</Link>
             <Link href="/track" className={styles.navLink}>Track Claim</Link>
             <Link href="/submit-feedback" className={styles.navLink}>Feedback</Link>
