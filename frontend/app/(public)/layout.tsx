@@ -8,18 +8,15 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
-            <svg viewBox="0 0 32 32" className={styles.logoIcon}>
-              <rect x="2" y="2" width="28" height="28" rx="6" fill="#2563eb" />
-              <path d="M10 22V10h4l6 6v6h-4l-6-6z" fill="white" />
-            </svg>
-            <span className={styles.logoText}>InsureClaim</span>
+            <div className={styles.logoContainer}>
+              <span className={styles.logoText}>Britam</span>
+              <span className={styles.logoTagline}>With you every step of the way</span>
+            </div>
           </Link>
           <nav className={styles.nav}>
-            <Link href="/" className={styles.navLink}>Home</Link>
-            <Link href="/file-claim" className={styles.navLink}>File a Claim</Link>
-            <Link href="/track" className={styles.navLink}>Track Claim</Link>
-            <Link href="/submit-feedback" className={styles.navLink}>Feedback</Link>
-            <Link href="/login" className={styles.navButton}>Sign In</Link>
+            <Link href="/auth/login" className={styles.navLink}>Track Claim</Link>
+            <Link href="/auth/login" className={styles.navLink}>Feedback</Link>
+            <Link href="/auth/login" className={styles.navButton}>Sign In</Link>
           </nav>
         </div>
       </header>
@@ -36,10 +33,10 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <span>InsureClaim Portal</span>
           </div>
           <div className={styles.footerLinks}>
-            <Link href="/file-claim">File a Claim</Link>
-            <Link href="/track">Track Claim</Link>
-            <Link href="/submit-feedback">Feedback</Link>
-            <Link href="/login">Sign In</Link>
+            <Link href="/auth/login">File a Claim</Link>
+            <Link href="/auth/login">Track Claim</Link>
+            <Link href="/auth/login">Feedback</Link>
+            <Link href="/auth/login">Sign In</Link>
           </div>
           <p className={styles.footerCopy}>
             Britam Insurance PLC - Motor Insurance Claims Platform

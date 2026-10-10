@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background-color: #f0f4f8;
+  background-color: #1E293B;
   position: relative;
   overflow: hidden;
 }
@@ -18,14 +18,15 @@
 .bgPattern {
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 6v4H4V4H0v2h4v4h2V6H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M40 0l40 40-40 40L0 40 40 0zm0 10L10 40l30 30 30-30-30-30z'/%3E%3Cpath d='M40 20l20 20-20 20L20 40l20-20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.6;
 }
 
 .card {
   position: relative;
   width: 100%;
   max-width: 420px;
-  background-color: white;
+  background-color: #FAF8F5;
   border-radius: 0.75rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -35,33 +36,40 @@
 .header {
   padding: 1.5rem;
   text-align: center;
-  background-color: #1f2937;
+  background-color: #FAF8F5;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
-  justifyContent: center;
-  gap: 0.75rem;
   text-decoration: none;
-  color: white;
+  color: #111827;
 }
 
-.logoIcon {
-  width: 2.5rem;
-  height: 2.5rem;
+.logoContainer {
+  display: flex;
+  flex-direction: column;
 }
 
 .logoText {
   font-size: 1.5rem;
   font-weight: 700;
+  color: #0066CC;
+  line-height: 1.2;
+}
+
+.logoTagline {
+  font-size: 0.625rem;
+  color: #C06C5C;
+  font-weight: 500;
+  letter-spacing: 0.025em;
 }
 
 .tagline {
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: #9ca3af;
-  margin: 0;
 }
 
 .content {
