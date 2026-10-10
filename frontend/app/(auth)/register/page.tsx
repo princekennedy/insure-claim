@@ -38,12 +38,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await register(formData);
-      // Store tokens
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
+      await register(formData);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
