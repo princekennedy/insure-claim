@@ -173,17 +173,6 @@ class JsonDataSeeder(
         }
     }
 
-    private fun requireAccountsSeedable(fileName: String): Boolean {
-        if (!properties.canSeedAccounts) {
-            logger.warn(
-                "Skipping {} - no seed password configured. Set INSURECLAIM_SEED_PASSWORD to seed accounts.",
-                fileName,
-            )
-            return false
-        }
-        return true
-    }
-
     // ── role / permission seeders (code-only, validated against Role) ────
 
     private fun seedRoles(fileName: String, root: JsonNode) {
@@ -239,21 +228,11 @@ class JsonDataSeeder(
     // ── seeders ─────────────────────────────────────────────────────────
 
     private fun seedUsers(fileName: String, root: JsonNode) {
-        if (!properties.canSeedAccounts) {
-            logger.warn(
-                "Skipping {} - no seed password configured. Set INSURECLAIM_SEED_PASSWORD to seed accounts.",
-                fileName,
-            )
-            return
-        }
         var inserted = 0
         var present = 0
         transactionTemplate.executeWithoutResult {
             items(fileName, root, SeedUser::class.java).forEach { seed ->
-                val rawPassword = seed.password ?: properties.password
-                if (rawPassword.isBlank()) {
-                    throw IllegalStateException("Seed $fileName: password is required for ${seed.email}")
-                }
+                val rawPassword = requireText(fileName, seed.password, "password")
                 val encodedPassword = passwordEncoder.encode(rawPassword)!!
 
                 val email = requireText(fileName, seed.email, "email").lowercase()
@@ -325,7 +304,6 @@ class JsonDataSeeder(
     }
 
     private fun seedVehicles(fileName: String, root: JsonNode) {
-        if (!requireAccountsSeedable(fileName)) return
         var inserted = 0
         var present = 0
         var orphaned = 0
@@ -365,7 +343,6 @@ class JsonDataSeeder(
     }
 
     private fun seedPolicies(fileName: String, root: JsonNode) {
-        if (!requireAccountsSeedable(fileName)) return
         var inserted = 0
         var present = 0
         var skipped = 0

@@ -1,6 +1,6 @@
 {
   "entity": "users",
-  "description": "Portal accounts. Passwords are never stored here - every account takes the value of INSURECLAIM_SEED_PASSWORD, and the whole file is skipped when that is unset.",
+  "description": "Portal accounts. Each entry carries its own password, which is bcrypt-encoded by the seeder.",
   "items": [
     {
       "email": "insurer.admin@britam.lk",
