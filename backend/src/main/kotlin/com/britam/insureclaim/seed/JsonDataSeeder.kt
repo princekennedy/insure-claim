@@ -35,6 +35,7 @@ class SeedGarage {
 
 class SeedUser {
 	var email: String? = null
+	var password: String? = null
 	var fullName: String? = null
 	var phone: String? = null
 	var nic: String? = null
@@ -130,17 +131,9 @@ class JsonDataSeeder(
 	// ------------------------------------------------------------- accounts --
 
 	private fun seedUsers(fileName: String, root: JsonNode) {
-		if (!properties.canSeedAccounts) {
-			logger.warn(
-				"Skipping {} - no seed password configured. Set INSURECLAIM_SEED_PASSWORD to seed accounts.",
-				fileName,
-			)
-			return
-		}
-		val encodedPassword = passwordEncoder.encode(properties.password)
-			?: throw IllegalStateException("Password encoder could not hash the seed password")
 		var inserted = 0
 		var present = 0
+		var skipped = 0
 		transactionTemplate.executeWithoutResult {
 			items(fileName, root, SeedUser::class.java).forEach { seed ->
 				val email = requireText(fileName, seed.email, "email").lowercase()
@@ -148,34 +141,47 @@ class JsonDataSeeder(
 				val role = parseRole(fileName, seed.role)
 				val existing = userRepository.findByEmailIgnoreCase(email).orElse(null)
 				if (existing != null) {
-				if (existing.role != role.code) {
+					if (existing.role != role.code) {
+						logger.warn(
+							"Seed {}: {} already exists with role {}; seed says {} - left untouched",
+							fileName,
+							email,
+							existing.role,
+							role.code,
+						)
+					}
+					present++
+					return@forEach
+				}
+				val rawPassword = seed.password?.takeIf { it.isNotBlank() }
+					?: properties.password.takeIf { it.isNotBlank() }
+				if (rawPassword == null) {
+					skipped++
 					logger.warn(
-						"Seed {}: {} already exists with role {}; seed says {} - left untouched",
+						"Seed {}: {} has no password - add one to users.json or set INSURECLAIM_SEED_PASSWORD - skipped",
 						fileName,
 						email,
-						existing.role,
-						role.code,
 					)
+					return@forEach
 				}
-				present++
-				return@forEach
-			}
-			userRepository.save(
-				User().apply {
-					this.email = email
-					password = encodedPassword
-					this.fullName = fullName
-					phone = seed.phone
-					nic = seed.nic
-					this.role = role.code
-					enabled = seed.enabled ?: true
-					emailVerified = true
-				},
+				val encodedPassword = passwordEncoder.encode(rawPassword)
+					?: throw IllegalStateException("Password encoder could not hash the seed password")
+				userRepository.save(
+					User().apply {
+						this.email = email
+						password = encodedPassword
+						this.fullName = fullName
+						phone = seed.phone
+						nic = seed.nic
+						this.role = role.code
+						enabled = seed.enabled ?: true
+						emailVerified = true
+					},
 				)
 				inserted++
 			}
 		}
-		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+		logger.info("Seed {}: {} inserted, {} already present, {} skipped", fileName, inserted, present, skipped)
 	}
 
 	// ------------------------------------------------------- garage panel ----
@@ -216,7 +222,6 @@ class JsonDataSeeder(
 	// ------------------------------------------------------------- vehicles --
 
 	private fun seedVehicles(fileName: String, root: JsonNode) {
-		if (!requireAccountsSeedable(fileName)) return
 		var inserted = 0
 		var present = 0
 		var orphaned = 0
@@ -256,7 +261,6 @@ class JsonDataSeeder(
 	// ------------------------------------------------------------- policies --
 
 	private fun seedPolicies(fileName: String, root: JsonNode) {
-		if (!requireAccountsSeedable(fileName)) return
 		var inserted = 0
 		var present = 0
 		var orphaned = 0
@@ -316,12 +320,6 @@ class JsonDataSeeder(
 			seeds.add(objectMapper.convertValue(node, type))
 		}
 		return seeds
-	}
-
-	private fun requireAccountsSeedable(fileName: String): Boolean {
-		if (properties.canSeedAccounts) return true
-		logger.warn("Skipping {} - no seed password configured (INSURECLAIM_SEED_PASSWORD)", fileName)
-		return false
 	}
 
 	private fun requireText(fileName: String, value: String?, field: String): String {

@@ -11,13 +11,10 @@ data class SeedProperties(
 	val enabled: Boolean = true,
 
 	/**
-	 * Password applied to every account in `seed/users.json`. Deliberately has
-	 * no default: nothing is written to the repository, and if it is left blank
-	 * the account/vehicle/policy seeds are skipped rather than created with a
-	 * guessable credential. Supply it through INSURECLAIM_SEED_PASSWORD.
+	 * Optional fallback password for account rows in `seed/users.json` that do
+	 * not carry their own `password`. Normally each JSON entry supplies its own
+	 * credential; this only covers rows without one (can be set through
+	 * INSURECLAIM_SEED_PASSWORD).
 	 */
 	val password: String = "",
-) {
-	val canSeedAccounts: Boolean
-		get() = enabled && password.isNotBlank()
-}
+)
