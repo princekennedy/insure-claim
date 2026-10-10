@@ -24,20 +24,27 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
   text-decoration: none;
   color: #111827;
 }
 
-.logoIcon {
-  width: 2rem;
-  height: 2rem;
+.logoContainer {
+  display: flex;
+  flex-direction: column;
 }
 
 .logoText {
-  font-size: 1.125rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: #2563eb;
+  line-height: 1.2;
+}
+
+.logoTagline {
+  font-size: 0.625rem;
+  color: #dc2626;
+  font-weight: 500;
+  letter-spacing: 0.025em;
 }
 
 .nav {
@@ -55,7 +62,7 @@
 }
 
 .navLink:hover {
-  color: #111827;
+  color: #2563eb;
 }
 
 .navButton {

@@ -37,16 +37,16 @@
 
 /* Variants */
 .primary {
-  background-color: #2563eb;
+  background-color: #0066CC;
   color: white;
 }
 
 .primary:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: #0055AA;
 }
 
 .primary:active:not(:disabled) {
-  background-color: #1e40af;
+  background-color: #004488;
 }
 
 .secondary {
