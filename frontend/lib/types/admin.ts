@@ -45,8 +45,8 @@ export interface CreateUserRequest {
 
 export interface UpdateUserRequest {
   fullName: string;
-  phone?: string;
-  nic?: string;
+  phone?: string | null;
+  nic?: string | null;
   role?: string;
   enabled?: boolean;
   password?: string;

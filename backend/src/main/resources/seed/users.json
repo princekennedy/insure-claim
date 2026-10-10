@@ -3,6 +3,15 @@
   "description": "Portal accounts. Each entry carries its own password, which is bcrypt-encoded by the seeder.",
   "items": [
     {
+      "email": "platform.admin@britam.lk",
+      "password": "password",
+      "fullName": "System Administrator",
+      "phone": "+94771000000",
+      "nic": "19751234567",
+      "role": "ADMIN",
+      "enabled": true
+    },
+    {
       "email": "insurer.admin@britam.lk",
       "password": "password",
       "fullName": "Nimal Perera",
