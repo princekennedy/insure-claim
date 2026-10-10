@@ -5,7 +5,14 @@ import com.britam.insureclaim.garage.GarageRepository
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.policy.PolicyRepository
 import com.britam.insureclaim.policy.PolicyStatus
+import com.britam.insureclaim.role.PermissionEntity
+import com.britam.insureclaim.role.PermissionRepository
 import com.britam.insureclaim.role.Role
+import com.britam.insureclaim.role.RoleEntity
+import com.britam.insureclaim.role.RolePermissionEntity
+import com.britam.insureclaim.role.RolePermissionKey
+import com.britam.insureclaim.role.RolePermissionRepository
+import com.britam.insureclaim.role.RoleRepository
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.Vehicle
@@ -91,6 +98,9 @@ class JsonDataSeeder(
 	private val garageRepository: GarageRepository,
 	private val vehicleRepository: VehicleRepository,
 	private val policyRepository: PolicyRepository,
+	private val roleRepository: RoleRepository,
+	private val permissionRepository: PermissionRepository,
+	private val rolePermissionRepository: RolePermissionRepository,
 	private val passwordEncoder: PasswordEncoder,
 	private val transactionTemplate: TransactionTemplate,
 ) : ApplicationRunner {
@@ -121,11 +131,95 @@ class JsonDataSeeder(
 
 	private fun dispatch(fileName: String, root: JsonNode) {
 		when (fileName) {
+			"permissions.json" -> seedPermissions(fileName, root)
+			"roles.json" -> seedRoles(fileName, root)
+			"role_permissions.json" -> seedRolePermissions(fileName, root)
 			"users.json" -> seedUsers(fileName, root)
 			"garages.json" -> seedGarages(fileName, root)
 			"vehicles.json" -> seedVehicles(fileName, root)
 			"policies.json" -> seedPolicies(fileName, root)
 		}
+	}
+
+	// ----------------------------------------------------- role catalog ----
+
+	private fun seedPermissions(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		transactionTemplate.executeWithoutResult {
+			items(fileName, root, SeedPermission::class.java).forEach { seed ->
+				val code = requireText(fileName, seed.code, "code").uppercase()
+				if (permissionRepository.existsById(code)) {
+					present++
+					return@forEach
+				}
+				permissionRepository.save(
+					PermissionEntity(
+						code = code,
+						name = requireText(fileName, seed.name, "name"),
+						description = seed.description.orEmpty(),
+					),
+				)
+				inserted++
+			}
+		}
+		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+	}
+
+	private fun seedRoles(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		transactionTemplate.executeWithoutResult {
+			items(fileName, root, SeedRole::class.java).forEach { seed ->
+				val code = requireText(fileName, seed.code, "code").uppercase()
+				if (roleRepository.existsById(code)) {
+					present++
+					return@forEach
+				}
+				roleRepository.save(
+					RoleEntity(
+						code = code,
+						name = requireText(fileName, seed.name, "name"),
+						description = seed.description.orEmpty(),
+						system = code in Role.VALID_CODES,
+					),
+				)
+				inserted++
+			}
+		}
+		logger.info("Seed {}: {} inserted, {} already present", fileName, inserted, present)
+	}
+
+	private fun seedRolePermissions(fileName: String, root: JsonNode) {
+		var inserted = 0
+		var present = 0
+		var skipped = 0
+		transactionTemplate.executeWithoutResult {
+			items(fileName, root, SeedRolePermission::class.java).forEach { seed ->
+				val roleCode = requireText(fileName, seed.role, "role").uppercase()
+				if (!roleRepository.existsById(roleCode)) {
+					skipped++
+					logger.warn("Seed {}: role {} has no role row - skipped", fileName, roleCode)
+					return@forEach
+				}
+				(seed.permissions ?: emptyList()).forEach { raw ->
+					val permissionCode = raw.trim().uppercase()
+					if (!permissionRepository.existsById(permissionCode)) {
+						skipped++
+						logger.warn("Seed {}: {} has no permission {} - skipped", fileName, roleCode, permissionCode)
+						return@forEach
+					}
+					val key = RolePermissionKey(roleCode, permissionCode)
+					if (rolePermissionRepository.existsById(key)) {
+						present++
+						return@forEach
+					}
+					rolePermissionRepository.save(RolePermissionEntity(key))
+					inserted++
+				}
+			}
+		}
+		logger.info("Seed {}: {} inserted, {} already present, {} skipped", fileName, inserted, present, skipped)
 	}
 
 	// ------------------------------------------------------------- accounts --
@@ -363,8 +457,16 @@ class JsonDataSeeder(
 	companion object {
 		const val SEED_PATTERN = "classpath:seed/*.json"
 
-		/** Dependency order: accounts first, then the records that reference them. */
-		val ORDER = listOf("users.json", "garages.json", "vehicles.json", "policies.json")
+		/** Dependency order: role catalog first, then accounts, then records that reference them. */
+		val ORDER = listOf(
+			"permissions.json",
+			"roles.json",
+			"role_permissions.json",
+			"users.json",
+			"garages.json",
+			"vehicles.json",
+			"policies.json",
+		)
 	}
 }
 

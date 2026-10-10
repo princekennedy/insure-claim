@@ -44,15 +44,24 @@ class SecurityConfig(
 					.requestMatchers("/api/v1/claims/tracking/**").permitAll()
 				.requestMatchers("/api/v1/claims/{claimId}/tracking-link").permitAll()
 
-					// Insurer-only surfaces.
-					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
-					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					// Insurer-only surfaces. ROLE_STAFF is granted to every
+					// non-CUSTOMER role, so admin-created roles work too.
+					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
+					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
 					// Staff consoles sit under /admin but are not admin-only; each one
 					// states its own roles via @PreAuthorize. Only user administration
 					// is reserved for full administrators here.
 					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.POST, "/api/v1/admin/roles").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.PUT, "/api/v1/admin/roles/*").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.DELETE, "/api/v1/admin/roles/*").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.GET, "/api/v1/admin/roles", "/api/v1/admin/roles/*").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
 					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
-					.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers("/api/v1/users/*/enabled").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers(HttpMethod.POST, "/api/v1/users").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers(HttpMethod.DELETE, "/api/v1/users/*").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.GET, "/api/v1/users", "/api/v1/users/*").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
 
 					// Everything else needs a valid token; ownership is enforced in services.
 					.anyRequest().authenticated()

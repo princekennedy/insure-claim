@@ -102,10 +102,7 @@ class UserAdminController(
 			size.coerceIn(1, 100),
 			Sort.by("createdAt").descending(),
 		)
-		val roleFilter = role?.trim()?.takeIf { it.isNotBlank() }?.let { requested ->
-			com.britam.insureclaim.role.Role.entries.firstOrNull { it.code.equals(requested, ignoreCase = true) }
-		}
-		val result = authService.search(query, roleFilter, pageable)
+		val result = authService.search(query, role, pageable)
 		return PageResponse(
 			content = result.content.map(User::toSummary),
 			page = result.number,
@@ -116,6 +113,32 @@ class UserAdminController(
 			last = result.isLast,
 			empty = result.isEmpty,
 		)
+	}
+
+	@Operation(summary = "Fetch one user")
+	@GetMapping("/{userId}")
+	fun get(@PathVariable userId: Long): UserResponse = UserResponse.from(authService.findById(userId))
+
+	@Operation(summary = "Create an account (platform admin only)")
+	@PostMapping
+	@Auditable(action = "USER_CREATE", description = "Created a user account", entityType = "USER")
+	fun create(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserResponse> =
+		ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(authService.createUser(request)))
+
+	@Operation(summary = "Edit an account (insurer admin or platform admin only)")
+	@PutMapping("/{userId}")
+	@Auditable(action = "USER_UPDATE", description = "Updated a user account", entityType = "USER")
+	fun update(
+		@PathVariable userId: Long,
+		@Valid @RequestBody request: UpdateUserRequest,
+	): UserResponse = UserResponse.from(authService.updateUser(userId, request, currentUser.requireId()))
+
+	@Operation(summary = "Delete an account with no claims (platform admin only)")
+	@DeleteMapping("/{userId}")
+	@Auditable(action = "USER_DELETE", description = "Deleted a user account", entityType = "USER")
+	fun delete(@PathVariable userId: Long): ResponseEntity<Void> {
+		authService.deleteUser(userId, currentUser.requireId())
+		return ResponseEntity.noContent().build()
 	}
 
 	@Operation(summary = "Change a user's role (insurer admin or platform admin only)")

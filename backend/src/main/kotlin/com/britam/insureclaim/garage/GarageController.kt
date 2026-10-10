@@ -62,7 +62,7 @@ class GarageController(
 @Tag(name = "Repair jobs", description = "Garage assignment and repair progress")
 @RestController
 @RequestMapping("/api/v1/repair-jobs")
-@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN')")
+@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN', 'STAFF')")
 class RepairJobController(
 	private val garageService: GarageService,
 	private val accountService: UserAccountService,
@@ -105,7 +105,7 @@ class RepairJobController(
 @Tag(name = "Garage assignment", description = "Routing an approved claim to a panel garage")
 @RestController
 @RequestMapping("/api/v1/claims")
-@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN')")
+@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN', 'STAFF')")
 class GarageAssignmentController(
 	private val garageService: GarageService,
 	private val accountService: UserAccountService,

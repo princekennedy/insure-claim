@@ -74,7 +74,7 @@ class KycController(
 @Tag(name = "KYC review", description = "Insurer-staff verification queue")
 @RestController
 @RequestMapping("/api/v1/admin/kyc")
-@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN')")
+@PreAuthorize("hasAnyRole('AGENT', 'INSURER_ADMIN', 'ADMIN', 'STAFF')")
 class KycReviewController(
 	private val kycService: KycService,
 	private val accountService: UserAccountService,

@@ -2,8 +2,14 @@ import { request } from './api';
 import { authenticatedRequest } from './auth';
 import type {
   AuditLogResponse,
+  CreateUserRequest,
   PageResponse,
+  PermissionDefinition,
+  RoleCreateRequest,
   RoleDefinition,
+  RoleUpdateRequest,
+  UpdateUserRequest,
+  UserDetail,
   UserSummary,
 } from '../types';
 
@@ -41,8 +47,60 @@ export function getUsers(
   );
 }
 
-export function getAdminRoles(): Promise<RoleDefinition[]> {
-  return authenticatedRequest(() => request<RoleDefinition[]>('/admin/roles'));
+export function getAdminRoles(
+  page = 0,
+  size = 100,
+): Promise<PageResponse<RoleDefinition>> {
+  return authenticatedRequest(() =>
+    request<PageResponse<RoleDefinition>>(`/admin/roles${toQuery({ page, size })}`),
+  );
+}
+
+export function getPermissions(): Promise<PermissionDefinition[]> {
+  return authenticatedRequest(() => request<PermissionDefinition[]>('/admin/roles/permissions'));
+}
+
+export function createRole(body: RoleCreateRequest): Promise<RoleDefinition> {
+  return authenticatedRequest(() =>
+    request<RoleDefinition>('/admin/roles', { method: 'POST', body: JSON.stringify(body) }),
+  );
+}
+
+export function updateRole(code: string, body: RoleUpdateRequest): Promise<RoleDefinition> {
+  return authenticatedRequest(() =>
+    request<RoleDefinition>(`/admin/roles/${encodeURIComponent(code)}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+export function deleteRole(code: string): Promise<void> {
+  return authenticatedRequest(() =>
+    request<void>(`/admin/roles/${encodeURIComponent(code)}`, { method: 'DELETE' }),
+  );
+}
+
+export function getUser(userId: number): Promise<UserDetail> {
+  return authenticatedRequest(() => request<UserDetail>(`/users/${userId}`));
+}
+
+export function createUser(body: CreateUserRequest): Promise<UserDetail> {
+  return authenticatedRequest(() =>
+    request<UserDetail>('/users', { method: 'POST', body: JSON.stringify(body) }),
+  );
+}
+
+export function updateUser(userId: number, body: UpdateUserRequest): Promise<UserDetail> {
+  return authenticatedRequest(() =>
+    request<UserDetail>(`/users/${userId}`, { method: 'PUT', body: JSON.stringify(body) }),
+  );
+}
+
+export function deleteUser(userId: number): Promise<void> {
+  return authenticatedRequest(() =>
+    request<void>(`/users/${userId}`, { method: 'DELETE' }),
+  );
 }
 
 export function getAuditTrail(

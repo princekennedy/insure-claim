@@ -35,6 +35,10 @@ interface UserRepository : JpaRepository<User, Long> {
 
 	@Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.enabled = true")
 	fun countActiveByRole(@Param("role") role: String): Long
+
+	fun existsByRole(role: String): Boolean
+
+	fun countByRole(role: String): Long
 }
 
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {

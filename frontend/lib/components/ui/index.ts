@@ -11,3 +11,4 @@ export { EmptyState } from './empty-state';
 export { PageHeader } from './page-header';
 export { Alert, ToastAlert } from './alert';
 export { Dialog } from './dialog';
+export { Pagination } from './pagination';

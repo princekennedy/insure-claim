@@ -14,8 +14,15 @@ class AuthenticatedUser(
 	private val displayName: String,
 ) : UserDetails {
 
-	override fun getAuthorities(): Collection<GrantedAuthority> =
-		listOf(SimpleGrantedAuthority("ROLE_${role}"), SimpleGrantedAuthority("SCOPE_${role.lowercase()}"))
+	/**
+	 * Every non-CUSTOMER role also receives ROLE_STAFF, so admin-created
+	 * roles work across the staff consoles without editing security matchers.
+	 */
+	override fun getAuthorities(): Collection<GrantedAuthority> = buildList {
+		add(SimpleGrantedAuthority("ROLE_${role}"))
+		if (role != CUSTOMER_ROLE) add(SimpleGrantedAuthority(STAFF_AUTHORITY))
+		add(SimpleGrantedAuthority("SCOPE_${role.lowercase()}"))
+	}
 
 	override fun getPassword(): String? = null
 
@@ -30,10 +37,15 @@ class AuthenticatedUser(
 	override fun isEnabled(): Boolean = true
 
 	val isStaff: Boolean
-		get() = role in setOf("ADMIN", "INSURER_ADMIN", "AGENT")
+		get() = role != CUSTOMER_ROLE
 
 	val name: String
 		get() = displayName
 
 	override fun toString(): String = "AuthenticatedUser(id=$id, role=$role)"
+
+	companion object {
+		const val CUSTOMER_ROLE = "CUSTOMER"
+		const val STAFF_AUTHORITY = "ROLE_STAFF"
+	}
 }
