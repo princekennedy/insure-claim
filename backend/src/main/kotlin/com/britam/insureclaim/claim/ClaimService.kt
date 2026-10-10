@@ -186,8 +186,9 @@ class ClaimService(
 		return claim
 	}
 
+	@Transactional(readOnly = true)
 	fun findByNumber(claimNumber: String, actor: User): Claim {
-		val claim = claimRepository.findByClaimNumber(claimNumber.trim().uppercase())
+		val claim = claimRepository.findByClaimNumberWithDetails(claimNumber.trim().uppercase())
 			.orElseThrow { NotFoundException("Claim", claimNumber) }
 		if (!actor.canViewAllClaims() && claim.customer.id != actor.id) {
 			throw ForbiddenException("You do not have access to this claim")
@@ -476,7 +477,7 @@ class ClaimService(
 
 	@Transactional(readOnly = true)
 	fun trackByToken(token: String): Claim {
-		val record = publicTokenRepository.findByToken(token.trim())
+		val record = publicTokenRepository.findByTokenWithClaimDetails(token.trim())
 			.orElseThrow { NotFoundException("Tracking link", "not found or expired") }
 		if (!record.isUsable()) {
 			publicTokenRepository.delete(record)

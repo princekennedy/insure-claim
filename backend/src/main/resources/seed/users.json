@@ -4,6 +4,7 @@
   "items": [
     {
       "email": "insurer.admin@britam.lk",
+      "password": "password",
       "fullName": "Nimal Perera",
       "phone": "+94771000001",
       "nic": "19801234567",
@@ -12,6 +13,7 @@
     },
     {
       "email": "claims.agent@britam.lk",
+      "password": "password",
       "fullName": "Ayesha Fernando",
       "phone": "+94771000002",
       "nic": "19901234567",
@@ -20,6 +22,7 @@
     },
     {
       "email": "demo.customer@britam.lk",
+      "password": "password",
       "fullName": "Chamika Silva",
       "phone": "+94771000003",
       "nic": "19951234567",

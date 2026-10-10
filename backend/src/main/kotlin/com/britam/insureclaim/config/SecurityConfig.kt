@@ -40,18 +40,19 @@ class SecurityConfig(
 				registry
 					.requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
 					.requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-					.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+					.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
 					.requestMatchers("/api/v1/claims/tracking/**").permitAll()
 				.requestMatchers("/api/v1/claims/{claimId}/tracking-link").permitAll()
 
 					// Insurer-only surfaces.
-					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.name, Role.INSURER_ADMIN.name, Role.ADMIN.name)
-					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.name, Role.INSURER_ADMIN.name, Role.ADMIN.name)
+					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers("/api/v1/fraud-alerts/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
 					// Staff consoles sit under /admin but are not admin-only; each one
 					// states its own roles via @PreAuthorize. Only user administration
 					// is reserved for full administrators here.
-					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.name)
-					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.name, Role.ADMIN.name)
+					.requestMatchers("/api/v1/admin/users/**").hasRole(Role.ADMIN.code)
+					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
+					.requestMatchers(HttpMethod.GET, "/api/v1/users").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code)
 
 					// Everything else needs a valid token; ownership is enforced in services.
 					.anyRequest().authenticated()

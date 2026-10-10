@@ -3,6 +3,12 @@ FROM node:22-alpine AS builder
 
 WORKDIR /build
 
+# Optional build-time overrides (exposed to `next build` only when passed via
+# --build-arg; otherwise the committed .env.production values apply)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_FRONTEND_URL
+ARG NEXT_PUBLIC_STORAGE_URL
+
 # Copy package files first for better layer caching
 COPY package.json package-lock.json ./
 COPY next.config.ts ./
@@ -10,11 +16,12 @@ COPY tsconfig.json ./
 COPY postcss.config.mjs ./
 COPY eslint.config.mjs ./
 
+# Committed deployment URLs (inlined into the client bundle by next build)
+COPY .env.production ./
+
 # Copy source code
 COPY app ./app
 COPY public ./public
-COPY lib ./lib
-COPY lib ./lib
 COPY lib ./lib
 
 # Install dependencies and build (eslint v9 is incompatible with eslint-config-next ^14; pin and legacy flags)

@@ -1,5 +1,6 @@
 package com.britam.insureclaim.user
 
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.security.CurrentUserResolver
 import io.swagger.v3.oas.annotations.Operation
@@ -34,6 +35,7 @@ class UserAccountController(
 
 	@Operation(summary = "Update the signed-in user's profile")
 	@PutMapping("/profile")
+	@Auditable(action = "PROFILE_UPDATE", description = "Updated own profile", entityType = "USER")
 	fun updateProfile(@Valid @RequestBody request: UpdateProfileRequest): UserResponse =
 		UserResponse.from(accountService.updateProfile(currentUser.requireId(), request))
 
@@ -43,6 +45,7 @@ class UserAccountController(
 
 	@Operation(summary = "Register a vehicle")
 	@PostMapping("/vehicles")
+	@Auditable(action = "VEHICLE_CREATE", description = "Registered a vehicle", entityType = "VEHICLE", entityIdFromResponse = true)
 	fun addVehicle(@Valid @RequestBody request: VehicleRequest): ResponseEntity<VehicleResponse> =
 		ResponseEntity.status(HttpStatus.CREATED).body(accountService.addVehicle(currentUser.requireId(), request))
 
@@ -53,6 +56,7 @@ class UserAccountController(
 
 	@Operation(summary = "Update a vehicle")
 	@PutMapping("/vehicles/{vehicleId}")
+	@Auditable(action = "VEHICLE_UPDATE", description = "Updated a vehicle", entityType = "VEHICLE")
 	fun updateVehicle(
 		@PathVariable vehicleId: Long,
 		@Valid @RequestBody request: VehicleRequest,
@@ -60,6 +64,7 @@ class UserAccountController(
 
 	@Operation(summary = "Remove a vehicle that has no active policy")
 	@DeleteMapping("/vehicles/{vehicleId}")
+	@Auditable(action = "VEHICLE_DELETE", description = "Removed a vehicle", entityType = "VEHICLE")
 	fun deleteVehicle(@PathVariable vehicleId: Long): ResponseEntity<Void> {
 		accountService.deleteVehicle(currentUser.requireId(), vehicleId)
 		return ResponseEntity.noContent().build()
@@ -86,9 +91,9 @@ class UserAdminController(
 	@Operation(summary = "Search users (staff only)")
 	@GetMapping
 	fun search(
-		@Parameter(description = "Free-text match on name, email or NIC")
+		@Parameter(description = "Filter by role code")
 		@RequestParam(required = false) query: String? = null,
-		@RequestParam(required = false) role: com.britam.insureclaim.role.Role? = null,
+		@RequestParam(required = false) role: String? = null,
 		@RequestParam(defaultValue = "0") page: Int = 0,
 		@RequestParam(defaultValue = "20") size: Int = 20,
 	): PageResponse<UserSummary> {
@@ -97,7 +102,10 @@ class UserAdminController(
 			size.coerceIn(1, 100),
 			Sort.by("createdAt").descending(),
 		)
-		val result = authService.search(query, role, pageable)
+		val roleFilter = role?.trim()?.takeIf { it.isNotBlank() }?.let { requested ->
+			com.britam.insureclaim.role.Role.entries.firstOrNull { it.code.equals(requested, ignoreCase = true) }
+		}
+		val result = authService.search(query, roleFilter, pageable)
 		return PageResponse(
 			content = result.content.map(User::toSummary),
 			page = result.number,
@@ -112,7 +120,8 @@ class UserAdminController(
 
 	@Operation(summary = "Change a user's role (insurer admin or platform admin only)")
 	@PutMapping("/{userId}/role")
-	fun changeRole(@PathVariable userId: Long, @RequestParam role: com.britam.insureclaim.role.Role): UserResponse {
+	@Auditable(action = "USER_ROLE_CHANGE", description = "Changed a user's role", entityType = "USER")
+	fun changeRole(@PathVariable userId: Long, @RequestParam role: String): UserResponse {
 		authService.updateRole(userId, role, currentUser.requireId())
 		val updated = authService.findById(userId)
 		return UserResponse.from(updated)
@@ -120,6 +129,7 @@ class UserAdminController(
 
 	@Operation(summary = "Enable or disable an account")
 	@PutMapping("/{userId}/enabled")
+	@Auditable(action = "USER_ENABLED_TOGGLE", description = "Enabled or disabled an account", entityType = "USER")
 	fun setEnabled(@PathVariable userId: Long, @RequestParam enabled: Boolean): ResponseEntity<Void> {
 		authService.setEnabled(userId, enabled, currentUser.requireId())
 		return ResponseEntity.noContent().build()

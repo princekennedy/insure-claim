@@ -1,11 +1,9 @@
 package com.britam.insureclaim.user
 
 import com.britam.insureclaim.common.AuditableVersionedEntity
+import com.britam.insureclaim.role.Role
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.Instant
 
@@ -15,8 +13,8 @@ class User(
 	@Column(name = "email", nullable = false, unique = true, length = 255)
 	var email: String = "",
 
-	@Column(name = "password_hash", nullable = false, length = 255)
-	var passwordHash: String = "",
+	@Column(name = "password", nullable = false, length = 255)
+	var password: String = "",
 
 	@Column(name = "full_name", nullable = false, length = 160)
 	var fullName: String = "",
@@ -25,8 +23,10 @@ class User(
 	var phone: String? = null,
 
 	@Column(name = "nic", length = 32)
-	var nic: String? = null,	@Column(name = "role", nullable = false, length = 32)
-	var role: String = com.britam.insureclaim.role.CUSTOMER,
+	var nic: String? = null,
+
+	@Column(name = "role", nullable = false, length = 32)
+	var role: String = Role.CUSTOMER.code,
 
 	@Column(name = "enabled", nullable = false)
 	var enabled: Boolean = true,
@@ -42,12 +42,24 @@ class User(
 
 	@Column(name = "last_login_at")
 	var lastLoginAt: Instant? = null,
+
+	@Column(name = "reset_token", length = 128)
+	var resetToken: String? = null,
+
+	@Column(name = "reset_token_expires_at")
+	var resetTokenExpiresAt: Instant? = null,
 ) : AuditableVersionedEntity() {
 	fun isLocked(now: Instant = Instant.now()): Boolean = lockedUntil?.isAfter(now) == true
 	fun isUsable(): Boolean = enabled && !isLocked()
 	fun fullNameOrEmail(): String = fullName.ifBlank { email }
-	fun initials(): String = fullName.ifBlank { email.take(2).uppercase() }
-	fun isStaff(): Boolean = role in com.britam.insureclaim.role.STAFF_CODES
+	fun initials(): String = fullName
+		.split(' ')
+		.filter { it.isNotBlank() }
+		.take(2)
+		.joinToString("") { it.first().uppercase() }
+		.ifBlank { email.take(2).uppercase() }
+
+	fun isStaff(): Boolean = role in com.britam.insureclaim.role.Role.STAFF_CODES
 	fun canViewAllClaims(): Boolean = isStaff()
 }
 
@@ -56,6 +68,8 @@ data class UserSummary(
 	val email: String,
 	val fullName: String,
 	val role: String,
+	val enabled: Boolean,
+	val lastLoginAt: Instant?,
 )
 
 fun User.toSummary(): UserSummary = UserSummary(
@@ -63,4 +77,6 @@ fun User.toSummary(): UserSummary = UserSummary(
 	email = email,
 	fullName = fullName,
 	role = role,
+	enabled = enabled,
+	lastLoginAt = lastLoginAt,
 )

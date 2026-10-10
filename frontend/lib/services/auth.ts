@@ -4,6 +4,8 @@ import type {
   LoginRequest,
   RefreshRequest,
   ChangePasswordRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
   TokenResponse,
   UserResponse,
   UpdateProfileRequest,
@@ -57,6 +59,20 @@ export async function getCurrentUser(): Promise<UserResponse> {
 
 export async function changePassword(data: ChangePasswordRequest): Promise<void> {
   await request('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function forgotPassword(data: ForgotPasswordRequest): Promise<void> {
+  await request('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
+  await request('/auth/reset-password', {
     method: 'POST',
     body: JSON.stringify(data),
   });

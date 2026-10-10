@@ -1,7 +1,6 @@
 package com.britam.insureclaim.security
 
 import com.britam.insureclaim.common.UnauthorizedException
-import com.britam.insureclaim.common.UnauthorizedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 

@@ -276,11 +276,11 @@ class KycService(
 			PageRequest.of(0, MAX_RELEASED_CLAIMS),
 		)
 		if (waiting.isEmpty) return
-
 		val systemActor = User().apply {
 			email = SYSTEM_ACTOR_EMAIL
-			passwordHash = ""
-			fullName = "Digital KYC"				this.role = "ADMIN"
+			password = ""
+			fullName = "Digital KYC"
+			role = "ADMIN"
 		}
 		waiting.forEach { claim ->
 			claimService.transition(

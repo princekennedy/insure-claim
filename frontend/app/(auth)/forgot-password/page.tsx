@@ -1,24 +1,16 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input, Button } from '@/lib/components/ui';
-import { login, isAuthenticated } from '@/lib/services/auth';
-import styles from './login.module.css';
+import { forgotPassword } from '@/lib/services/auth';
+import styles from '../login/login.module.css';
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Redirect if already logged in
-  if (typeof window !== 'undefined' && isAuthenticated()) {
-    router.push('/dashboard');
-    return null;
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -26,19 +18,36 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
-      router.push('/dashboard');
+      await forgotPassword({ email });
+      setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid email or password');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   }
 
+  if (success) {
+    return (
+      <div className={styles.form} style={{ textAlign: 'center' }}>
+        <h1 className={styles.title}>Check your email</h1>
+        <p className={styles.subtitle}>
+          If an account exists with {email}, we've sent instructions to reset your password.
+          (For this demo, since emails are not sent, simply go to <Link href="/reset-password?token=YOUR_TOKEN" className={styles.link}>Reset Password</Link> assuming you extracted the token from the backend logs).
+        </p>
+        <p className={styles.homeLink}>
+          <Link href="/login" className={styles.link}>
+            Back to login
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h1 className={styles.title}>Welcome back</h1>
-      <p className={styles.subtitle}>Sign in to your account to continue</p>
+      <h1 className={styles.title}>Forgot password</h1>
+      <p className={styles.subtitle}>Enter your email to receive a password reset link</p>
 
       {error && (
         <div className={styles.error}>
@@ -63,24 +72,13 @@ export default function LoginPage() {
         autoComplete="email"
       />
 
-      <Input
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Enter your password"
-        required
-        autoComplete="current-password"
-      />
-
       <Button type="submit" fullWidth loading={loading}>
-        Sign in
+        Send reset link
       </Button>
 
-      <p className={styles.footer}>
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/register" className={styles.link}>
-          Sign up
+      <p className={styles.homeLink}>
+        <Link href="/login" className={styles.link}>
+          Back to login
         </Link>
       </p>
     </form>

@@ -154,6 +154,8 @@ Once the backend is running, access the interactive API documentation at:
 - `POST /api/v1/auth/refresh` - Refresh token
 - `POST /api/v1/auth/logout` - Logout
 - `GET /api/v1/auth/me` - Get current user
+- `POST /api/v1/auth/forgot-password` - Request a password reset link
+- `POST /api/v1/auth/reset-password` - Reset password using a token
 
 #### Claims
 - `GET /api/v1/claims` - List claims

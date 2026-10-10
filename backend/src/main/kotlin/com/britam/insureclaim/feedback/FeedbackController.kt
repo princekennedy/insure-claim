@@ -1,5 +1,6 @@
 package com.britam.insureclaim.feedback
 
+import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.PageResponse
 import com.britam.insureclaim.garage.GarageFeedbackRequest
 import com.britam.insureclaim.garage.GarageFeedbackResponse
@@ -32,6 +33,7 @@ class FeedbackController(
 		description = "One rating per claim. Unlocks once the vehicle has been collected.",
 	)
 	@PostMapping("/claims/{claimId}/feedback")
+@Auditable(action = "FEEDBACK_CREATE", description = "Left repair feedback", entityType = "FEEDBACK", entityIdFromResponse = true)
 	fun submit(
 		@PathVariable claimId: Long,
 		@Valid @RequestBody request: GarageFeedbackRequest,

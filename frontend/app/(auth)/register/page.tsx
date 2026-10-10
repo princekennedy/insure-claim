@@ -117,8 +117,7 @@ export default function RegisterPage() {
       </Button>
 
       <p className={styles.footer}>
-        Already have an account?{' '}
-        <Link href="/auth/login" className={styles.link}>
+        Already have an account?{' '}          <Link href="/login" className={styles.link}>
           Sign in
         </Link>
       </p>

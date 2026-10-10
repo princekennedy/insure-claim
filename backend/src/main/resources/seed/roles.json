@@ -1,0 +1,9 @@
+﻿{
+  "entity": "roles",
+  "items": [
+    {"code": "ADMIN", "name": "Platform Administrator", "description": "Full system access"},
+    {"code": "INSURER_ADMIN", "name": "Insurer Administrator", "description": "Manage insurer operations and staff"},
+    {"code": "AGENT", "name": "Claims Agent", "description": "Handle claims and assessments"},
+    {"code": "CUSTOMER", "name": "Policyholder", "description": "Customer access to policies and claims"}
+  ]
+}

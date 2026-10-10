@@ -1,36 +1,14 @@
 ﻿services:
   backend:
     build:
-      context: ..
-      dockerfile: backend/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: insureclaim-backend
     restart: unless-stopped
     ports:
       - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: ${POSTGRES_URL:-jdbc:postgresql://host.docker.internal:5432/insureclaim}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-insureclaim}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-insureclaim}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_FLYWAY_ENABLED: "true"
-      MINIO_ENABLED: "false"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  frontend:
-    build:
-      context: ..
-      dockerfile: frontend/Dockerfile
-    container_name: insureclaim-frontend
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8080}
-      NODE_ENV: production

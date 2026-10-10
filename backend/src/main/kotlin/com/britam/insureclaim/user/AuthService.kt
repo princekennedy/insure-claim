@@ -31,7 +31,7 @@ class AuthService(
 	private val maxFailedAttempts = 5
 	private val lockoutDuration: Duration = Duration.ofMinutes(15)
 
-	private fun getCustomerRole(): String = com.britam.insureclaim.role.CUSTOMER
+	private fun getCustomerRole(): String = "CUSTOMER"
 
 	fun register(request: RegisterRequest): TokenResponse {
 		validatePasswordStrength(request.password)
@@ -41,7 +41,7 @@ class AuthService(
 		}
 		val user = User(
 			email = email,
-			passwordHash = passwordEncoder.encode(request.password)!!,
+			password = passwordEncoder.encode(request.password)!!,
 			fullName = request.fullName.trim(),
 			phone = request.phone?.trim(),
 			nic = request.nic?.trim()?.uppercase(),
@@ -68,7 +68,7 @@ class AuthService(
 		if (!user.enabled) {
 			throw UnauthorizedException("This account has been disabled", "ACCOUNT_DISABLED")
 		}
-		if (!passwordEncoder.matches(request.password, user.passwordHash)) {
+		if (!passwordEncoder.matches(request.password, user.password)) {
 			recordFailedLogin(user, now)
 			throw UnauthorizedException("Invalid email or password", "INVALID_CREDENTIALS")
 		}
@@ -117,16 +117,43 @@ class AuthService(
 
 	fun changePassword(userId: Long, request: ChangePasswordRequest) {
 		val user = findById(userId)
-		if (!passwordEncoder.matches(request.currentPassword, user.passwordHash)) {
+		if (!passwordEncoder.matches(request.currentPassword, user.password)) {
 			throw BusinessRuleException("Current password is incorrect", "WRONG_PASSWORD")
 		}
-		if (passwordEncoder.matches(request.newPassword, user.passwordHash)) {
+		if (passwordEncoder.matches(request.newPassword, user.password)) {
 			throw BusinessRuleException("New password must be different from the current one", "PASSWORD_UNCHANGED")
 		}
 		validatePasswordStrength(request.newPassword)
-		user.passwordHash = passwordEncoder.encode(request.newPassword)!!
+		user.password = passwordEncoder.encode(request.newPassword)!!
 		userRepository.save(user)
 		refreshTokenRepository.findActiveByUser(userId).forEach { it.revoke() }
+	}
+
+	fun forgotPassword(request: ForgotPasswordRequest) {
+		val email = request.email.trim().lowercase(Locale.ROOT)
+		val user = userRepository.findByEmailIgnoreCase(email).orElse(null) ?: return // Silently return
+		user.resetToken = java.util.UUID.randomUUID().toString()
+		user.resetTokenExpiresAt = Instant.now().plus(Duration.ofHours(1))
+		userRepository.save(user)
+		log.info("Generated password reset token for user {}: {} (simulate sending email)", user.id, user.resetToken)
+	}
+
+	fun resetPassword(request: ResetPasswordRequest) {
+		val user = userRepository.findByResetToken(request.token)
+			.orElseThrow { BusinessRuleException("Invalid or expired reset token", "INVALID_TOKEN") }
+
+		val now = Instant.now()
+		if (user.resetTokenExpiresAt == null || user.resetTokenExpiresAt!!.isBefore(now)) {
+			throw BusinessRuleException("Invalid or expired reset token", "INVALID_TOKEN")
+		}
+
+		validatePasswordStrength(request.newPassword)
+		user.password = passwordEncoder.encode(request.newPassword)!!
+		user.resetToken = null
+		user.resetTokenExpiresAt = null
+		userRepository.save(user)
+		refreshTokenRepository.findActiveByUser(user.id ?: 0L).forEach { it.revoke(now) }
+		log.info("User {} reset their password successfully", user.id)
 	}
 
 	@Transactional(readOnly = true)
@@ -140,12 +167,12 @@ class AuthService(
 		pageable: Pageable,
 	): Page<User> = userRepository.search(
 		query = query?.trim()?.takeIf { it.isNotBlank() },
-		role = role,
+		role = role?.code,
 		pageable = pageable,
 	)
 
 	fun updateRole(targetUserId: Long, role: String, actingUserId: Long) {
-		if (role !in com.britam.insureclaim.role.VALID_ROLE_CODES) {
+		if (role !in com.britam.insureclaim.role.Role.VALID_CODES) {
 			throw BusinessRuleException("Unknown role: $role", "INVALID_ROLE")
 		}
 		val user = findById(targetUserId)
@@ -188,7 +215,7 @@ class AuthService(
 		ipAddress: String? = null,
 	): TokenResponse {
 		val userId = user.id ?: throw IllegalStateException("User must be persisted before issuing tokens")
-		val role = user.role ?: throw IllegalStateException("User ${user.id} has no assigned role")
+		val role = user.role
 		val access = jwtService.issueAccessToken(userId, user.email, role)
 		val refreshValue = jwtService.newRefreshTokenValue()
 

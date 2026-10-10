@@ -1,49 +1,46 @@
-package com.britam.insureclaim.role
+﻿package com.britam.insureclaim.role
 
 /**
- * Role codes used across the portal. Roles are stored as a plain VARCHAR
- * column on the users table rather than as a separate entity, so this class
- * is a value-object constant holder rather than a JPA entity.
+ * Role codes used across the portal.
  */
-class Role
+class Role(val code: String, val name: String) {
 
-/** Extension functions on Role for authorization checks. */
-fun Role.isStaff(): Boolean = this in Role.STAFF_CODES
+    companion object {
+        /** Staff role codes that can view all claims and perform administrative actions. */
+        val STAFF_CODES: Set<String> = setOf("AGENT", "INSURER_ADMIN", "ADMIN")
 
-/** Role code constants and lookup helpers. */
-fun Role.Companion.fromCode(code: String): String = code.uppercase()
+        /** All valid role codes. */
+        val VALID_CODES: Set<String> = setOf("CUSTOMER", "AGENT", "INSURER_ADMIN", "ADMIN")
 
-val Role.Companion.STAFF_CODES: Set<String>
-	get() = setOf("ADMIN", "INSURER_ADMIN", "AGENT")
+        /** Canonical role definitions. */
+        val CUSTOMER = Role("CUSTOMER", "Policyholder")
+        val AGENT = Role("AGENT", "Claims Agent")
+        val INSURER_ADMIN = Role("INSURER_ADMIN", "Insurer Administrator")
+        val ADMIN = Role("ADMIN", "Platform Administrator")
 
-val Role.Companion.entries: List<String>
-	get() = listOf(
-		"ADMIN",
-		"INSURER_ADMIN",
-		"AGENT",
-		"CUSTOMER",
-	)
+        /** Pseudo-enumeration used by seeders and admin UIs that expect enum-like access. */
+        val entries: List<Role> = listOf(ADMIN, INSURER_ADMIN, AGENT, CUSTOMER)
 
-val Role.Companion.CUSTOMER: String
-	get() = "CUSTOMER"
+        /** Looks up a role by its code. */
+        fun fromCode(code: String): Role =
+            entries.firstOrNull { it.code == code.uppercase() }
+                ?: throw IllegalArgumentException("Unknown role code: $code")
+    }
 
-val Role.Companion.ADMIN: String
-	get() = "ADMIN"
+    override fun equals(other: Any?): Boolean =
+        other is Role && other.code == code
 
-val Role.Companion.AGENT: String
-	get() = "AGENT"
+    override fun hashCode(): Int = code.hashCode()
 
-val Role.Companion.INSURER_ADMIN: String
-	get() = "INSURER_ADMIN"
-
-/** Resolves a role code to a human-readable display name. */
-fun roleNameFor(code: String): String? = when (code.uppercase()) {
-	"ADMIN" -> "Platform Administrator"
-	"INSURER_ADMIN" -> "Insurer Administrator"
-	"AGENT" -> "Claims Agent"
-	"CUSTOMER" -> "Policyholder"
-	else -> null
+    override fun toString(): String = code
 }
 
-/** All valid role codes, for validation. */
-val VALID_ROLE_CODES: Set<String> = setOf("ADMIN", "INSURER_ADMIN", "AGENT", "CUSTOMER")
+fun Role.isStaff(): Boolean = code in Role.STAFF_CODES
+
+fun roleNameFor(code: String): String? = when (code.uppercase()) {
+    "ADMIN" -> "Platform Administrator"
+    "INSURER_ADMIN" -> "Insurer Administrator"
+    "AGENT" -> "Claims Agent"
+    "CUSTOMER" -> "Policyholder"
+    else -> null
+}
