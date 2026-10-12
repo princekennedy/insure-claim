@@ -18,7 +18,7 @@ export default function HomePage() {
             <p className={styles.heroSubtitle}>
               File your claim in minutes, track progress in real-time, and get back on the road faster. Powered by Britam Insurance PLC.
             </p>
-            <Link href="/auth/login" className={styles.heroCtaButton}>
+            <Link href="/login" className={styles.heroCtaButton}>
               File a Claim Now
             </Link>
             <div className={styles.heroStats}>

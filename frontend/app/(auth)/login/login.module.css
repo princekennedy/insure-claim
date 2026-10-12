@@ -1,7 +1,7 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .title {
@@ -39,7 +39,7 @@
   font-size: 0.875rem;
   color: #6b7280;
   text-align: center;
-  margin: 0;
+  margin: 0.25rem 0 0 0;
 }
 
 .link {
@@ -57,4 +57,23 @@
   color: #9ca3af;
   text-align: center;
   margin: 0;
+}
+
+.securityNote {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: #065f46;
+}
+
+.lockIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: #10b981;
 }

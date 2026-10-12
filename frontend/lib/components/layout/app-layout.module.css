@@ -5,7 +5,7 @@
 
 .sidebar {
   width: 240px;
-  background-color: #1f2937;
+  background-color: #2563eb;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -17,25 +17,35 @@
 
 .sidebarHeader {
   padding: 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #f9fafb;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   text-decoration: none;
-  color: white;
+  color: #111827;
 }
 
-.logoIcon {
-  width: 2rem;
-  height: 2rem;
+.logoContainer {
+  display: flex;
+  flex-direction: column;
 }
 
 .logoText {
-  font-size: 1.125rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0066CC;
+  line-height: 1.2;
+}
+
+.logoTagline {
+  font-size: 0.65rem;
+  color: #C06C5C;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .nav {
@@ -45,22 +55,29 @@
   flex-direction: column;
   gap: 1.125rem;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
 }
 
 .navGroup {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding-bottom: 1.5rem;
 }
 
 .groupLabel {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.5rem;
   padding: 0 0.875rem;
-  color: #9ca3af;
-  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.075em;
-  line-height: 1.4;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
   text-transform: uppercase;
 }
 
@@ -70,7 +87,7 @@
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
   border-radius: 0.375rem;
-  color: #d1d5db;
+  color: #ffffff;
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -84,7 +101,7 @@
 }
 
 .navItem:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
   color: white;
 }
 
@@ -97,12 +114,21 @@
 }
 
 .navItemActive {
-  background-color: #2563eb;
+  background-color: rgba(255, 255, 255, 0.2);
   color: white;
+  border-left: 3px solid white;
+  padding-left: 0.625rem;
 }
 
 .groupToggle {
   position: relative;
+}
+
+.groupToggle.navItemActive {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-left: 3px solid white;
+  padding-left: 0.625rem;
 }
 
 .chevron {
@@ -123,7 +149,7 @@
   gap: 0.125rem;
   margin: 0.125rem 0 0.125rem 1.75rem;
   padding-left: 0.625rem;
-  border-left: 1px solid rgba(209, 213, 219, 0.28);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .subNavItem {
@@ -133,7 +159,7 @@
   min-height: 2.125rem;
   padding: 0.375rem 0.625rem;
   border-radius: 0.3rem;
-  color: #d1d5db;
+  color: #ffffff;
   text-decoration: none;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -147,7 +173,7 @@
 
 .subNavItemActive {
   color: white;
-  background: rgba(37, 99, 235, 0.72);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .subNavMarker {
@@ -163,8 +189,21 @@
 }
 
 .sidebarFooter {
-  padding: 1rem 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebarFooter .navItem {
+  color: #fca5a5;
+  width: 100%;
+}
+
+.sidebarFooter .navItem:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
 }
 
 .main {
@@ -181,20 +220,119 @@
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 1.5rem;
+  gap: 1rem;
 }
 
-.headerUser {
+.headerLeft {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.headerRight {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.userName {
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  max-width: 320px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchBar:focus-within {
+  background-color: white;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.searchBar svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: #111827;
+  width: 100%;
+  font-family: inherit;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.newClaimButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.newClaimButton:hover {
+  background-color: #1d4ed8;
+}
+
+.notificationButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.375rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.notificationButton:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  min-width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0 0.25rem;
+}
+
+.headerUser {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .content {
@@ -222,6 +360,14 @@
     padding: 0.75rem 1rem;
   }
 
+  .logoText {
+    font-size: 1.25rem;
+  }
+
+  .logoTagline {
+    display: none;
+  }
+
   .nav {
     flex: 0 0 auto;
     flex-direction: row;
@@ -230,7 +376,7 @@
     padding: 0.5rem 0.75rem 0.75rem;
     overflow-x: auto;
     overflow-y: hidden;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .navGroup {
@@ -261,6 +407,20 @@
   .header {
     height: 3.5rem;
     padding: 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .searchBar {
+    max-width: 180px;
+  }
+
+  .newClaimButton span {
+    display: none;
+  }
+
+  .notificationButton {
+    width: 2rem;
+    height: 2rem;
   }
 
   .content {
@@ -268,15 +428,7 @@
   }
 
   .sidebarFooter {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.5rem;
-    padding: 0;
-    border: 0;
-  }
-
-  .sidebarFooter .navItem {
-    width: auto;
+    display: none;
   }
 }
 

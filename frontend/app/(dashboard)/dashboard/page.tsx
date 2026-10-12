@@ -11,9 +11,9 @@ import {
   CardContent,
   Badge,
   ProgressBar,
-  Avatar,
   EmptyState,
   PageLoader,
+  Button,
 } from '@/lib/components/ui';
 import { getMeSummary, getCurrentUser } from '@/lib/services/auth';
 import { getClaims } from '@/lib/services/claims';
@@ -56,7 +56,6 @@ export default function DashboardPage() {
     <div className={styles.page}>
       <PageHeader
         title={user ? `Welcome back, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
-        description={user ? "Here's an overview of your insurance claims" : "Overview of your insurance claims"}
       />
 
       <div className={styles.statsGrid}>
@@ -105,17 +104,35 @@ export default function DashboardPage() {
                   {formatCurrency(summary?.totalSettledAmount ?? 0)}
                 </span>
               </div>
-              <div className={styles.financialItem}>
-                <span className={styles.financialLabel}>KYC Verified</span>
-                <Badge variant={summary?.kycVerified ? 'success' : 'warning'}>
-                  {summary?.kycVerified ? 'Yes' : 'No'}
-                </Badge>
+            </div>
+            <div className={styles.actionItems}>
+              <div className={styles.actionItem}>
+                <span className={styles.actionLabel}>KYC Status</span>
+                <div className={styles.actionContent}>
+                  <Badge variant={summary?.kycVerified ? 'success' : 'warning'}>
+                    {summary?.kycVerified ? 'Verified' : 'KYC Not Verified'}
+                  </Badge>
+                  {!summary?.kycVerified && (
+                    <Button variant="primary" size="sm" onClick={() => router.push('/kyc')}>
+                      Complete KYC
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className={styles.financialItem}>
-                <span className={styles.financialLabel}>Active Policy</span>
-                <span className={styles.financialValue}>
-                  {summary?.activePolicy?.policyNumber ?? '—'}
-                </span>
+              <div className={styles.actionItem}>
+                <span className={styles.actionLabel}>Active Policy</span>
+                <div className={styles.actionContent}>
+                  {summary?.activePolicy ? (
+                    <span className={styles.policyNumber}>{summary.activePolicy.policyNumber}</span>
+                  ) : (
+                    <>
+                      <span className={styles.noPolicy}>No active policy</span>
+                      <Button variant="ghost" size="sm" onClick={() => router.push('/policies')}>
+                        View Policies
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -128,65 +145,59 @@ export default function DashboardPage() {
           <CardContent>
             {recentClaims.length === 0 ? (
               <EmptyState
-                title="No claims yet"
-                description="You haven't filed any claims. Start by filing your first claim."
+                title="You haven't filed any claims yet"
+                description="Start by filing your first claim to get started."
                 action={{
-                  label: 'File a Claim',
+                  label: 'File your first claim',
                   onClick: () => router.push('/claims/new'),
                 }}
               />
             ) : (
-              <div className={styles.claimsList}>
-                {recentClaims.map((claim) => (
-                  <Link
-                    key={claim.id}
-                    href={`/claims/${claim.id}`}
-                    className={styles.claimRow}
-                  >
-                    <div className={styles.claimInfo}>
-                      <span className={styles.claimNumber}>{claim.claimNumber}</span>
-                      <span className={styles.claimMeta}>
-                        {claim.vehicleLabel} · {formatDate(claim.submittedAt)}
-                      </span>
-                    </div>
-                    <div className={styles.claimStatus}>
-                      <Badge
-                        variant={
-                          claim.status === 'SETTLED' || claim.status === 'CLOSED'
-                            ? 'success'
-                            : claim.status === 'REJECTED' || claim.status === 'WITHDRAWN'
-                              ? 'danger'
-                              : 'info'
-                        }
-                      >
-                        {claim.statusLabel}
-                      </Badge>
-                      <ProgressBar
-                        value={claim.progressPercent}
-                        size="sm"
-                        showPercentage
-                      />
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <>
+                <div className={styles.claimsList}>
+                  {recentClaims.map((claim) => (
+                    <Link
+                      key={claim.id}
+                      href={`/claims/${claim.id}`}
+                      className={styles.claimRow}
+                    >
+                      <div className={styles.claimInfo}>
+                        <span className={styles.claimNumber}>{claim.claimNumber}</span>
+                        <span className={styles.claimMeta}>
+                          {claim.vehicleLabel}
+                        </span>
+                        <span className={styles.claimDate}>
+                          {formatDate(claim.submittedAt)}
+                        </span>
+                      </div>
+                      <div className={styles.claimStatus}>
+                        <Badge
+                          variant={
+                            claim.status === 'SETTLED' || claim.status === 'CLOSED'
+                              ? 'success'
+                              : claim.status === 'REJECTED' || claim.status === 'WITHDRAWN'
+                                ? 'danger'
+                                : 'info'
+                          }
+                        >
+                          {claim.statusLabel}
+                        </Badge>
+                        <div className={styles.progressSection}>
+                          <ProgressBar
+                            value={claim.progressPercent}
+                            size="md"
+                          />
+                          <span className={styles.progressPercent}>{claim.progressPercent}%</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <Link href="/claims" className={styles.viewAllLink}>
+                  View all claims →
+                </Link>
+              </>
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>My Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={styles.profileCard}>
-              <Avatar name={user?.fullName || 'User'} size="lg" />
-              <div className={styles.profileInfo}>
-                <span className={styles.profileName}>{user?.fullName ?? '—'}</span>
-                <span className={styles.profileEmail}>{user?.email ?? '—'}</span>
-              </div>
-              <Badge variant="secondary">{user?.role ?? '—'}</Badge>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -214,6 +225,9 @@ function StatCard({
       </div>
       <div className={styles.statContent}>
         <span className={styles.statValue}>{value}</span>
+        {value === 0 && (
+          <span className={styles.statSecondary}>No activity yet</span>
+        )}
         <span className={styles.statTitle}>{title}</span>
       </div>
     </Card>
@@ -222,7 +236,7 @@ function StatCard({
 
 function ClaimsIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -233,7 +247,7 @@ function ClaimsIcon() {
 
 function OpenIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
     </svg>
@@ -242,7 +256,7 @@ function OpenIcon() {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
@@ -251,7 +265,7 @@ function CheckIcon() {
 
 function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
       <circle cx="12" cy="12" r="10" />
       <line x1="15" y1="9" x2="9" y2="15" />
       <line x1="9" y1="9" x2="15" y2="15" />

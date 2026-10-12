@@ -64,21 +64,12 @@ export default function ClaimsPage() {
       <PageHeader
         title="Claims"
         description="View and manage your insurance claims"
-        actions={
-          <Link href="/claims/new" className={styles.newButton}>
-            <Button>File New Claim</Button>
-          </Link>
-        }
       />
 
       {claims.length === 0 ? (
         <EmptyState
           title="No claims yet"
-          description="You haven't filed any claims yet. File your first claim to get started."
-          action={{
-            label: 'File a Claim',
-            onClick: () => router.push('/claims/new'),
-          }}
+          description="You haven't filed any claims yet."
         />
       ) : (
         <div className={styles.claimsGrid}>

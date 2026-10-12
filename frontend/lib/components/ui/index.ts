@@ -1,5 +1,7 @@
 export { Button } from './button';
 export { Input } from './input';
+export { PasswordInput } from './password-input';
+export { PhoneInput } from './phone-input';
 export { Select } from './select';
 export { Textarea } from './textarea';
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card';
