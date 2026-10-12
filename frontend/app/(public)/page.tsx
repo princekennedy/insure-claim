@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { ChatbotCard } from '@/lib/components/ui';
 import styles from './page.module.css';
 
 export default function HomePage() {
@@ -59,52 +62,61 @@ export default function HomePage() {
             </div>
           </div>
           <div className={styles.heroRight}>
-            <div className={styles.heroVisual}>
-              <div className={styles.visualCard}>
-                <div className={styles.visualHeader}>
-                  <div className={styles.visualStep}>
-                    <span className={styles.visualStepNumber}>1</span>
-                    <span className={styles.visualStepText}>Submit Claim</span>
-                  </div>
-                  <div className={styles.visualStep}>
-                    <span className={styles.visualStepNumber}>2</span>
-                    <span className={styles.visualStepText}>Review</span>
-                  </div>
-                  <div className={styles.visualStep}>
-                    <span className={styles.visualStepNumber}>3</span>
-                    <span className={styles.visualStepText}>Garage Assigned</span>
-                  </div>
-                  <div className={styles.visualStep}>
-                    <span className={styles.visualStepNumber}>4</span>
-                    <span className={styles.visualStepText}>Vehicle Fixed</span>
-                  </div>
-                  <div className={styles.visualStep}>
-                    <span className={styles.visualStepNumber}>5</span>
-                    <span className={styles.visualStepText}>Service Rated</span>
-                  </div>
+            <ChatbotCard
+              onOpenChat={() => console.log('Chat opened')}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.processSection}>
+        <div className={styles.processContainer}>
+          <h2 className={styles.processTitle}>How It Works</h2>
+          <div className={styles.heroVisual}>
+            <div className={styles.visualCard}>
+              <div className={styles.visualHeader}>
+                <div className={styles.visualStep}>
+                  <span className={styles.visualStepNumber}>1</span>
+                  <span className={styles.visualStepText}>Submit Claim</span>
                 </div>
-                <div className={styles.visualBody}>
-                  <div className={styles.visualProgress}>
-                    <div className={styles.visualProgressBar}>
-                      <div className={styles.visualProgressFill} />
-                    </div>
-                    <span className={styles.visualProgressText}>Claim in Progress</span>
+                <div className={styles.visualStep}>
+                  <span className={styles.visualStepNumber}>2</span>
+                  <span className={styles.visualStepText}>Review</span>
+                </div>
+                <div className={styles.visualStep}>
+                  <span className={styles.visualStepNumber}>3</span>
+                  <span className={styles.visualStepText}>Garage Assigned</span>
+                </div>
+                <div className={styles.visualStep}>
+                  <span className={styles.visualStepNumber}>4</span>
+                  <span className={styles.visualStepText}>Vehicle Fixed</span>
+                </div>
+                <div className={styles.visualStep}>
+                  <span className={styles.visualStepNumber}>5</span>
+                  <span className={styles.visualStepText}>Service Rated</span>
+                </div>
+              </div>
+              <div className={styles.visualBody}>
+                <div className={styles.visualProgress}>
+                  <div className={styles.visualProgressBar}>
+                    <div className={styles.visualProgressFill} />
                   </div>
-                  <div className={styles.visualDetails}>
-                    <div className={styles.visualDetail}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      <span>Submitted: Today</span>
-                    </div>
-                    <div className={styles.visualDetail}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                      <span>Documents Verified</span>
-                    </div>
+                  <span className={styles.visualProgressText}>Claim in Progress</span>
+                </div>
+                <div className={styles.visualDetails}>
+                  <div className={styles.visualDetail}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>Submitted: Today</span>
+                  </div>
+                  <div className={styles.visualDetail}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <span>Documents Verified</span>
                   </div>
                 </div>
               </div>

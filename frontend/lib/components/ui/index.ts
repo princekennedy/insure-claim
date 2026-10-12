@@ -14,3 +14,4 @@ export { PageHeader } from './page-header';
 export { Alert, ToastAlert } from './alert';
 export { Dialog } from './dialog';
 export { Pagination } from './pagination';
+export { ChatbotCard } from './chatbot-card';

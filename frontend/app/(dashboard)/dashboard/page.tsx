@@ -14,6 +14,7 @@ import {
   EmptyState,
   PageLoader,
   Button,
+  ChatbotCard,
 } from '@/lib/components/ui';
 import { getMeSummary, getCurrentUser } from '@/lib/services/auth';
 import { getClaims } from '@/lib/services/claims';
@@ -200,6 +201,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        <ChatbotCard
+          onOpenChat={() => console.log('Chat opened')}
+        />
       </div>
     </div>
   );

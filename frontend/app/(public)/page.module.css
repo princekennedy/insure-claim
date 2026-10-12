@@ -43,7 +43,9 @@
 .heroRight {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 2rem;
+  max-width: 450px;
 }
 
 .heroBadge {
@@ -329,6 +331,28 @@
   font-weight: 500;
 }
 
+/* Process Section */
+.processSection {
+  padding: 4rem 2rem;
+  background-color: #f8fafc;
+}
+
+.processContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.processTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
 /* Responsive */
 @media (max-width: 968px) {
   .heroContent {
@@ -361,5 +385,6 @@
 
   .heroRight {
     order: -1;
+    padding-top: 0;
   }
 }
