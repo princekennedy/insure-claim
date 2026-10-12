@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Policies", description = "Insurer staff: issue and amend motor cover")
-@PreAuthorize("hasAnyRole('AGENT','INSURER_ADMIN','ADMIN')")
+@PreAuthorize("hasAnyRole('AGENT','INSURER_ADMIN','ADMIN','STAFF')")
 @RestController
 @RequestMapping("/api/v1/policies")
 class PolicyController(

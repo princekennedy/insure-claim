@@ -59,9 +59,27 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+// Auth endpoints that must never trigger an automatic token refresh:
+// a 401 from these means bad credentials or a dead session, not an expired one.
+const NO_REFRESH_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
+
+function canAttemptRefresh(endpoint: string): boolean {
+  return (
+    NO_REFRESH_ENDPOINTS.every((e) => !endpoint.startsWith(e)) &&
+    getRefreshToken() !== null
+  );
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
+  retriedAfterRefresh = false,
 ): Promise<T> {
   const url = `${API_BASE_URL}/api/v1${endpoint}`;
 
@@ -72,6 +90,16 @@ async function request<T>(
       ...options.headers,
     },
   });
+
+  if (response.status === 401 && !retriedAfterRefresh && canAttemptRefresh(endpoint)) {
+    try {
+      await refreshAccessToken();
+    } catch {
+      // Session is genuinely dead (tokens cleared) — surface the original 401.
+      return handleResponse<T>(response);
+    }
+    return request<T>(endpoint, options, true);
+  }
 
   return handleResponse<T>(response);
 }
@@ -103,27 +131,41 @@ export function isAuthenticated(): boolean {
   return getAccessToken() !== null;
 }
 
-// Refresh token helper
-export async function refreshAccessToken(): Promise<string> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    throw new ApiError('No refresh token available', 401);
-  }
+// Refresh token helper.
+// Single-flight: concurrent 401s (parallel requests, multiple tabs' in-flight
+// calls) share one refresh. The backend rotates refresh tokens and treats a
+// replayed (already-revoked) token as theft — it revokes EVERY session — so
+// parallel refresh calls would log the user out.
+let refreshInFlight: Promise<string> | null = null;
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+export async function refreshAccessToken(): Promise<string> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new ApiError('No refresh token available', 401);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      clearTokens();
+      throw new ApiError('Session expired', 401);
+    }
+
+    const data = await response.json() as { accessToken: string; refreshToken: string };
+    setTokens(data.accessToken, data.refreshToken);
+    return data.accessToken;
+  })().finally(() => {
+    refreshInFlight = null;
   });
 
-  if (!response.ok) {
-    clearTokens();
-    throw new ApiError('Session expired', 401);
-  }
-
-  const data = await response.json() as { accessToken: string; refreshToken: string };
-  setTokens(data.accessToken, data.refreshToken);
-  return data.accessToken;
+  return refreshInFlight;
 }
 
 export { ApiError, request, handleResponse };

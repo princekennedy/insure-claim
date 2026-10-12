@@ -1,4 +1,4 @@
-import { request, setTokens, clearTokens, refreshAccessToken, ApiError, isAuthenticated } from './api';
+import { request, setTokens, clearTokens, refreshAccessToken, getRefreshToken, ApiError, isAuthenticated } from './api';
 import type {
   RegisterRequest,
   LoginRequest,
@@ -13,10 +13,12 @@ import type {
 } from '../types';
 
 export async function register(data: RegisterRequest): Promise<TokenResponse> {
-  return request<TokenResponse>('/auth/register', {
+  const response = await request<TokenResponse>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  setTokens(response.accessToken, response.refreshToken);
+  return response;
 }
 
 export async function login(data: LoginRequest): Promise<TokenResponse> {
@@ -39,7 +41,10 @@ export async function refresh(data: RefreshRequest): Promise<TokenResponse> {
 
 export async function logout(): Promise<void> {
   try {
-    await request('/auth/logout', { method: 'POST' });
+    await request('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken: getRefreshToken() }),
+    });
   } finally {
     clearTokens();
   }
@@ -92,17 +97,23 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<UserRes
 // Re-export for convenience
 export { isAuthenticated };
 
-// Authenticated request wrapper that auto-refreshes on 401
+// Authenticated request wrapper. request() now refreshes on 401 internally
+// (single-flight), so this only retries as a fallback for callers whose fn
+// throws a raw 401 without going through the refresh path.
 export async function authenticatedRequest<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   try {
     return await fn();
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
+    if (error instanceof ApiError && error.status === 401 && canAttemptExternalRefresh()) {
       await refreshAccessToken();
       return await fn();
     }
     throw error;
   }
+}
+
+function canAttemptExternalRefresh(): boolean {
+  return getRefreshToken() !== null;
 }

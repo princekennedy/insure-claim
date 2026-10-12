@@ -59,7 +59,7 @@ class User(
 		.joinToString("") { it.first().uppercase() }
 		.ifBlank { email.take(2).uppercase() }
 
-	fun isStaff(): Boolean = role in com.britam.insureclaim.role.Role.STAFF_CODES
+	fun isStaff(): Boolean = role != com.britam.insureclaim.role.Role.CUSTOMER.code
 	fun canViewAllClaims(): Boolean = isStaff()
 }
 

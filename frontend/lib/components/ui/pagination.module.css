@@ -1,0 +1,17 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pageCount {
+  color: #4b5563;
+  font-size: 0.8125rem;
+}
+
+.paginationActions {
+  display: flex;
+  gap: 0.5rem;
+}

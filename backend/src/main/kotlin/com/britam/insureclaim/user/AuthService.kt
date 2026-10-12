@@ -24,6 +24,7 @@ class AuthService(
 	private val refreshTokenRepository: RefreshTokenRepository,
 	private val passwordEncoder: PasswordEncoder,
 	private val jwtService: JwtService,
+	private val roleRepository: com.britam.insureclaim.role.RoleRepository,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -163,25 +164,120 @@ class AuthService(
 	@Transactional(readOnly = true)
 	fun search(
 		query: String?,
-		role: com.britam.insureclaim.role.Role?,
+		role: String?,
 		pageable: Pageable,
 	): Page<User> = userRepository.search(
 		query = query?.trim()?.takeIf { it.isNotBlank() },
-		role = role?.code,
+		role = role?.trim()?.takeIf { it.isNotBlank() }?.uppercase(),
 		pageable = pageable,
 	)
 
 	fun updateRole(targetUserId: Long, role: String, actingUserId: Long) {
-		if (role !in com.britam.insureclaim.role.Role.VALID_CODES) {
-			throw BusinessRuleException("Unknown role: $role", "INVALID_ROLE")
-		}
+		val roleCode = requireKnownRole(role)
 		val user = findById(targetUserId)
 		if (user.id == actingUserId) {
 			throw BusinessRuleException("You cannot change your own role", "SELF_ROLE_CHANGE")
 		}
-		user.role = role
+		if (user.role == roleCode) return
+		user.role = roleCode
 		userRepository.save(user)
-		refreshTokenRepository.findActiveByUser(user.id ?: 0L).forEach { it.revoke() }
+		revokeSessions(user.id ?: targetUserId)
+	}
+
+	fun createUser(request: CreateUserRequest): User {
+		val email = request.email.trim().lowercase(Locale.ROOT)
+		if (userRepository.existsByEmailIgnoreCase(email)) {
+			throw ConflictException("An account with this email already exists", "EMAIL_TAKEN")
+		}
+		validatePasswordStrength(request.password)
+		val roleCode = requireKnownRole(request.role)
+		val user = userRepository.save(
+			User(
+				email = email,
+				password = passwordEncoder.encode(request.password)!!,
+				fullName = request.fullName.trim(),
+				phone = request.phone?.trim()?.takeIf { it.isNotBlank() },
+				nic = request.nic?.trim()?.uppercase()?.takeIf { it.isNotBlank() },
+				role = roleCode,
+				enabled = true,
+				emailVerified = true,
+			),
+		)
+		log.info("Admin created user {} with role {}", email, roleCode)
+		return user
+	}
+
+	fun updateUser(targetUserId: Long, request: UpdateUserRequest, actingUserId: Long): User {
+		val user = findById(targetUserId)
+		user.fullName = request.fullName.trim()
+		user.phone = request.phone?.trim()?.takeIf { it.isNotBlank() }
+		user.nic = request.nic?.trim()?.uppercase()?.takeIf { it.isNotBlank() }
+
+		request.role?.let { requested ->
+			val roleCode = requireKnownRole(requested)
+			if (user.role != roleCode) {
+				if (user.id == actingUserId) {
+					throw BusinessRuleException("You cannot change your own role", "SELF_ROLE_CHANGE")
+				}
+				user.role = roleCode
+				revokeSessions(user.id ?: targetUserId)
+			}
+		}
+
+		request.enabled?.let { enabled ->
+			if (user.id == actingUserId && !enabled) {
+				throw BusinessRuleException("You cannot disable your own account", "SELF_DISABLE")
+			}
+			if (user.enabled != enabled) {
+				user.enabled = enabled
+				if (!enabled) revokeSessions(user.id ?: targetUserId)
+			}
+		}
+
+		request.password?.let { raw ->
+			validatePasswordStrength(raw)
+			user.password = passwordEncoder.encode(raw)!!
+			user.failedLoginCount = 0
+			user.lockedUntil = null
+			revokeSessions(user.id ?: targetUserId)
+		}
+
+		return userRepository.save(user)
+	}
+
+	fun deleteUser(targetUserId: Long, actingUserId: Long) {
+		if (targetUserId == actingUserId) {
+			throw BusinessRuleException("You cannot delete your own account", "SELF_DELETE")
+		}
+		val user = findById(targetUserId)
+		if (user.role.equals(com.britam.insureclaim.role.Role.ADMIN.code, ignoreCase = true) &&
+			userRepository.countByRole(com.britam.insureclaim.role.Role.ADMIN.code) <= 1L
+		) {
+			throw BusinessRuleException("The last administrator account cannot be deleted", "LAST_ADMIN")
+		}
+		userRepository.delete(user)
+		try {
+			userRepository.flush()
+		} catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+			// claims.customer_id is ON DELETE RESTRICT - the only hard reference left.
+			throw ConflictException(
+				"That user still owns claims - disable the account instead",
+				"USER_HAS_RECORDS",
+			)
+		}
+		log.info("Admin deleted user {}", targetUserId)
+	}
+
+	private fun requireKnownRole(role: String): String {
+		val code = role.trim().uppercase()
+		if (!roleRepository.existsById(code)) {
+			throw BusinessRuleException("Unknown role: $role", "INVALID_ROLE")
+		}
+		return code
+	}
+
+	private fun revokeSessions(userId: Long) {
+		refreshTokenRepository.findActiveByUser(userId).forEach { it.revoke() }
 	}
 
 	fun setEnabled(targetUserId: Long, enabled: Boolean, actingUserId: Long) {

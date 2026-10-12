@@ -70,6 +70,7 @@ data class UserResponse(
 	val email: String,
 	val fullName: String,
 	val phone: String?,
+	val nic: String?,
 	val role: String,
 	val roleName: String?,
 	val enabled: Boolean,
@@ -82,8 +83,9 @@ data class UserResponse(
 			email = user.email,
 			fullName = user.fullName,
 			phone = user.phone,
+			nic = user.nic,
 			role = user.role,
-			roleName = roleNameFor(user.role),
+			roleName = roleNameFor(user.role) ?: user.role,
 			enabled = user.enabled,
 			initials = user.initials(),
 			lastLoginAt = user.lastLoginAt,
@@ -97,6 +99,31 @@ data class UpdateProfileRequest(
 	@field:Pattern(regexp = "^\\+?[0-9 ()-]{7,32}$", message = "must be a valid phone number")
 	val phone: String? = null,
 	@field:Size(max = 32) val nic: String? = null,
+)
+
+@Schema(name = "CreateUserRequest", description = "Admin-created account")
+data class CreateUserRequest(
+	@field:Email @field:NotBlank val email: String,
+	@field:NotBlank @field:Size(min = 10, max = 72) val password: String,
+	@field:NotBlank @field:Size(min = 2, max = 160) val fullName: String,
+	@field:Pattern(regexp = "^\\+?[0-9 ()-]{7,32}$", message = "must be a valid phone number")
+	val phone: String? = null,
+	@field:Size(max = 32) val nic: String? = null,
+	@field:NotBlank @field:Size(max = 32) val role: String,
+)
+
+@Schema(
+	name = "UpdateUserRequest",
+	description = "Edit an account. fullName/phone/nic replace the stored values; role/enabled/password are left unchanged when omitted.",
+)
+data class UpdateUserRequest(
+	@field:NotBlank @field:Size(min = 2, max = 160) val fullName: String,
+	@field:Pattern(regexp = "^\\+?[0-9 ()-]{7,32}$", message = "must be a valid phone number")
+	val phone: String? = null,
+	@field:Size(max = 32) val nic: String? = null,
+	@field:Size(max = 32) val role: String? = null,
+	val enabled: Boolean? = null,
+	@field:Size(min = 10, max = 72) val password: String? = null,
 )
 
 @Schema(name = "VehicleRequest")
