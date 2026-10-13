@@ -7,7 +7,7 @@ import com.britam.insureclaim.claim.FraudAlertSummary
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.policy.PolicyStatus
-import com.britam.insureclaim.security.FraudProperties
+import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.user.User
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -40,7 +40,7 @@ data class FraudSignal(
 class FraudDetectionService(
 	private val claimRepository: ClaimRepository,
 	private val fraudAlertRepository: FraudAlertRepository,
-	private val properties: FraudProperties,
+	private val settingService: SettingService,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -58,7 +58,7 @@ class FraudDetectionService(
 		evaluateEvidence(claim)?.let(signals::add)
 
 		val score = signals.sumOf { it.severity.weight }.coerceIn(0, 100)
-		val flagged = score >= properties.autoAlertThreshold
+		val flagged = score >= settingService.autoAlertThreshold()
 
 		if (save) {
 			claim.fraudScore = score

@@ -7,4 +7,5 @@ export * from './kyc';
 export * from './page';
 export * from './customer-summary';
 export * from './admin';
+export * from './settings';
 // Feedback types are defined here to avoid conflicts

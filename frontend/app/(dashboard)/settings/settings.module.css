@@ -1,0 +1,38 @@
+.page {
+  max-width: 1080px;
+}
+
+.sections {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+
+.footer {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.groupError {
+  margin-top: 0.75rem;
+}
+
+.errorActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+}
