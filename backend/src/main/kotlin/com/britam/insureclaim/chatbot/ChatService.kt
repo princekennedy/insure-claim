@@ -62,7 +62,7 @@ class ChatService(
 				userId,
 				listOf(ChatConversationStatus.OPEN, ChatConversationStatus.ESCALATED),
 				org.springframework.data.domain.PageRequest.of(0, 10),
-			).map { ConversationResponse.toResponse(it) }
+			).map { ConversationResponse.from(it) }
 	}
 
 	fun createConversation(userId: Long?, request: CreateConversationRequest): ConversationResponse {
@@ -88,15 +88,15 @@ class ChatService(
 				status = ChatConversationStatus.OPEN,
 			),
 		)
-		return ConversationResponse.toResponse(conversation)
+		return ConversationResponse.from(conversation)
 	}
 
 	@Transactional(readOnly = true)
 	fun conversationDetail(conversationId: Long, userId: Long?): ConversationDetailResponse {
 		val conversation = requireConversation(conversationId, userId)
 		val messages = messageRepository.findByConversationIdOrderByCreatedAt(conversationId)
-			.map { MessageResponse.toResponse(it) }
-		return ConversationDetailResponse(ConversationResponse.toResponse(conversation), messages)
+			.map { MessageResponse.from(it) }
+		return ConversationDetailResponse(ConversationResponse.from(conversation), messages)
 	}
 
 	fun sendMessage(conversationId: Long, userId: Long?, request: SendMessageRequest): ChatSendResponse {
@@ -142,7 +142,7 @@ class ChatService(
 		var concern: SupportConcernResponse? = null
 		if (shouldEscalate) {
 			conversation.escalate(now)
-			concern = SupportConcernResponse.toResponse(
+			concern = SupportConcernResponse.from(
 				supportConcernRepository.save(
 					SupportConcern(
 						conversation = conversation,
@@ -158,9 +158,9 @@ class ChatService(
 		conversation.messagesCount += 2
 
 		return ChatSendResponse(
-			conversation = ConversationResponse.toResponse(conversationRepository.save(conversation)),
-			userMessage = MessageResponse.toResponse(userMessage),
-			assistantMessage = MessageResponse.toResponse(assistantMessage),
+			conversation = ConversationResponse.from(conversationRepository.save(conversation)),
+			userMessage = MessageResponse.from(userMessage),
+			assistantMessage = MessageResponse.from(assistantMessage),
 			escalated = escalated,
 			concern = concern,
 		)
@@ -170,7 +170,7 @@ class ChatService(
 	fun staffConcerns(): List<SupportConcernResponse> =
 		supportConcernRepository
 			.findAll(org.springframework.data.domain.PageRequest.of(0, 50))
-			.map { SupportConcernResponse.toResponse(it) }
+			.map { SupportConcernResponse.from(it) }
 
 	// --------------------------------------------------------- internals -----
 

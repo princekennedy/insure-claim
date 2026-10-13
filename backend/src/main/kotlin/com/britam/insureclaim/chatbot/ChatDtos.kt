@@ -23,7 +23,19 @@ data class ConversationResponse(
 	val messagesCount: Int,
 	val startedAt: Instant,
 	val escalatedAt: Instant?,
-)
+) {
+	companion object {
+		fun from(conversation: ChatConversation) = ConversationResponse(
+			id = conversation.id ?: 0L,
+			reference = conversation.reference,
+			status = conversation.status.name,
+			escalated = conversation.escalated,
+			messagesCount = conversation.messagesCount,
+			startedAt = conversation.startedAt,
+			escalatedAt = conversation.escalatedAt,
+		)
+	}
+}
 
 @Schema(name = "ChatMessage", description = "A single message inside a conversation")
 data class MessageResponse(
@@ -34,7 +46,19 @@ data class MessageResponse(
 	val confidence: Double?,
 	val escalateSuggested: Boolean,
 	val createdAt: Instant,
-)
+) {
+	companion object {
+		fun from(message: ChatMessage) = MessageResponse(
+			id = message.id ?: 0L,
+			sender = message.sender.name,
+			content = message.content,
+			intent = message.intent,
+			confidence = message.confidence?.toDouble(),
+			escalateSuggested = message.escalateSuggested,
+			createdAt = message.createdAt,
+		)
+	}
+}
 
 @Schema(name = "SupportConcern", description = "Issue the chatbot surfaced to operations")
 data class SupportConcernResponse(
@@ -45,7 +69,19 @@ data class SupportConcernResponse(
 	val status: String,
 	val conversationId: Long?,
 	val createdAt: Instant,
-)
+) {
+	companion object {
+		fun from(concern: SupportConcern) = SupportConcernResponse(
+			id = concern.id ?: 0L,
+			category = concern.category.name,
+			severity = concern.severity.name,
+			summary = concern.summary,
+			status = concern.status.name,
+			conversationId = concern.conversation?.id,
+			createdAt = concern.createdAt,
+		)
+	}
+}
 
 @Schema(name = "ConversationDetail", description = "A conversation with its full message history")
 data class ConversationDetailResponse(
@@ -71,34 +107,4 @@ data class CreateConversationRequest(
 @Schema(name = "SendMessageRequest")
 data class SendMessageRequest(
 	@field:NotBlank @field:Size(max = 4000) val content: String,
-)
-
-fun ConversationResponse.toResponse(conversation: ChatConversation) = ConversationResponse(
-	id = conversation.id ?: 0L,
-	reference = conversation.reference,
-	status = conversation.status.name,
-	escalated = conversation.escalated,
-	messagesCount = conversation.messagesCount,
-	startedAt = conversation.startedAt,
-	escalatedAt = conversation.escalatedAt,
-)
-
-fun MessageResponse.toResponse(message: ChatMessage) = MessageResponse(
-	id = message.id ?: 0L,
-	sender = message.sender.name,
-	content = message.content,
-	intent = message.intent,
-	confidence = message.confidence?.toDouble(),
-	escalateSuggested = message.escalateSuggested,
-	createdAt = message.createdAt,
-)
-
-fun SupportConcernResponse.toResponse(concern: SupportConcern) = SupportConcernResponse(
-	id = concern.id ?: 0L,
-	category = concern.category.name,
-	severity = concern.severity.name,
-	summary = concern.summary,
-	status = concern.status.name,
-	conversationId = concern.conversation?.id,
-	createdAt = concern.createdAt,
 )
