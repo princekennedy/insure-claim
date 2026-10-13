@@ -92,6 +92,7 @@ export default function SettingsPage() {
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
   const [savedGroup, setSavedGroup] = useState<string | null>(null);
   const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
+  const [activeGroup, setActiveGroup] = useState('');
 
   const loadSettings = useCallback(async () => {
     try {
@@ -162,6 +163,15 @@ export default function SettingsPage() {
     }
   }
 
+  const groups = response?.groups ?? [];
+  const activeGroupData = groups.find((g) => g.group === activeGroup) ?? groups[0];
+  const activeMeta = activeGroupData
+    ? GROUP_META[activeGroupData.group] ?? { title: activeGroupData.group, description: '' }
+    : null;
+  const activeError = activeGroupData ? groupErrors[activeGroupData.group] : '';
+  const activeIsSaving = activeGroupData ? savingGroup === activeGroupData.group : false;
+  const activeWasSaved = activeGroupData ? savedGroup === activeGroupData.group : false;
+
   return (
     <section className={styles.page}>
       <PageHeader
@@ -183,27 +193,45 @@ export default function SettingsPage() {
       {loading && !response ? (
         <PageLoader message="Loading settings..." />
       ) : response ? (
-        <div className={styles.sections}>
-          {response.groups.map((group) => {
-            const meta = GROUP_META[group.group] ?? {
-              title: group.group,
-              description: '',
-            };
-            const groupError = groupErrors[group.group];
-            const isSaving = savingGroup === group.group;
-            const wasSaved = savedGroup === group.group;
+        <>
+          <div className={styles.tabs} role="tablist" aria-label="Settings sections">
+            {groups.map((group) => {
+              const isActive = group.group === activeGroupData.group;
+              return (
+                <button
+                  key={group.group}
+                  type="button"
+                  role="tab"
+                  id={`tab-${group.group}`}
+                  aria-selected={isActive}
+                  aria-controls={`panel-${group.group}`}
+                  className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
+                  onClick={() => setActiveGroup(group.group)}
+                >
+                  {GROUP_META[group.group]?.title ?? group.group}
+                </button>
+              );
+            })}
+          </div>
 
-            return (
-              <Card key={group.group}>
+          {activeGroupData && activeMeta && (
+            <div
+              key={activeGroupData.group}
+              className={styles.tabPanel}
+              role="tabpanel"
+              id={`panel-${activeGroupData.group}`}
+              aria-labelledby={`tab-${activeGroupData.group}`}
+            >
+              <Card>
                 <CardHeader>
-                  <CardTitle as="h2">{meta.title}</CardTitle>
-                  {meta.description && <CardDescription>{meta.description}</CardDescription>}
+                  <CardTitle as="h2">{activeMeta.title}</CardTitle>
+                  {activeMeta.description && <CardDescription>{activeMeta.description}</CardDescription>}
                 </CardHeader>
-                <form onSubmit={(event) => void handleSave(group, event)}>
+                <form onSubmit={(event) => void handleSave(activeGroupData, event)}>
                   <CardContent>
                     <div className={styles.grid}>
-                      {group.settings.map((setting) => {
-                        const draftKey = `${group.group}.${setting.key}`;
+                      {activeGroupData.settings.map((setting) => {
+                        const draftKey = `${activeGroupData.group}.${setting.key}`;
                         const fieldMeta = FIELD_META[setting.key] ?? { label: setting.key };
                         const value = draft[draftKey] ?? setting.value;
 
@@ -238,12 +266,12 @@ export default function SettingsPage() {
                         );
                       })}
                     </div>
-                    {groupError && (
+                    {activeError && (
                       <Alert type="error" className={styles.groupError}>
-                        {groupError}
+                        {activeError}
                       </Alert>
                     )}
-                    {wasSaved && !groupError && (
+                    {activeWasSaved && !activeError && (
                       <Alert type="success" className={styles.groupError} dismissible onDismiss={() => setSavedGroup(null)}>
                         Saved. New values apply to the next request.
                       </Alert>
@@ -251,16 +279,16 @@ export default function SettingsPage() {
                   </CardContent>
                   <CardFooter className={styles.footer}>
                     <span className={styles.footerActions}>
-                      <Button type="submit" loading={isSaving}>
-                        Save {meta.title.toLowerCase()}
+                      <Button type="submit" loading={activeIsSaving}>
+                        Save {activeMeta.title.toLowerCase()}
                       </Button>
                     </span>
                   </CardFooter>
                 </form>
               </Card>
-            );
-          })}
-        </div>
+            </div>
+          )}
+        </>
       ) : null}
     </section>
   );
