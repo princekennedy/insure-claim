@@ -73,7 +73,7 @@ data class SendMessageRequest(
 	@field:NotBlank @field:Size(max = 4000) val content: String,
 )
 
-fun ConversationResponse.from(conversation: ChatConversation) = ConversationResponse(
+fun ConversationResponse.toResponse(conversation: ChatConversation) = ConversationResponse(
 	id = conversation.id ?: 0L,
 	reference = conversation.reference,
 	status = conversation.status.name,
@@ -83,7 +83,7 @@ fun ConversationResponse.from(conversation: ChatConversation) = ConversationResp
 	escalatedAt = conversation.escalatedAt,
 )
 
-fun MessageResponse.from(message: ChatMessage) = MessageResponse(
+fun MessageResponse.toResponse(message: ChatMessage) = MessageResponse(
 	id = message.id ?: 0L,
 	sender = message.sender.name,
 	content = message.content,
@@ -93,7 +93,7 @@ fun MessageResponse.from(message: ChatMessage) = MessageResponse(
 	createdAt = message.createdAt,
 )
 
-fun SupportConcernResponse.from(concern: SupportConcern) = SupportConcernResponse(
+fun SupportConcernResponse.toResponse(concern: SupportConcern) = SupportConcernResponse(
 	id = concern.id ?: 0L,
 	category = concern.category.name,
 	severity = concern.severity.name,
