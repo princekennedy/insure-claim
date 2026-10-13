@@ -12,43 +12,6 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-<<<<<<< HEAD
-const navGroups = [
-  {
-    label: 'Overview',
-    items: [{ href: '/dashboard', label: 'Dashboard', icon: DashboardIcon }],
-  },
-  {
-    label: 'Claims & Policies',
-    items: [
-      { href: '/claims', label: 'Claims', icon: ClaimsIcon },
-      { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
-      { href: '/policies', label: 'Policies', icon: PolicyIcon },
-      { href: '/kyc', label: 'KYC', icon: KycIcon },
-    ],
-  },
-  {
-    label: 'Service Network',
-    items: [
-      { href: '/garages', label: 'Garages', icon: GarageIcon },
-      { href: '/feedback', label: 'Feedback', icon: FeedbackIcon },
-    ],
-  },
-];
-
-const STAFF_ROLES: readonly Role[] = ['AGENT', 'INSURER_ADMIN', 'ADMIN'];
-const ADMIN_ROLES: readonly Role[] = ['INSURER_ADMIN', 'ADMIN'];
-
-const userManagementItems = [
-  { href: '/users', label: 'Users', roles: STAFF_ROLES },
-  { href: '/roles', label: 'Roles', roles: STAFF_ROLES },
-  { href: '/audit-trail', label: 'Audit Trail', roles: ADMIN_ROLES },
-];
-
-const settingsItem = { href: '/settings', label: 'Settings', roles: ADMIN_ROLES };
-
-=======
->>>>>>> origin/main
 function DashboardIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -149,6 +112,8 @@ const userManagementItems = [
   { href: '/roles', label: 'Roles', roles: STAFF_ROLES },
   { href: '/audit-trail', label: 'Audit Trail', roles: ADMIN_ROLES },
 ];
+
+const settingsItem = { href: '/settings', label: 'Settings', roles: ADMIN_ROLES };
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
