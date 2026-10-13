@@ -44,6 +44,12 @@ class SecurityConfig(
 					.requestMatchers("/api/v1/claims/tracking/**").permitAll()
 				.requestMatchers("/api/v1/claims/{claimId}/tracking-link").permitAll()
 
+					// Chatbot widget: open so visitors can use the landing-page
+					// assistant; ownership is enforced in ChatService. Escalated
+					// concerns stay staff-only.
+					.requestMatchers("/api/v1/chat/concerns").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
+					.requestMatchers("/api/v1/chat/**").permitAll()
+
 					// Insurer-only surfaces. ROLE_STAFF is granted to every
 					// non-CUSTOMER role, so admin-created roles work too.
 					.requestMatchers("/api/v1/analytics/**").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
