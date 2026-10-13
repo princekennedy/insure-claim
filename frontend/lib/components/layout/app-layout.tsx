@@ -12,6 +12,7 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
+<<<<<<< HEAD
 const navGroups = [
   {
     label: 'Overview',
@@ -46,6 +47,8 @@ const userManagementItems = [
 
 const settingsItem = { href: '/settings', label: 'Settings', roles: ADMIN_ROLES };
 
+=======
+>>>>>>> origin/main
 function DashboardIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -115,19 +118,58 @@ function FeedbackIcon() {
   );
 }
 
+const navGroups = [
+  {
+    label: 'Overview',
+    items: [{ href: '/dashboard', label: 'Dashboard', icon: DashboardIcon }],
+  },
+  {
+    label: 'Claims & Policies',
+    items: [
+      { href: '/claims', label: 'Claims', icon: ClaimsIcon },
+      { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
+      { href: '/policies', label: 'Policies', icon: PolicyIcon },
+      { href: '/kyc', label: 'KYC', icon: KycIcon },
+    ],
+  },
+  {
+    label: 'Service Network',
+    items: [
+      { href: '/garages', label: 'Garages', icon: GarageIcon },
+      { href: '/feedback', label: 'Feedback', icon: FeedbackIcon },
+    ],
+  },
+];
+
+const STAFF_ROLES: readonly Role[] = ['AGENT', 'INSURER_ADMIN', 'ADMIN'];
+const ADMIN_ROLES: readonly Role[] = ['INSURER_ADMIN', 'ADMIN'];
+
+const userManagementItems = [
+  { href: '/users', label: 'Users', roles: STAFF_ROLES },
+  { href: '/roles', label: 'Roles', roles: STAFF_ROLES },
+  { href: '/audit-trail', label: 'Audit Trail', roles: ADMIN_ROLES },
+];
+
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [viewerRole, setViewerRole] = useState<Role | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ fullName: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     getCurrentUser()
       .then((currentUser) => {
-        if (!cancelled) setViewerRole(currentUser.role);
+        if (!cancelled) {
+          setViewerRole(currentUser.role);
+          setCurrentUser({ fullName: currentUser.fullName });
+        }
       })
       .catch(() => {
-        if (!cancelled) setViewerRole(null);
+        if (!cancelled) {
+          setViewerRole(null);
+          setCurrentUser(null);
+        }
       });
     return () => {
       cancelled = true;
@@ -143,10 +185,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const userManagementActive = visibleManagementItems.some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
-  const [userManagementOpen, setUserManagementOpen] = useState(userManagementActive);
+  const [userManagementOpen, setUserManagementOpen] = useState(false);
 
   useEffect(() => {
-    if (userManagementActive) setUserManagementOpen(true);
+    if (userManagementActive) {
+      setUserManagementOpen(true);
+    }
   }, [userManagementActive]);
 
   const handleLogout = (e: React.MouseEvent) => {
@@ -161,11 +205,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <Link href="/dashboard" className={styles.logo}>
-            <svg viewBox="0 0 32 32" className={styles.logoIcon}>
-              <rect x="2" y="2" width="28" height="28" rx="6" fill="#2563eb" />
-              <path d="M10 22V10h4l6 6v6h-4l-6-6z" fill="white" />
-            </svg>
-            <span className={styles.logoText}>InsureClaim</span>
+            <div className={styles.logoContainer}>
+              <span className={styles.logoText}>Britam</span>
+              <span className={styles.logoTagline}>With you every step of the way</span>
+            </div>
           </Link>
         </div>
 
@@ -254,9 +297,30 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       <main className={styles.main}>
         <header className={styles.header}>
-          <div className={styles.headerUser}>
-            <Avatar name="User" size="sm" />
-            <span className={styles.userName}>User</span>
+          <div className={styles.headerLeft}>
+            <div className={styles.searchBar}>
+              <SearchIcon />
+              <input
+                type="text"
+                placeholder="Search..."
+                className={styles.searchInput}
+              />
+            </div>
+          </div>
+          <div className={styles.headerRight}>
+            <Link href="/claims/new" className={styles.newClaimButton}>
+              <PlusIcon />
+              <span>New Claim</span>
+            </Link>
+            <button className={styles.notificationButton} aria-label="Notifications">
+              <BellIcon />
+              <span className={styles.notificationBadge}>3</span>
+            </button>
+            {currentUser && (
+              <div className={styles.headerUser}>
+                <Avatar name={currentUser.fullName} size="sm" />
+              </div>
+            )}
           </div>
         </header>
         <div className={styles.content}>{children}</div>
@@ -295,6 +359,33 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
       aria-hidden="true"
     >
       <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
     </svg>
   );
 }

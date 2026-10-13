@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Input, Button } from '@/lib/components/ui';
+import { Input, Button, PasswordInput, PhoneInput } from '@/lib/components/ui';
 import { register, isAuthenticated } from '@/lib/services/auth';
 import styles from './register.module.css';
 
@@ -16,6 +16,7 @@ export default function RegisterPage() {
     phone: '',
     nic: '',
   });
+  const [phoneValue, setPhoneValue] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -76,14 +77,16 @@ export default function RegisterPage() {
         autoComplete="email"
       />
 
-      <Input
+      <PhoneInput
         label="Phone number"
-        type="tel"
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        placeholder="+1 234 567 8900"
-        hint="Optional but recommended"
+        value={phoneValue}
+        onValueChange={(value) => {
+          setPhoneValue(value);
+          setFormData((prev) => ({ ...prev, phone: value }));
+        }}
+        placeholder="712345678"
+        required
+        defaultCountry="MW"
       />
 
       <Input
@@ -96,20 +99,38 @@ export default function RegisterPage() {
         hint="Optional"
       />
 
-      <Input
+      <PasswordInput
         label="Password"
-        type="password"
         name="password"
         value={formData.password}
         onChange={handleChange}
         placeholder="Min 10 characters"
         required
         autoComplete="new-password"
+        showStrength
       />
+
+      <div className={styles.securityNote}>
+        <svg viewBox="0 0 20 20" fill="currentColor" className={styles.lockIcon}>
+          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+        </svg>
+        <span>Secure registration with end-to-end encryption</span>
+      </div>
 
       <Button type="submit" fullWidth loading={loading}>
         Create account
       </Button>
+
+      <p className={styles.privacyNote}>
+        By creating an account, you agree to our{' '}
+        <Link href="/terms" className={styles.link}>
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className={styles.link}>
+          Privacy Policy
+        </Link>
+      </p>
 
       <p className={styles.footer}>
         Already have an account?{' '}          <Link href="/login" className={styles.link}>

@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background-color: #1E293B;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #f0f4f8 100%);
   position: relative;
   overflow: hidden;
 }
@@ -53,17 +53,18 @@
 }
 
 .logoText {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #0066CC;
   line-height: 1.2;
 }
 
 .logoTagline {
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   color: #C06C5C;
-  font-weight: 500;
-  letter-spacing: 0.025em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .tagline {

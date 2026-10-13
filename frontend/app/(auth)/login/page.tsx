@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Input, Button } from '@/lib/components/ui';
+import { Input, Button, PasswordInput } from '@/lib/components/ui';
 import { login, isAuthenticated } from '@/lib/services/auth';
 import styles from './login.module.css';
 
@@ -38,7 +38,6 @@ export default function LoginPage() {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <h1 className={styles.title}>Welcome back</h1>
-      <p className={styles.subtitle}>Sign in to your account to continue</p>
 
       {error && (
         <div className={styles.error}>
@@ -63,26 +62,32 @@ export default function LoginPage() {
         autoComplete="email"
       />
 
-      <div className={styles.passwordHeader}>
-        <Input
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          required
-          autoComplete="current-password"
-        />
-        <div style={{ textAlign: 'right', marginTop: '-15px', marginBottom: '15px' }}>
-          <Link href="/forgot-password" className={styles.link} style={{ fontSize: '0.875rem' }}>
-            Forgot password?
-          </Link>
-        </div>
+      <PasswordInput
+        label="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Enter your password"
+        required
+        autoComplete="current-password"
+        showStrength={false}
+      />
+
+      <div className={styles.securityNote}>
+        <svg viewBox="0 0 20 20" fill="currentColor" className={styles.lockIcon}>
+          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+        </svg>
+        <span>Secure login with end-to-end encryption</span>
       </div>
 
       <Button type="submit" fullWidth loading={loading}>
         Sign in
       </Button>
+
+      <div style={{ textAlign: 'center' }}>
+        <Link href="/forgot-password" className={styles.link} style={{ fontSize: '0.875rem' }}>
+          Forgot password?
+        </Link>
+      </div>
 
       <p className={styles.footer}>
         Don&apos;t have an account?{' '}          <Link href="/register" className={styles.link}>

@@ -8,6 +8,14 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.asterisk {
+  color: #dc2626;
+  font-size: 0.875rem;
 }
 
 .input {
@@ -42,6 +50,14 @@
 
 .input.error:focus {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.input.success {
+  border-color: #10b981;
+}
+
+.input.success:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .errorMessage {

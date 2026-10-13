@@ -30,9 +30,6 @@ export default function KycPage() {
   const [documentNumber, setDocumentNumber] = useState('');
   const [fullNameOnDocument, setFullNameOnDocument] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [frontImage, setFrontImage] = useState<File | null>(null);
-  const [backImage, setBackImage] = useState<File | null>(null);
-  const [selfie, setSelfie] = useState<File | null>(null);
 
   useEffect(() => {
     getCurrentKyc()
@@ -43,10 +40,6 @@ export default function KycPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!frontImage) {
-      setError('Front image of your ID document is required');
-      return;
-    }
     setError('');
     setSubmitting(true);
     try {
@@ -57,7 +50,7 @@ export default function KycPage() {
           fullNameOnDocument,
           dateOfBirth: dateOfBirth || undefined,
         },
-        { frontImage, backImage: backImage || undefined, selfie: selfie || undefined },
+        {},
       );
       setCurrent(result);
       setSuccess('KYC verification submitted for review');
@@ -170,42 +163,6 @@ export default function KycPage() {
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setDateOfBirth(e.target.value)}
                 />
-              </div>
-
-              <div className={styles.uploads}>
-                <label className={styles.uploadItem}>
-                  <span className={styles.uploadTitle}>Front image *</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic"
-                    onChange={(e) => setFrontImage(e.target.files?.[0] || null)}
-                  />
-                  <span className={styles.uploadHint}>
-                    {frontImage ? frontImage.name : 'Choose image'}
-                  </span>
-                </label>
-                <label className={styles.uploadItem}>
-                  <span className={styles.uploadTitle}>Back image</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic"
-                    onChange={(e) => setBackImage(e.target.files?.[0] || null)}
-                  />
-                  <span className={styles.uploadHint}>
-                    {backImage ? backImage.name : 'Optional'}
-                  </span>
-                </label>
-                <label className={styles.uploadItem}>
-                  <span className={styles.uploadTitle}>Selfie</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/heic"
-                    onChange={(e) => setSelfie(e.target.files?.[0] || null)}
-                  />
-                  <span className={styles.uploadHint}>
-                    {selfie ? selfie.name : 'Optional'}
-                  </span>
-                </label>
               </div>
 
               <div className={styles.submitRow}>
