@@ -252,7 +252,7 @@ class ChatService(
 			.body(String::class.java)
 
 		val root: JsonNode = objectMapper.readTree(raw)
-		(root["content"] as? ArrayNode)?.elements()?.asSequence()
+		return (root["content"] as? ArrayNode)?.elements()?.asSequence()
 			?.firstOrNull { it.path("type").asText() == "text" }
 			?.path("text")
 			?.takeIf { it.isTextual }
