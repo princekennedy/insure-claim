@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './card';
 import { Button } from './button';
+import { getChatConfig, createConversation, sendMessage } from '@/lib/services/chat';
+import { ApiError } from '@/lib/services/api';
+import type { ChatConfig } from '@/lib/types';
 import styles from './chatbot-card.module.css';
 
 interface ChatbotCardProps {
   className?: string;
   onOpenChat?: () => void;
+  /** Optional claim the conversation should be bound to. */
+  claimId?: number;
 }
 
 interface Message {
@@ -15,73 +20,129 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  error?: boolean;
 }
 
-export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
+const FALLBACK_GREETING =
+  "Hello! I'm the Britam claims assistant. How can I help with your insurance claims today?";
+
+export function ChatbotCard({ className = '', onOpenChat, claimId }: ChatbotCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m your AI assistant. How can I help you with your insurance claims today?',
-      timestamp: new Date(),
-    },
-  ]);
+  const [config, setConfig] = useState<ChatConfig | null>(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [escalated, setEscalated] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  };
+  }, []);
+
+  // Load the public chatbot config once on mount. If it can't be reached we
+  // optimistically allow the widget; the send call surfaces any failure.
+  useEffect(() => {
+    let cancelled = false;
+    getChatConfig()
+      .then((data) => {
+        if (cancelled) return;
+        setConfig(data);
+        setMessages([
+          { id: 'greeting', role: 'assistant', content: data.greeting, timestamp: new Date() },
+        ]);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setConfig({ enabled: true, mode: 'demo', model: null, greeting: FALLBACK_GREETING });
+        setMessages([
+          { id: 'greeting', role: 'assistant', content: FALLBACK_GREETING, timestamp: new Date() },
+        ]);
+      })
+      .finally(() => {
+        if (!cancelled) setConfigLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isChatOpen]);
+  }, [messages, isChatOpen, scrollToBottom]);
+
+  const isEnabled = config?.enabled ?? false;
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!isEnabled) return;
     setIsChatOpen(true);
-    if (onOpenChat) {
-      onOpenChat();
-    }
+    onOpenChat?.();
   };
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const ensureConversation = async (): Promise<number> => {
+    if (conversationId !== null) return conversationId;
+    const conversation = await createConversation(claimId ? { claimId } : {});
+    setConversationId(conversation.id);
+    return conversation.id;
+  };
+
+  const handleSendMessage = async () => {
+    const content = inputValue.trim();
+    if (!content || isTyping || !isEnabled) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `u-${Date.now()}`,
       role: 'user',
-      content: inputValue,
+      content,
       timestamp: new Date(),
     };
-
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Thank you for your message. I\'m here to help you with your insurance claims, policy questions, and any other support you need. Could you please provide more details about what you\'d like assistance with?',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
+    try {
+      const id = await ensureConversation();
+      const result = await sendMessage(id, { content });
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a-${result.assistantMessage.id}`,
+          role: 'assistant',
+          content: result.assistantMessage.content,
+          timestamp: new Date(result.assistantMessage.createdAt),
+        },
+      ]);
+      if (result.escalated) setEscalated(true);
+    } catch (err) {
+      if (err instanceof ApiError && err.data && (err.data as { code?: string }).code === 'CHATBOT_DISABLED') {
+        setConfig((prev) => (prev ? { ...prev, enabled: false } : prev));
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `e-${Date.now()}`,
+          role: 'assistant',
+          content:
+            "Sorry, I couldn't reach the assistant just now. Please try again in a moment.",
+          timestamp: new Date(),
+          error: true,
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -108,7 +169,11 @@ export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
               </div>
               <CardTitle>AI Assistant</CardTitle>
               <CardDescription>
-                Get instant help with claims, policy questions, and support
+                {!configLoaded
+                  ? 'Connecting…'
+                  : isEnabled
+                    ? 'Get instant help with claims, policy questions, and support'
+                    : 'The assistant is offline right now. Please try again later.'}
               </CardDescription>
             </CardHeader>
             <CardContent className={styles.content}>
@@ -158,9 +223,10 @@ export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
               <Button
                 className={styles.chatButton}
                 onClick={handleChatClick}
+                disabled={!configLoaded || !isEnabled}
                 fullWidth
               >
-                {isHovered ? 'Start Chatting' : 'Chat Now'}
+                {!configLoaded ? 'Connecting…' : !isEnabled ? 'Unavailable' : isHovered ? 'Start Chatting' : 'Chat Now'}
               </Button>
             </CardContent>
           </>
@@ -182,7 +248,7 @@ export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
                 <div>
                   <CardTitle className={styles.chatTitle}>AI Assistant</CardTitle>
                   <CardDescription className={styles.chatDescription}>
-                    Online
+                    {config?.mode === 'live' ? 'Online' : 'Online · Demo'}
                   </CardDescription>
                 </div>
               </div>
@@ -206,7 +272,9 @@ export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
                   key={message.id}
                   className={`${styles.message} ${styles[message.role]}`}
                 >
-                  <div className={styles.messageContent}>
+                  <div
+                    className={`${styles.messageContent} ${message.error ? styles.messageError : ''}`}
+                  >
                     {message.content}
                   </div>
                   <span className={styles.messageTime}>
@@ -230,19 +298,25 @@ export function ChatbotCard({ className = '', onOpenChat }: ChatbotCardProps) {
               )}
               <div ref={messagesEndRef} />
             </div>
+            {escalated && (
+              <div className={styles.notice}>
+                A Britam specialist has been notified and will follow up with you.
+              </div>
+            )}
             <div className={styles.inputContainer}>
               <textarea
                 className={styles.chatInput}
                 placeholder="Type your message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
+                disabled={!isEnabled}
                 rows={1}
               />
               <Button
                 className={styles.sendButton}
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isTyping}
+                onClick={() => void handleSendMessage()}
+                disabled={!inputValue.trim() || isTyping || !isEnabled}
               >
                 <svg
                   viewBox="0 0 24 24"
