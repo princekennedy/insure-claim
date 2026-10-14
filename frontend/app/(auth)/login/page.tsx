@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input, Button, PasswordInput } from '@/lib/components/ui';
@@ -14,11 +14,13 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
-  if (typeof window !== 'undefined' && isAuthenticated()) {
-    router.push('/dashboard');
-    return null;
-  }
+  // Redirect if already logged in (middleware will handle role-based redirect)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isAuthenticated()) {
+      // Let middleware handle the role-based redirect
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -27,6 +29,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
+      // Middleware will handle role-based redirect after successful login
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password');

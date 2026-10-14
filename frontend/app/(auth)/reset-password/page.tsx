@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, FormEvent, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Input, Button } from '@/lib/components/ui';
 import { resetPassword } from '@/lib/services/auth';
 import styles from '../login/login.module.css';
 
 function ResetPasswordForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
 

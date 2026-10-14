@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button, Input, Textarea, Select, Card, Alert, Badge, PageLoader } from '@/lib/components/ui';
+import { Button, Textarea, Select, Card, Alert } from '@/lib/components/ui';
 import { isAuthenticated } from '@/lib/services/auth';
-import { submitFeedback } from '@/lib/services/garages';
 import { GarageFeedbackRequest } from '@/lib/types/garage';
 import styles from './feedback.module.css';
 

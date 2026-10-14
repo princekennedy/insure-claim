@@ -2,8 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button, Input, Select, Textarea, Card, Alert, Badge } from '@/lib/components/ui';
+import { Button, Input, Select, Textarea, Card, Alert } from '@/lib/components/ui';
 import { isAuthenticated } from '@/lib/services/auth';
 import { INCIDENT_TYPE_LABELS } from '@/lib/types/claim';
 import styles from './claims.module.css';
@@ -171,7 +170,7 @@ export default function PublicFileClaimPage() {
 
           <div className={styles.infoSection}>
             <Card padding="md">
-              <h3 className={styles.infoTitle}>What You'll Need</h3>
+              <h3 className={styles.infoTitle}>What You&apos;ll Need</h3>
               <ul className={styles.infoList}>
                 <li>Vehicle registration number</li>
                 <li>Policy number (if available)</li>
@@ -183,7 +182,7 @@ export default function PublicFileClaimPage() {
             <Card padding="md">
               <h3 className={styles.infoTitle}>Processing Time</h3>
               <p className={styles.infoText}>
-                Most claims are reviewed within 24-48 hours. You'll receive updates via SMS and email.
+                Most claims are reviewed within 24-48 hours. You&apos;ll receive updates via SMS and email.
               </p>
             </Card>
           </div>

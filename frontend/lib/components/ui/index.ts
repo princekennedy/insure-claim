@@ -13,5 +13,6 @@ export { EmptyState } from './empty-state';
 export { PageHeader } from './page-header';
 export { Alert, ToastAlert } from './alert';
 export { Dialog } from './dialog';
+export { StaffLoginModal } from './staff-login-modal';
 export { Pagination } from './pagination';
 export { ChatbotCard } from './chatbot-card';

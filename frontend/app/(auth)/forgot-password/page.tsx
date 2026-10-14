@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
       <div className={styles.form} style={{ textAlign: 'center' }}>
         <h1 className={styles.title}>Check your email</h1>
         <p className={styles.subtitle}>
-          If an account exists with {email}, we've sent instructions to reset your password.
+          If an account exists with {email}, we&apos;ve sent instructions to reset your password.
           (For this demo, since emails are not sent, simply go to <Link href="/reset-password?token=YOUR_TOKEN" className={styles.link}>Reset Password</Link> assuming you extracted the token from the backend logs).
         </p>
         <p className={styles.homeLink}>

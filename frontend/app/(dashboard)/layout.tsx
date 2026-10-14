@@ -1,28 +1,13 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/services/auth';
 import { AppLayout } from "@/lib/components/layout";
+import { requireStaffRole } from "@/lib/services/auth-server";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    if (!isAuthenticated()) {
-      router.push('/login');
-    }
-  }, [router]);
-
-  if (!mounted || !isAuthenticated()) {
-    return null;
-  }
+  // Server-side authentication and role guard
+  await requireStaffRole();
 
   return <AppLayout>{children}</AppLayout>;
 }

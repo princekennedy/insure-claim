@@ -65,7 +65,7 @@ export default function AuditTrailPage() {
   }, []);
 
   useEffect(() => {
-    void loadAuditTrail(0, appliedFilters);
+    void Promise.resolve().then(() => loadAuditTrail(0, appliedFilters));
   }, [appliedFilters, loadAuditTrail]);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {

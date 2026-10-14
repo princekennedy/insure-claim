@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { PageHeader, Card, Badge, ProgressBar, EmptyState, PageLoader, Button } from '@/lib/components/ui';
 import { getMyClaims } from '@/lib/services/claims';
 import { formatCurrency, formatDateTime } from '@/lib/types/claim';
@@ -16,7 +15,6 @@ function getStatusVariant(status: ClaimStatus): 'success' | 'danger' | 'info' {
 }
 
 export default function ClaimsPage() {
-  const router = useRouter();
   const [claims, setClaims] = useState<ClaimSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);

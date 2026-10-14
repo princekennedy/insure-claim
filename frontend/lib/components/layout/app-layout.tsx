@@ -4,12 +4,22 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
+import { Dialog } from '../ui/dialog';
+import { Button } from '../ui/button';
 import { getCurrentUser, logout } from '../../services/auth';
 import type { Role } from '../../types/auth';
 import styles from './app-layout.module.css';
 
 interface AppLayoutProps {
   children: ReactNode;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  hasSubmenu?: boolean;
+  subitems?: Array<{ href: string; label: string }>;
 }
 
 function DashboardIcon() {
@@ -35,10 +45,11 @@ function ClaimsIcon() {
   );
 }
 
-function VehicleIcon() {
+function CustomerIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-      <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 10l-2.84-2.01A1 1 0 0 0 12.16 7H9c-1.38 0-2.37-.97-2.65-2.15a1 1 0 0 0-.84-1.19l-.93-.93-1.2.73a1 1 0 0 0-.44 1.22l.33.76c-.17.13-.37.26-.6.35l-.36.15C4.74 11.7 4 10.7 4 9.5 4 6.17 6.17 3.5 8.5 3.5h7c2.33 0 4.5 2.67 4.5 5.5 0 1.2-.4 2.2-.93 3.07l.73 1.2c.1.16.23.31.37.45l.01.01c.16.12.33.22.5.3l.76-.33a1 1 0 0 0 .44-.22l.73.54c.3-.16.55-.38.75-.63l.93.93c.22.22.47.4.76.53l.33-.17c1.16-.6 2.1-1.8 2.46-3.17a1 1 0 0 0-.46-1.17l-1.2-.73c.17-.13.32-.28.44-.45l.36-.15c.23-.1.44-.23.63-.38l-.55-.32.74-.55c-.08-.1-.17-.19-.27-.27z" />
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }
@@ -81,7 +92,25 @@ function FeedbackIcon() {
   );
 }
 
-const navGroups = [
+function ReportsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: 'Overview',
     items: [{ href: '/dashboard', label: 'Dashboard', icon: DashboardIcon }],
@@ -90,7 +119,7 @@ const navGroups = [
     label: 'Claims & Policies',
     items: [
       { href: '/claims', label: 'Claims', icon: ClaimsIcon },
-      { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
+      { href: '/customers', label: 'Customers', icon: CustomerIcon },
       { href: '/policies', label: 'Policies', icon: PolicyIcon },
       { href: '/kyc', label: 'KYC', icon: KycIcon },
     ],
@@ -100,6 +129,22 @@ const navGroups = [
     items: [
       { href: '/garages', label: 'Garages', icon: GarageIcon },
       { href: '/feedback', label: 'Feedback', icon: FeedbackIcon },
+    ],
+  },
+  {
+    label: 'Reports',
+    items: [
+      { 
+        href: '/reports', 
+        label: 'Reports', 
+        icon: ReportsIcon,
+        hasSubmenu: true,
+        subitems: [
+          { href: '/reports/garage', label: 'Garage Performance' },
+          { href: '/reports/claims', label: 'Claims' },
+          { href: '/reports/financial', label: 'Financial' },
+        ]
+      },
     ],
   },
 ];
@@ -114,10 +159,11 @@ const userManagementItems = [
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
   const [viewerRole, setViewerRole] = useState<Role | null>(null);
   const [currentUser, setCurrentUser] = useState<{ fullName: string } | null>(null);
+  const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,22 +189,27 @@ export function AppLayout({ children }: AppLayoutProps) {
     ? userManagementItems.filter((item) => item.roles.includes(viewerRole))
     : [];
   const showAdministration = visibleManagementItems.length > 0;
-  const userManagementActive = visibleManagementItems.some(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  );
-  const [userManagementOpen, setUserManagementOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (userManagementActive) {
-      setUserManagementOpen(true);
-    }
-  }, [userManagementActive]);
+  const toggleSubmenu = (href: string) => {
+    setExpandedSubmenu(expandedSubmenu === href ? null : href);
+  };
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    logout().finally(() => {
-      router.push('/');
-    });
+  const handleLogout = () => {
+    void logout().catch(() => undefined).then(() => router.replace('/'));
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setLogoutModalOpen(false);
+    handleLogout();
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
   };
 
   return (
@@ -180,6 +231,42 @@ export function AppLayout({ children }: AppLayoutProps) {
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const hasSubmenu = item.hasSubmenu;
+                const subitems = item.subitems;
+                const isExpanded = expandedSubmenu === item.href;
+
+                if (hasSubmenu && subitems) {
+                  return (
+                    <div key={item.href}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSubmenu(item.href)}
+                        className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                        aria-expanded={isExpanded}
+                      >
+                        <Icon />
+                        <span>{item.label}</span>
+                        <ChevronDownIcon />
+                      </button>
+                      {isExpanded && (
+                        <div className={styles.submenu}>
+                          {subitems.map((subitem) => {
+                            const isSubActive = pathname === subitem.href;
+                            return (
+                              <Link
+                                key={subitem.href}
+                                href={subitem.href}
+                                className={`${styles.submenuItem} ${isSubActive ? styles.submenuItemActive : ''}`}
+                              >
+                                {subitem.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <Link
@@ -199,50 +286,33 @@ export function AppLayout({ children }: AppLayoutProps) {
           {showAdministration && (
             <div className={styles.navGroup}>
               <p className={styles.groupLabel}>Administration</p>
-              <button
-                type="button"
-                className={`${styles.navItem} ${styles.groupToggle} ${userManagementActive ? styles.navItemActive : ''}`}
-                onClick={() => setUserManagementOpen((open) => !open)}
-                aria-expanded={userManagementOpen}
-                aria-controls="user-management-nav"
-              >
-                <AdminIcon />
-                <span>User Management</span>
-                <ChevronIcon expanded={userManagementOpen} />
-              </button>
-              <div
-                className={styles.subNav}
-                id="user-management-nav"
-                hidden={!userManagementOpen}
-              >
-                {visibleManagementItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`${styles.subNavItem} ${isActive ? styles.subNavItemActive : ''}`}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      <span className={styles.subNavMarker} aria-hidden="true" />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              {visibleManagementItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <AdminIcon />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <Link href="/login" onClick={handleLogout} className={styles.navItem}>
+          <button type="button" onClick={handleLogoutClick} className={styles.navItem}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -276,6 +346,27 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
         <div className={styles.content}>{children}</div>
       </main>
+
+      <Dialog
+        isOpen={logoutModalOpen}
+        onClose={handleLogoutCancel}
+        title="Confirm Logout"
+        size="sm"
+        showCloseButton={false}
+        closeOnOverlay={false}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Button variant="danger" onClick={handleLogoutConfirm}>
+              Yes
+            </Button>
+            <Button variant="secondary" onClick={handleLogoutCancel}>
+              No
+            </Button>
+          </div>
+        }
+      >
+        <p>Are you sure you want to logout?</p>
+      </Dialog>
     </div>
   );
 }
@@ -286,21 +377,6 @@ function AdminIcon() {
       <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="10" cy="7" r="4" />
       <path d="M20 8v6m3-3h-6" />
-    </svg>
-  );
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      className={`${styles.chevron} ${expanded ? styles.chevronExpanded : ''}`}
-      aria-hidden="true"
-    >
-      <path d="m5.5 7.5 4.5 4.5 4.5-4.5" />
     </svg>
   );
 }
