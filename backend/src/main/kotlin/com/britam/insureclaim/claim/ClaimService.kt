@@ -13,7 +13,7 @@ import com.britam.insureclaim.kyc.KycDocumentType
 import com.britam.insureclaim.kyc.KycStatus
 import com.britam.insureclaim.kyc.KycVerificationRepository
 import com.britam.insureclaim.policy.PolicyStatus
-import com.britam.insureclaim.security.ClaimProperties
+import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.storage.LocalFileStorageService
 import com.britam.insureclaim.storage.StoredFile
 import com.britam.insureclaim.user.User
@@ -55,7 +55,7 @@ class ClaimService(
 	private val accountService: UserAccountService,
 	private val fraudDetectionService: FraudDetectionService,
 	private val storageService: LocalFileStorageService,
-	private val properties: ClaimProperties,
+	private val settingService: SettingService,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -123,9 +123,10 @@ class ClaimService(
 			ClaimStatus.entries.filter { it.isOpen },
 			PageRequest.of(0, 1),
 		).totalElements
-		if (openCount >= properties.maxOpenClaimsPerCustomer) {
+		val maxOpenClaims = settingService.maxOpenClaimsPerCustomer()
+		if (openCount >= maxOpenClaims) {
 			throw BusinessRuleException(
-				"You already have $openCount open claims. The limit is ${properties.maxOpenClaimsPerCustomer}; " +
+				"You already have $openCount open claims. The limit is $maxOpenClaims; " +
 					"contact us before filing another.",
 				"TOO_MANY_OPEN_CLAIMS",
 			)
@@ -469,7 +470,7 @@ class ClaimService(
 				claimId = claim.id ?: 0L,
 				claim = claim,
 				token = token,
-				expiresAt = Instant.now().plus(Duration.ofDays(properties.settlementWindowDays.toLong())),
+				expiresAt = Instant.now().plus(Duration.ofDays(settingService.settlementWindowDays().toLong())),
 			),
 		)
 		return token
