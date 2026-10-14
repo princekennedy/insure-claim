@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input, Button, PasswordInput } from '@/lib/components/ui';
 import { login, isAuthenticated } from '@/lib/services/auth';
+import { clearTokens } from '@/lib/services/api';
 import styles from './login.module.css';
 
 export default function LoginPage() {
@@ -14,11 +15,17 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in (middleware will handle role-based redirect)
+  // Only bounce to the portal when the session cookie middleware checks is
+  // actually present. Middleware clears that cookie when a token is invalid or
+  // the backend is unreachable; trusting localStorage alone then sends us back
+  // to /dashboard, which bounces us here again - an endless refresh loop.
   useEffect(() => {
-    if (typeof window !== 'undefined' && isAuthenticated()) {
-      // Let middleware handle the role-based redirect
-      router.push('/dashboard');
+    if (typeof window === 'undefined') return;
+    const hasSessionCookie = /(?:^|;\s*)accessToken=/.test(document.cookie);
+    if (hasSessionCookie && isAuthenticated()) {
+      router.replace('/dashboard');
+    } else if (!hasSessionCookie) {
+      clearTokens();
     }
   }, [router]);
 
