@@ -16,6 +16,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           <nav className={styles.nav}>
             <Link href="/login" className={styles.navLink}>Track Claim</Link>
             <Link href="/login" className={styles.navLink}>Feedback</Link>
+            <Link href="/staff/login" className={styles.navLink}>Staff Portal</Link>
             <Link href="/login" className={styles.navButton}>Sign In</Link>
           </nav>
         </div>
@@ -36,6 +37,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <Link href="/login">File a Claim</Link>
             <Link href="/login">Track Claim</Link>
             <Link href="/login">Feedback</Link>
+            <Link href="/staff/login">Staff Portal</Link>
             <Link href="/login">Sign In</Link>
           </div>
           <p className={styles.footerCopy}>

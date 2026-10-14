@@ -70,7 +70,7 @@ export default function RolesPage() {
   }, []);
 
   useEffect(() => {
-    void loadRoles(0);
+    void Promise.resolve().then(() => loadRoles(0));
   }, [loadRoles]);
 
   async function ensurePermissions() {

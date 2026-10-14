@@ -1,6 +1,7 @@
 'use client';
 
 import styles from './avatar.module.css';
+import Image from 'next/image';
 
 interface AvatarProps {
   src?: string | null;
@@ -21,12 +22,16 @@ function getInitials(name: string): string {
 export function Avatar({ src, name, size = 'md', className = '' }: AvatarProps) {
   const sizeClass = styles[`size-${size}`];
   const initials = getInitials(name);
+  const dimension = size === 'sm' ? 32 : size === 'lg' ? 56 : 40;
 
   if (src) {
     return (
-      <img
+      <Image
         src={src}
         alt={name}
+        width={dimension}
+        height={dimension}
+        unoptimized
         className={`${styles.avatar} ${sizeClass} ${className}`}
       />
     );

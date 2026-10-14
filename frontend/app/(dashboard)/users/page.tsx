@@ -111,7 +111,7 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    void loadUsers(0, appliedFilters);
+    void Promise.resolve().then(() => loadUsers(0, appliedFilters));
   }, [appliedFilters, loadUsers]);
 
   useEffect(() => {

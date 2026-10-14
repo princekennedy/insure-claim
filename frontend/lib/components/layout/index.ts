@@ -1,2 +1,3 @@
 export { AppLayout } from './app-layout';
 export { AuthLayout } from './auth-layout';
+export { CustomerLayout } from './customer-layout';

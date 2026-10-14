@@ -104,25 +104,37 @@ async function request<T>(
   return handleResponse<T>(response);
 }
 
-// Token management
+// Token management - using cookies for server-side middleware access
 export function setTokens(accessToken: string, refreshToken: string): void {
   if (typeof window === 'undefined') return;
+  // Store in both cookies (for middleware) and localStorage (for client-side fallback)
+  document.cookie = `accessToken=${accessToken}; path=/; max-age=604800; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
+  document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
   localStorage.setItem('accessToken', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
 }
 
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
+  // Try cookies first, fallback to localStorage
+  const cookieMatch = document.cookie.match(/accessToken=([^;]+)/);
+  if (cookieMatch) return cookieMatch[1];
   return localStorage.getItem('accessToken');
 }
 
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
+  // Try cookies first, fallback to localStorage
+  const cookieMatch = document.cookie.match(/refreshToken=([^;]+)/);
+  if (cookieMatch) return cookieMatch[1];
   return localStorage.getItem('refreshToken');
 }
 
 export function clearTokens(): void {
   if (typeof window === 'undefined') return;
+  // Clear from both cookies and localStorage
+  document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax;';
+  document.cookie = 'refreshToken=; path=/; max-age=0; SameSite=Lax;';
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
 }

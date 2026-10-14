@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (middleware will handle role-based redirect)
   if (typeof window !== 'undefined' && isAuthenticated()) {
     router.push('/dashboard');
     return null;
@@ -40,6 +40,7 @@ export default function RegisterPage() {
 
     try {
       await register(formData);
+      // Middleware will handle role-based redirect after successful registration
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');

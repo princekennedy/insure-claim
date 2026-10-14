@@ -238,9 +238,9 @@ export const CLAIM_STATUS_PROGRESS: Record<ClaimStatus, number> = {
 
 export function formatCurrency(amount: number | null | undefined): string {
   if (amount === null || amount === undefined) return '-';
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-MW', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'MWK',
   }).format(amount);
 }
 

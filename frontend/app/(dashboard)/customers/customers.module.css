@@ -1,0 +1,132 @@
+.page {
+  max-width: 1120px;
+}
+
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.infoValue {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.vehicleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vehicleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+.vehicleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.vehicleReg {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  text-transform: uppercase;
+}
+
+.vehicleModel {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.addButton {
+  margin-top: 1rem;
+}
+
+.policyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.policyItem {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.policyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.policyNumber {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.policyInsurer {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.policyVehicle {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}

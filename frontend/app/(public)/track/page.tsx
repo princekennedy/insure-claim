@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button, Input, Card, Alert, Badge, ProgressBar, PageLoader } from '@/lib/components/ui';
-import { getPublicTracking, createTrackingLink } from '@/lib/services/claims';
-import { formatDateTime, CLAIM_STATUS_LABELS } from '@/lib/types/claim';
+import { useState } from 'react';
+import { Button, Input, Card, Alert, Badge, ProgressBar } from '@/lib/components/ui';
+import { getPublicTracking } from '@/lib/services/claims';
+import { formatDateTime, type ClaimTrackingResponse } from '@/lib/types/claim';
 import styles from './track.module.css';
 
 export default function PublicTrackPage() {
   const [trackingToken, setTrackingToken] = useState('');
-  const [claim, setClaim] = useState<any>(null);
+  const [claim, setClaim] = useState<ClaimTrackingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [submitted, setSubmitted] = useState(false);
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +31,6 @@ export default function PublicTrackPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCreateLink = async () => {
-    // In production, this would require authentication
-    setSuccess('Please sign in to generate a tracking link for your claim.');
   };
 
   return (
@@ -73,14 +67,6 @@ export default function PublicTrackPage() {
             {error && <Alert type="error" onDismiss={() => setError('')}>{error}</Alert>}
             {success && <Alert type="info" onDismiss={() => setSuccess('')}>{success}</Alert>}
 
-            {submitted && (
-              <div className={styles.linkSection}>
-                <p className={styles.linkText}>Don't have a token?</p>
-                <Button onClick={handleCreateLink} variant="secondary" size="sm">
-                  Request a Tracking Link
-                </Button>
-              </div>
-            )}
           </Card>
 
           {claim && (
@@ -93,7 +79,7 @@ export default function PublicTrackPage() {
                   <h2 className={styles.claimNumber}>{claim.claimNumber}</h2>
                 </div>
                 <div className={styles.claimMeta}>
-                  <span>{claim.claim.incidentType?.replace('_', ' ') || 'Incident'}</span>
+                    <span>{claim.incidentType.replace('_', ' ')}</span>
                   <span>·</span>
                   <span>{formatDateTime(claim.incidentDate || new Date().toISOString())}</span>
                 </div>
@@ -110,7 +96,7 @@ export default function PublicTrackPage() {
               <div className={styles.timelineSection}>
                 <h3 className={styles.timelineTitle}>Status Timeline</h3>
                 <div className={styles.timeline}>
-                  {claim.timeline?.map((entry: any, index: number) => (
+                  {claim.timeline.map((entry, index) => (
                     <div
                       key={index}
                       className={`${styles.timelineItem} ${entry.isCurrent ? styles.current : ''}`}
