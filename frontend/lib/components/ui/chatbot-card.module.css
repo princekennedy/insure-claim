@@ -175,6 +175,23 @@
   border-bottom-left-radius: 0.25rem;
 }
 
+.messageError {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+.notice {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .messageTime {
   font-size: 0.625rem;
   color: #9ca3af;

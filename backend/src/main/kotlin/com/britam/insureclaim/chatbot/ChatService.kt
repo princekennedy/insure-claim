@@ -62,7 +62,7 @@ class ChatService(
 				userId,
 				listOf(ChatConversationStatus.OPEN, ChatConversationStatus.ESCALATED),
 				org.springframework.data.domain.PageRequest.of(0, 10),
-			).map { ConversationResponse.from(it) }
+			).content.map { ConversationResponse.from(it) }
 	}
 
 	fun createConversation(userId: Long?, request: CreateConversationRequest): ConversationResponse {
@@ -170,7 +170,7 @@ class ChatService(
 	fun staffConcerns(): List<SupportConcernResponse> =
 		supportConcernRepository
 			.findAll(org.springframework.data.domain.PageRequest.of(0, 50))
-			.map { SupportConcernResponse.from(it) }
+			.content.map { SupportConcernResponse.from(it) }
 
 	// --------------------------------------------------------- internals -----
 

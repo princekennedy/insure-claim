@@ -8,4 +8,5 @@ export * from './page';
 export * from './customer-summary';
 export * from './admin';
 export * from './settings';
+export * from './chat';
 // Feedback types are defined here to avoid conflicts
