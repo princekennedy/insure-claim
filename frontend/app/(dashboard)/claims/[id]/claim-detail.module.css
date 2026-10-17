@@ -32,7 +32,7 @@
   align-items: flex-start;
   gap: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .detailRow:last-child {
@@ -43,13 +43,13 @@
 .detailLabel {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   min-width: 140px;
 }
 
 .detailValue {
   font-size: 0.875rem;
-  color: #111827;
+  color: var(--theme-text-primary);
   text-align: right;
   flex: 1;
 }
@@ -65,13 +65,13 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.75rem;
-  background-color: #f9fafb;
+  background-color: var(--theme-surface-muted);
   border-radius: 0.375rem;
 }
 
 .financialLabel {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -79,7 +79,7 @@
 .financialValue {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .documentsList {
@@ -94,9 +94,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  background-color: #f9fafb;
+  background-color: var(--theme-surface-muted);
   border-radius: 0.375rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border);
 }
 
 .documentInfo {
@@ -115,17 +115,17 @@
 
 .documentName {
   font-size: 0.875rem;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .documentSize {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .documentDate {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
 }
 
 .documentActions {
@@ -168,7 +168,7 @@
 
 .noDocuments {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   text-align: center;
   padding: 1rem;
 }
@@ -178,7 +178,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
 }
 
 .fileUpload {
@@ -229,7 +229,7 @@
   top: 0.5rem;
   bottom: 0.5rem;
   width: 2px;
-  background-color: #e5e7eb;
+  background-color: var(--theme-surface-hover);
 }
 
 .timelineItem {
@@ -248,7 +248,7 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 9999px;
-  background-color: #e5e7eb;
+  background-color: var(--theme-surface-hover);
   border: 2px solid white;
 }
 
@@ -265,28 +265,28 @@
 
 .timelineLabel {
   font-weight: 600;
-  color: #111827;
+  color: var(--theme-text-primary);
   font-size: 0.875rem;
 }
 
 .timelineNote {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .timelineDate {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
 }
 
 .timelineActor {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
 }
 
 .noTimeline {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   text-align: center;
   padding: 1rem;
 }
@@ -306,7 +306,7 @@
 .repairCode {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .repairDetails {
@@ -314,7 +314,7 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--theme-text-secondary);
 }
 
 .repairDetails p {
@@ -323,7 +323,7 @@
 
 .feedbackNote {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin-bottom: 0.75rem;
 }
 
@@ -356,5 +356,5 @@
 
 .fraudDesc {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }

@@ -1,6 +1,6 @@
 .card {
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 0.5rem;
   overflow: hidden;
   transition: box-shadow 0.15s ease;
@@ -29,21 +29,21 @@
 
 .header {
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--theme-border);
   margin-bottom: 0.75rem;
 }
 
 .title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--theme-text-primary);
   margin: 0;
   line-height: 1.25;
 }
 
 .description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0.25rem 0 0;
 }
 
@@ -53,7 +53,7 @@
 
 .footer {
   padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
   margin-top: 0.75rem;
   display: flex;
   gap: 0.5rem;

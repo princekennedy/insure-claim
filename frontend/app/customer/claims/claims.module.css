@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  color: #172a2b;
+  color: var(--theme-text-primary);
 }
 
 .overview {
@@ -12,7 +12,7 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   margin: 0 0 1.25rem;
-  background: #eaf3f1;
+  background: var(--theme-surface-muted);
   border-left: 4px solid #087f70;
 }
 
@@ -24,12 +24,12 @@
 
 .overviewLabel,
 .overviewNote {
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.875rem;
 }
 
 .overviewValue {
-  color: #075c53;
+  color: var(--theme-text-primary);
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
 }
@@ -54,8 +54,8 @@
   min-height: 2.5rem;
   border: 1px solid #bdcbca;
   border-radius: 4px;
-  background: #fff;
-  color: #172a2b;
+  background: var(--theme-surface);
+  color: var(--theme-text-primary);
   font: inherit;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .statusFilter label {
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -113,7 +113,7 @@
 .listHeader {
   padding: 0.65rem 1rem;
   border-bottom: 1px solid #bdcbca;
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -123,7 +123,7 @@
   min-height: 5.5rem;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid #dce5e3;
-  background: #fff;
+  background: var(--theme-surface);
 }
 
 .claimIdentity,
@@ -139,14 +139,14 @@
 .claimIdentity strong,
 .vehicle strong {
   overflow-wrap: anywhere;
-  color: #172a2b;
+  color: var(--theme-text-primary);
   font-size: 0.875rem;
 }
 
 .claimIdentity span,
 .vehicle span,
 .date {
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.8125rem;
 }
 
@@ -163,13 +163,13 @@
 }
 
 .progress > span {
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
 .amount {
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.75rem;
 }
 
@@ -179,7 +179,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 0;
-  color: #526566;
+  color: var(--theme-text-secondary);
   font-size: 0.8125rem;
 }
 

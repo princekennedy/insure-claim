@@ -1,0 +1,471 @@
+.page {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 0.25rem 0 2.5rem;
+  color: var(--theme-text-primary);
+}
+
+.pageHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0.8rem 0 1.7rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.55rem;
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.pageHeading h1 {
+  margin: 0;
+  color: #2563eb;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+}
+
+.intro {
+  margin: 0.7rem 0 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.accountStamp {
+  display: grid;
+  gap: 0.28rem;
+  flex-shrink: 0;
+  padding: 0.7rem 0 0.7rem 1rem;
+  border-left: 2px solid #dbeafe;
+}
+
+.stampLabel {
+  color: var(--theme-text-subtle);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.stampValue {
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.settingsLayout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.profileAside {
+  position: sticky;
+  top: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--theme-border);
+  border-top: 3px solid #2563eb;
+  background: var(--theme-surface);
+  box-shadow: 0 12px 30px rgb(29 55 76 / 5%);
+}
+
+.identityMark {
+  display: inline-grid;
+  place-items: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: #eff6ff;
+}
+
+.profileAside h2 {
+  margin: 0;
+  color: #2563eb;
+  font-size: 1.08rem;
+  font-weight: 750;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.accountEmail {
+  margin: 0.25rem 0 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.accountStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  margin-top: 1.15rem;
+  color: #345b54;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.statusDot {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: #39a77c;
+  box-shadow: 0 0 0 3px #e5f4ed;
+}
+
+.asideRule {
+  height: 1px;
+  margin: 1.2rem 0;
+  background: #e9eef0;
+}
+
+.asideNote {
+  margin: 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.settingsSections {
+  display: grid;
+  gap: 1rem;
+}
+
+.section {
+  padding: 1.45rem 1.6rem 1.5rem;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  box-shadow: 0 12px 30px rgb(29 55 76 / 4%);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.sectionNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  color: #2563eb;
+  background: #eff6ff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.sectionHeading h2 {
+  margin: 0.02rem 0 0;
+  color: #2563eb;
+  font-size: 1.03rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+.sectionHeading p {
+  margin: 0.35rem 0 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.81rem;
+  line-height: 1.5;
+}
+
+.form {
+  padding-top: 1.2rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.15rem;
+  row-gap: 0.15rem;
+}
+
+.formGrid label {
+  color: #2563eb;
+}
+
+.formGrid input:disabled {
+  color: var(--theme-text-secondary);
+  background: var(--theme-surface-muted);
+  cursor: not-allowed;
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.65rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--theme-border);
+}
+
+.themeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1.2rem;
+}
+
+.themeOption {
+  min-width: 9rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid #cbd5df;
+  border-radius: 0.35rem;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.themeOption:hover {
+  border-color: #2563eb;
+}
+
+.themeOption:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.themeOptionActive {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+:global(html[data-theme='dark']) .themeOption {
+  border-color: var(--theme-border);
+  background: var(--theme-surface-muted);
+  color: var(--theme-text-secondary);
+}
+
+:global(html[data-theme='dark']) .themeOptionActive {
+  border-color: #60a5fa;
+  background: #1e3a5f;
+  color: #dbeafe;
+}
+
+.formFootnote {
+  color: var(--theme-text-secondary);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.loadError {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 40rem;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.errorMark {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #a8453c;
+  background: #fff0ed;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+:global(html[data-theme='dark']) {
+  .page {
+    color: #e2e8f0;
+  }
+
+  .pageHeading h1,
+  .profileAside h2,
+  .sectionHeading h2,
+  .loadError h2 {
+    color: #f1f5f9;
+  }
+
+  .intro,
+  .accountEmail,
+  .asideNote,
+  .sectionHeading p,
+  .formFootnote,
+  .loadError p {
+    color: #a9b8c8;
+  }
+
+  .accountStamp {
+    border-left-color: #35485b;
+  }
+
+  .stampLabel {
+    color: var(--theme-text-subtle);
+  }
+
+  .stampValue {
+    color: #e1eaf2;
+  }
+
+  .profileAside,
+  .section,
+  .loadError {
+    border-color: #35485b;
+    background: #13202e;
+    box-shadow: 0 12px 30px rgb(0 0 0 / 18%);
+  }
+
+  .profileAside {
+    border-top-color: #54b6bd;
+  }
+
+  .identityMark,
+  .sectionNumber {
+    background: #203a46;
+    color: #8dd5d7;
+  }
+
+  .accountStatus {
+    color: #a8dbc1;
+  }
+
+  .asideRule,
+  .sectionHeading,
+  .formFooter {
+    border-color: #35485b;
+    background-color: transparent;
+  }
+
+  .formGrid label {
+    color: #d6e0e9;
+  }
+
+  .formGrid input {
+    border-color: #46596c;
+    background: #1c2b3b;
+    color: #eef3f7;
+  }
+
+  .formGrid input:disabled {
+    background: #233142;
+    color: #a9b8c8;
+  }
+
+}
+
+.loadError h2 {
+  margin: 0;
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+.loadError p {
+  margin: 0.35rem 0 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .settingsLayout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+
+  .profileAside,
+  .section {
+    padding-right: 1.2rem;
+    padding-left: 1.2rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .pageHeading {
+    align-items: flex-start;
+  }
+
+  .accountStamp {
+    display: none;
+  }
+
+  .settingsLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profileAside {
+    position: static;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.9rem;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .identityMark {
+    grid-row: span 3;
+    margin: 0;
+  }
+
+  .profileAside h2,
+  .accountEmail,
+  .accountStatus {
+    grid-column: 2;
+  }
+
+  .accountStatus {
+    margin-top: 0.45rem;
+  }
+
+  .asideRule,
+  .asideNote {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .pageHeading {
+    padding-top: 0.2rem;
+  }
+
+  .formGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .section {
+    padding: 1.1rem 1rem;
+  }
+
+  .formFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .formFootnote {
+    order: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

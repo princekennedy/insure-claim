@@ -194,9 +194,14 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
               <span className={styles.notificationBadge}>3</span>
             </button>
             {currentUser && (
-              <div className={styles.headerUser}>
+              <Link
+                href="/customer/account"
+                className={styles.headerUser}
+                aria-label="Open account settings"
+                title="Account settings"
+              >
                 <Avatar name={currentUser.fullName} size="sm" />
-              </div>
+              </Link>
             )}
           </div>
         </header>

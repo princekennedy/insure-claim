@@ -13,16 +13,16 @@
 .label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text-secondary);
 }
 
 .percentage {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .track {
-  background-color: #e5e7eb;
+  background-color: var(--theme-surface-hover);
   border-radius: 9999px;
   overflow: hidden;
 }

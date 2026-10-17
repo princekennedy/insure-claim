@@ -42,6 +42,7 @@ export interface UserResponse {
   email: string;
   fullName: string;
   phone: string | null;
+  nic: string | null;
   role: Role;
   enabled: boolean;
   initials: string;

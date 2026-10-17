@@ -7,7 +7,7 @@
 .label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text-secondary);
 }
 
 .selectWrapper {
@@ -18,10 +18,10 @@
   width: 100%;
   padding: 0.5rem 2.5rem 0.5rem 0.75rem;
   font-size: 0.875rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--theme-border);
   border-radius: 0.375rem;
-  background-color: white;
-  color: #1f2937;
+  background-color: var(--theme-surface);
+  color: var(--theme-text-primary);
   appearance: none;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -34,8 +34,8 @@
 }
 
 .select:disabled {
-  background-color: #f9fafb;
-  color: #6b7280;
+  background-color: var(--theme-surface-muted);
+  color: var(--theme-text-muted);
   cursor: not-allowed;
 }
 
@@ -58,7 +58,7 @@
 .arrowIcon {
   width: 1rem;
   height: 1rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .errorMessage {
@@ -69,6 +69,6 @@
 
 .hint {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0;
 }

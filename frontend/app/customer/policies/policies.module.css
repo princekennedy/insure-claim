@@ -27,14 +27,14 @@
 
 .insurer {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0.25rem 0 0;
 }
 
 .product {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--theme-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin: 0 0 0.75rem;
@@ -46,13 +46,13 @@
   gap: 0.75rem;
   align-items: center;
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--theme-text-secondary);
   margin-bottom: 1rem;
 }
 
 .reg {
   font-weight: 700;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .amountsGrid {
@@ -60,8 +60,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   padding: 0.75rem 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .amountItem {
@@ -72,13 +72,13 @@
 
 .amountLabel {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .amountValue {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .dates {
@@ -86,6 +86,6 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin-top: 0.75rem;
 }

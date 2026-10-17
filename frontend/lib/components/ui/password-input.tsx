@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, forwardRef, InputHTMLAttributes } from 'react';
+import { useId, useState, forwardRef, InputHTMLAttributes } from 'react';
 import styles from './password-input.module.css';
 
 interface PasswordInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -15,7 +15,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ label, error, hint, required, showStrength = true, className = '', id, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const [strength, setStrength] = useState(0);
-    const inputId = id || `password-${Math.random().toString(36).slice(2, 9)}`;
+    const generatedId = useId();
+    const inputId = id ?? `password-${generatedId}`;
 
     const calculateStrength = (password: string) => {
       let score = 0;

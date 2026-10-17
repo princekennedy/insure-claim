@@ -55,12 +55,12 @@
 }
 
 .secondary {
-  background-color: #e5e7eb;
-  color: #1f2937;
+  background-color: var(--theme-surface-hover);
+  color: var(--theme-text-primary);
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: #d1d5db;
+  background-color: var(--theme-surface-hover);
 }
 
 .danger {
@@ -74,11 +74,11 @@
 
 .ghost {
   background-color: transparent;
-  color: #374151;
+  color: var(--theme-text-secondary);
 }
 
 .ghost:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: var(--theme-surface-muted);
 }
 
 .fullWidth {

@@ -353,9 +353,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className={styles.notificationBadge}>3</span>
             </button>
             {currentUser && (
-              <div className={styles.headerUser}>
+              <Link
+                href="/account"
+                className={styles.headerUser}
+                aria-label="Open account settings"
+                title="Account settings"
+              >
                 <Avatar name={currentUser.fullName} size="sm" />
-              </div>
+              </Link>
             )}
           </div>
         </header>

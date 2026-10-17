@@ -13,7 +13,7 @@
 
 .subtitle {
   font-size: 0.875rem;
-  color: #64748B;
+  color: var(--theme-text-secondary);
   margin: 0;
 }
 
@@ -37,7 +37,7 @@
 
 .footer {
   font-size: 0.875rem;
-  color: #64748B;
+  color: var(--theme-text-secondary);
   text-align: center;
   margin: 0;
 }

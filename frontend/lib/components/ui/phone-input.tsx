@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, forwardRef, InputHTMLAttributes } from 'react';
+import { useId, useState, forwardRef, InputHTMLAttributes } from 'react';
 import styles from './phone-input.module.css';
 
 interface Country {
@@ -28,7 +28,8 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     const [selectedCountry] = useState(
       countries.find((c) => c.code === defaultCountry) || countries[0]
     );
-    const inputId = id || `phone-${Math.random().toString(36).slice(2, 9)}`;
+    const generatedId = useId();
+    const inputId = id ?? `phone-${generatedId}`;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value.replace(/[^0-9]/g, '');

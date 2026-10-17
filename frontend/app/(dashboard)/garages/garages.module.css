@@ -17,11 +17,11 @@
 .searchInput {
   flex: 1;
   padding: 0.625rem 0.875rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--theme-border);
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  color: #111827;
-  background: #fff;
+  color: var(--theme-text-primary);
+  background: var(--theme-surface);
 }
 
 .searchInput:focus {
@@ -50,19 +50,19 @@
 
 .city {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0.25rem 0 0;
 }
 
 .address {
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--theme-text-secondary);
   margin: 0 0 0.25rem;
 }
 
 .phone {
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
   margin: 0 0 0.75rem;
 }
 
@@ -71,8 +71,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
   padding: 0.75rem 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .stat {
@@ -85,12 +85,12 @@
 .statValue {
   font-size: 1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .statLabel {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--theme-text-muted);
 }
 
 .foot {

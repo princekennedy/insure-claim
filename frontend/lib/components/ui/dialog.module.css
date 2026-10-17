@@ -20,7 +20,7 @@
 }
 
 .dialog {
-  background-color: white;
+  background-color: var(--theme-surface);
   border-radius: 0.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -61,7 +61,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--theme-border);
   background-color: #1e40af;
   border-radius: 0.5rem 0.5rem 0 0;
 }
@@ -104,7 +104,7 @@
 
 .content p {
   font-weight: 600;
-  color: #111827;
+  color: var(--theme-text-primary);
   font-size: 1rem;
 }
 
@@ -113,7 +113,7 @@
   gap: 0.5rem;
   justify-content: flex-end;
   padding: 1rem 1.25rem;
-  border-top: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-top: 1px solid var(--theme-border);
+  background-color: var(--theme-surface-muted);
   border-radius: 0 0 0.5rem 0.5rem;
 }

@@ -5,8 +5,8 @@
 }
 
 .header {
-  background-color: white;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .logoContainer {
@@ -54,7 +54,7 @@
 }
 
 .navLink {
-  color: #6b7280;
+  color: var(--theme-text-muted);
   font-weight: 500;
   text-decoration: none;
   padding: 0.25rem 0;
@@ -85,7 +85,7 @@
 
 .footer {
   background-color: #1f2937;
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
   padding: 2rem;
   margin-top: auto;
 }
@@ -120,7 +120,7 @@
 }
 
 .footerLinks a {
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
   text-decoration: none;
   transition: color 0.15s ease;
 }

@@ -10,9 +10,9 @@
 }
 
 .tab {
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #4b5563;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font: inherit;

@@ -26,7 +26,7 @@
   position: relative;
   width: 100%;
   max-width: 420px;
-  background-color: #FAF8F5;
+  background-color: var(--theme-surface-muted);
   border-radius: 0.75rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -36,15 +36,15 @@
 .header {
   padding: 1.5rem;
   text-align: center;
-  background-color: #FAF8F5;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--theme-surface-muted);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  color: #111827;
+  color: var(--theme-text-primary);
 }
 
 .logoContainer {
@@ -70,7 +70,7 @@
 .tagline {
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--theme-text-subtle);
 }
 
 .content {
@@ -80,7 +80,7 @@
 .footer {
   padding: 1rem 1.5rem;
   text-align: center;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
   font-size: 0.75rem;
   background-color: #0066CC;
   color: white;

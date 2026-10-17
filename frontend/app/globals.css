@@ -3,6 +3,29 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --theme-surface: #ffffff;
+  --theme-surface-muted: #f9fafb;
+  --theme-surface-hover: #f3f4f6;
+  --theme-text-primary: #111827;
+  --theme-text-secondary: #4b5563;
+  --theme-text-muted: #6b7280;
+  --theme-text-subtle: #9ca3af;
+  --theme-border: #e5e7eb;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --theme-surface: #131f2e;
+  --theme-surface-muted: #1c2b3b;
+  --theme-surface-hover: #27364a;
+  --theme-text-primary: #f1f5f9;
+  --theme-text-secondary: #cbd5e1;
+  --theme-text-muted: #a9b8c8;
+  --theme-text-subtle: #93a4b8;
+  --theme-border: #35485b;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -12,15 +35,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:root[data-theme='dark'] .text-gray-500 {
+  color: var(--theme-text-muted);
 }
