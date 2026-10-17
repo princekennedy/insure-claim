@@ -57,13 +57,14 @@ export interface UpdateRepairJobRequest {
 }
 
 export interface GarageFeedbackRequest {
-  overallRating: number;
+  customerServiceRating: number;
+  repairQualityRating: number;
   qualityRating?: number;
   timelinessRating?: number;
   priceFairnessRating?: number;
   staffCourtesyRating?: number;
   comments?: string;
-  recommendAgain?: boolean;
+  recommendAgain: boolean;
 }
 
 export interface GarageFeedbackResponse {
@@ -74,6 +75,8 @@ export interface GarageFeedbackResponse {
   garageName: string;
   comments: string | null;
   overallRating: number;
+  customerServiceRating: number | null;
+  repairQualityRating: number | null;
   qualityRating: number | null;
   timelinessRating: number | null;
   priceFairnessRating: number | null;

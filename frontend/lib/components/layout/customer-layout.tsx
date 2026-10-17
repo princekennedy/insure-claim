@@ -183,10 +183,12 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
             </div>
           </div>
           <div className={styles.headerRight}>
-            <Link href="/customer/claims/new" className={styles.newClaimButton}>
-              <PlusIcon />
-              <span>New Claim</span>
-            </Link>
+            {pathname === '/customer/dashboard' && (
+              <Link href="/customer/claims/new" className={styles.newClaimButton}>
+                <PlusIcon />
+                <span>New Claim</span>
+              </Link>
+            )}
             <button className={styles.notificationButton} aria-label="Notifications">
               <BellIcon />
               <span className={styles.notificationBadge}>3</span>

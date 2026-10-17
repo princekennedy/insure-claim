@@ -106,6 +106,20 @@
   font-weight: 600;
 }
 
+.customerLink {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.customerLink:hover {
+  text-decoration: underline;
+}
+
+.customerLink:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .secondaryText {
   display: block;
   margin-top: 0.2rem;
@@ -351,8 +365,66 @@
 
 .rowActions {
   display: flex;
+  align-items: center;
   gap: 0.375rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.rowActions .rowAction {
+  min-height: 1.875rem;
+  padding: 0 0.625rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.rowActions .rowAction:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.rowActions .editAction {
+  color: #374151;
+}
+
+.rowActions .editAction:hover:not(:disabled) {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.rowActions .disableAction {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.rowActions .disableAction:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: #fef3c7;
+}
+
+.rowActions .enableAction {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.rowActions .enableAction:hover:not(:disabled) {
+  border-color: #4ade80;
+  background: #dcfce7;
+}
+
+.rowActions .deleteAction {
+  border-color: #fecdca;
+  background: #fff;
+  color: #b42318;
+}
+
+.rowActions .deleteAction:hover:not(:disabled) {
+  border-color: #fda29b;
+  background: #fef3f2;
 }
 
 .fieldset {

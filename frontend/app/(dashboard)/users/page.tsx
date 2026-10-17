@@ -391,6 +391,7 @@ export default function UsersPage() {
                               type="button"
                               size="sm"
                               variant="secondary"
+                              className={`${styles.rowAction} ${styles.editAction}`}
                               loading={busyId === user.id}
                               onClick={() => openEdit(user)}
                             >
@@ -399,7 +400,8 @@ export default function UsersPage() {
                             <Button
                               type="button"
                               size="sm"
-                              variant={user.enabled ? 'danger' : 'secondary'}
+                              variant="secondary"
+                              className={`${styles.rowAction} ${user.enabled ? styles.disableAction : styles.enableAction}`}
                               loading={busyId === user.id}
                               onClick={() => handleToggle(user)}
                             >
@@ -408,7 +410,8 @@ export default function UsersPage() {
                             <Button
                               type="button"
                               size="sm"
-                              variant="danger"
+                              variant="secondary"
+                              className={`${styles.rowAction} ${styles.deleteAction}`}
                               loading={busyId === user.id}
                               onClick={() => handleDelete(user)}
                             >

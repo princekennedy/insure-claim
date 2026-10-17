@@ -59,6 +59,10 @@ export async function getKycVerifications(): Promise<KycVerificationResponse[]> 
   return request<KycVerificationResponse[]>('/kyc/verifications');
 }
 
+export async function getCustomerKycVerifications(customerId: number): Promise<KycVerificationResponse[]> {
+  return request<KycVerificationResponse[]>(`/admin/kyc/customers/${customerId}/verifications`);
+}
+
 export async function getKycVerification(verificationId: number): Promise<KycVerificationResponse> {
   return request<KycVerificationResponse>(`/kyc/verifications/${verificationId}`);
 }

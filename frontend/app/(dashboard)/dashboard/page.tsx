@@ -106,36 +106,38 @@ export default function DashboardPage() {
                 </span>
               </div>
             </div>
-            <div className={styles.actionItems}>
-              <div className={styles.actionItem}>
-                <span className={styles.actionLabel}>KYC Status</span>
-                <div className={styles.actionContent}>
-                  <Badge variant={summary?.kycVerified ? 'success' : 'warning'}>
-                    {summary?.kycVerified ? 'Verified' : 'KYC Not Verified'}
-                  </Badge>
-                  {!summary?.kycVerified && (
-                    <Button variant="primary" size="sm" onClick={() => router.push('/kyc')}>
-                      Complete KYC
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className={styles.actionItem}>
-                <span className={styles.actionLabel}>Active Policy</span>
-                <div className={styles.actionContent}>
-                  {summary?.activePolicy ? (
-                    <span className={styles.policyNumber}>{summary.activePolicy.policyNumber}</span>
-                  ) : (
-                    <>
-                      <span className={styles.noPolicy}>No active policy</span>
-                      <Button variant="ghost" size="sm" onClick={() => router.push('/policies')}>
-                        View Policies
+            {user?.role === 'CUSTOMER' && (
+              <div className={styles.actionItems}>
+                <div className={styles.actionItem}>
+                  <span className={styles.actionLabel}>KYC Status</span>
+                  <div className={styles.actionContent}>
+                    <Badge variant={summary?.kycVerified ? 'success' : 'warning'}>
+                      {summary?.kycVerified ? 'Verified' : 'KYC Not Verified'}
+                    </Badge>
+                    {!summary?.kycVerified && (
+                      <Button variant="primary" size="sm" onClick={() => router.push('/kyc')}>
+                        Complete KYC
                       </Button>
-                    </>
-                  )}
+                    )}
+                  </div>
+                </div>
+                <div className={styles.actionItem}>
+                  <span className={styles.actionLabel}>Active Policy</span>
+                  <div className={styles.actionContent}>
+                    {summary?.activePolicy ? (
+                      <span className={styles.policyNumber}>{summary.activePolicy.policyNumber}</span>
+                    ) : (
+                      <>
+                        <span className={styles.noPolicy}>No active policy</span>
+                        <Button variant="ghost" size="sm" onClick={() => router.push('/customers')}>
+                          View Customers
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 

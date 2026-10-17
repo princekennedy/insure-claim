@@ -25,9 +25,6 @@ export default function HomePage() {
               <Link href="/login" className={styles.heroCtaButton}>
                 File a Claim Now
               </Link>
-              <Link href="/staff/login" className={styles.staffLoginButton}>
-                Staff Portal
-              </Link>
             </div>
             <div className={styles.heroStats}>
               <div className={styles.heroStat}>

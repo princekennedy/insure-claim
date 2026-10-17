@@ -114,27 +114,6 @@
   box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.4);
 }
 
-.staffLoginButton {
-  display: inline-block;
-  padding: 1rem 2.5rem;
-  background-color: white;
-  color: #111827;
-  font-weight: 600;
-  font-size: 1.125rem;
-  border-radius: 0.5rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border: 2px solid #e5e7eb;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.staffLoginButton:hover {
-  background-color: #f9fafb;
-  border-color: #2563eb;
-  color: #2563eb;
-  transform: translateY(-2px);
-}
-
 .heroActions {
   display: flex;
   gap: 1rem;

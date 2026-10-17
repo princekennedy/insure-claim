@@ -27,12 +27,12 @@ function isPublicRoute(pathname: string): boolean {
 
 // Helper to check if a path is a staff route
 function isStaffRoute(pathname: string): boolean {
-  return staffRoutes.some(route => pathname.startsWith(route));
+  return staffRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
 }
 
 // Helper to check if a path is a customer route
 function isCustomerRoute(pathname: string): boolean {
-  return customerRoutes.some(route => pathname.startsWith(route));
+  return customerRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
 }
 
 // Helper to validate token with backend

@@ -1,0 +1,141 @@
+.page {
+  max-width: 1120px;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.tabList {
+  display: flex;
+  gap: 0.25rem;
+  margin: 1.25rem 0 0;
+  overflow-x: auto;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.tab {
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: #111827;
+}
+
+.tab[aria-selected='true'] {
+  border-bottom-color: #0f766e;
+  color: #115e59;
+}
+
+.tab:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: -2px;
+}
+
+.panel {
+  margin-top: 1rem;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1.25rem 1.5rem;
+}
+
+.infoItem {
+  min-width: 0;
+}
+
+.infoLabel {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.infoValue {
+  color: #111827;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.table th {
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.8rem 0.875rem;
+  border-bottom: 1px solid #eef0f3;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.primaryCell {
+  color: #111827 !important;
+  font-weight: 600;
+}
+
+.dialogForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .headerActions {
+    width: 100%;
+  }
+
+  .tabList {
+    margin-right: -1rem;
+  }
+}

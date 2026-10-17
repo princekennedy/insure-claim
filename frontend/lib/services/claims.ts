@@ -11,6 +11,7 @@ import type {
 } from '../types';
 
 export interface ClaimListFilters {
+  customerId?: number;
   status?: string | string[];
   incidentType?: string | string[];
   fraudOnly?: boolean;

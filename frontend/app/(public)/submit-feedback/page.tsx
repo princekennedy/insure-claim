@@ -4,22 +4,27 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Textarea, Select, Card, Alert } from '@/lib/components/ui';
 import { isAuthenticated } from '@/lib/services/auth';
-import { GarageFeedbackRequest } from '@/lib/types/garage';
+import type { GarageFeedbackRequest } from '@/lib/types/garage';
 import styles from './feedback.module.css';
+
+type FeedbackDraft = Omit<GarageFeedbackRequest, 'recommendAgain'> & {
+  recommendAgain: boolean | null;
+};
 
 export default function PublicFeedbackPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [formData, setFormData] = useState<GarageFeedbackRequest>({
-    overallRating: 0 as number,
+  const [formData, setFormData] = useState<FeedbackDraft>({
+    customerServiceRating: 0,
+    repairQualityRating: 0,
     qualityRating: undefined as number | undefined,
     timelinessRating: undefined as number | undefined,
     priceFairnessRating: undefined as number | undefined,
     staffCourtesyRating: undefined as number | undefined,
     comments: '',
-    recommendAgain: undefined as boolean | undefined,
+    recommendAgain: null,
   });
 
   useEffect(() => {
@@ -38,8 +43,16 @@ export default function PublicFeedbackPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.overallRating || formData.overallRating < 1) {
-      setError('Please provide an overall rating');
+    if (!formData.customerServiceRating) {
+      setError('Please rate the customer service');
+      return;
+    }
+    if (!formData.repairQualityRating) {
+      setError('Please rate the repair quality');
+      return;
+    }
+    if (formData.recommendAgain === null) {
+      setError('Please tell us whether you would choose this garage again');
       return;
     }
 
@@ -77,16 +90,37 @@ export default function PublicFeedbackPage() {
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.ratingSection}>
                 <div className={styles.ratingHeader}>
-                  <label className={styles.label}>Overall Rating *</label>
+                  <label className={styles.label}>Customer service *</label>
                   <span className={styles.required}>Required</span>
                 </div>
+                <p className={styles.ratingPrompt}>How were you treated by the garage team?</p>
                 <div className={styles.ratingContainer}>
                   {ratingOptions.map((option) => (
                     <button
                       type="button"
                       key={option.value}
-                      className={`${styles.ratingButton} ${parseFloat(option.value) <= (formData.overallRating || 0) ? styles.ratingActive : ''}`}
-                      onClick={() => setFormData(prev => ({ ...prev, overallRating: parseFloat(option.value) }))}
+                      className={`${styles.ratingButton} ${parseFloat(option.value) <= formData.customerServiceRating ? styles.ratingActive : ''}`}
+                      onClick={() => setFormData(prev => ({ ...prev, customerServiceRating: parseFloat(option.value) }))}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.ratingSection}>
+                <div className={styles.ratingHeader}>
+                  <label className={styles.label}>Repair quality *</label>
+                  <span className={styles.required}>Required</span>
+                </div>
+                <p className={styles.ratingPrompt}>How satisfied are you with the completed repair?</p>
+                <div className={styles.ratingContainer}>
+                  {ratingOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option.value}
+                      className={`${styles.ratingButton} ${parseFloat(option.value) <= formData.repairQualityRating ? styles.ratingActive : ''}`}
+                      onClick={() => setFormData(prev => ({ ...prev, repairQualityRating: parseFloat(option.value) }))}
                     >
                       {option.label}
                     </button>
@@ -95,16 +129,6 @@ export default function PublicFeedbackPage() {
               </div>
 
               <div className={styles.subRatings}>
-                <div className={styles.subRating}>
-                  <label className={styles.label}>Quality of Work</label>
-                  <Select
-                    name="qualityRating"
-                    value={formData.qualityRating?.toString() || ''}
-                    onChange={handleChange}
-                    options={ratingOptions}
-                    placeholder="Select rating"
-                  />
-                </div>
                 <div className={styles.subRating}>
                   <label className={styles.label}>Timeliness</label>
                   <Select
@@ -125,29 +149,33 @@ export default function PublicFeedbackPage() {
                     placeholder="Select rating"
                   />
                 </div>
-                <div className={styles.subRating}>
-                  <label className={styles.label}>Staff Courtesy</label>
-                  <Select
-                    name="staffCourtesyRating"
-                    value={formData.staffCourtesyRating?.toString() || ''}
-                    onChange={handleChange}
-                    options={ratingOptions}
-                    placeholder="Select rating"
-                  />
-                </div>
               </div>
 
-              <div className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  id="recommend"
-                  checked={formData.recommendAgain || false}
-                  onChange={(e) => setFormData(prev => ({ ...prev, recommendAgain: e.target.checked }))}
-                />
-                <label htmlFor="recommend" className={styles.checkboxLabel}>
-                  I would recommend this garage to others
-                </label>
-              </div>
+              <fieldset className={styles.recommendField}>
+                <legend className={styles.label}>Would you choose this garage again? *</legend>
+                <div className={styles.recommendOptions}>
+                  <label className={styles.recommendOption}>
+                    <input
+                      type="radio"
+                      name="recommendAgain"
+                      value="yes"
+                      checked={formData.recommendAgain === true}
+                      onChange={() => setFormData(prev => ({ ...prev, recommendAgain: true }))}
+                    />
+                    Yes, I would
+                  </label>
+                  <label className={styles.recommendOption}>
+                    <input
+                      type="radio"
+                      name="recommendAgain"
+                      value="no"
+                      checked={formData.recommendAgain === false}
+                      onChange={() => setFormData(prev => ({ ...prev, recommendAgain: false }))}
+                    />
+                    Not this time
+                  </label>
+                </div>
+              </fieldset>
 
               <Textarea
                 label="Comments (Optional)"

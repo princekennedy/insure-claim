@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Alert,
   Badge,
@@ -198,7 +199,11 @@ export default function CustomersPage() {
                   <tbody>
                     {result.content.map((customer) => (
                       <tr key={customer.id}>
-                        <td className={styles.primaryCell}>{customer.fullName}</td>
+                        <td className={styles.primaryCell}>
+                          <Link className={styles.customerLink} href={`/customers/${customer.id}`}>
+                            {customer.fullName}
+                          </Link>
+                        </td>
                         <td>{customer.email}</td>
                         <td>
                           {customerPolicies[customer.id]?.length ? (
