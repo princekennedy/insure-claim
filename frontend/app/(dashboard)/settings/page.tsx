@@ -13,10 +13,11 @@ import {
   Input,
   PageHeader,
   PageLoader,
+  PasswordInput,
   Select,
 } from '@/lib/components/ui';
-import { getSettings, updateSettings } from '@/lib/services/settings';
-import type { SettingGroup, SettingsResponse } from '@/lib/types';
+import { getChatbotProviders, getSettings, updateSettings } from '@/lib/services/settings';
+import type { ChatbotProvider, SettingGroup, SettingsResponse } from '@/lib/types';
 import styles from './settings.module.css';
 
 const GROUP_META: Record<string, { title: string; description: string }> = {
@@ -45,7 +46,15 @@ interface FieldMeta {
 
 const FIELD_META: Record<string, FieldMeta> = {
   enabled: { label: 'Assistant enabled', hint: 'When disabled, the assistant stays idle.' },
+  provider: {
+    label: 'AI provider',
+    hint: 'The service the assistant sends messages to.',
+  },
   model: { label: 'Model', hint: 'Model used for assistant replies.' },
+  api_key: {
+    label: 'API key',
+    hint: 'Stored write-only and never shown again.',
+  },
   max_tokens: { label: 'Max reply length', hint: 'Tokens per reply, 64 to 4096.' },
   escalate_threshold: {
     label: 'Escalation threshold',
@@ -93,6 +102,7 @@ export default function SettingsPage() {
   const [savedGroup, setSavedGroup] = useState<string | null>(null);
   const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
   const [activeGroup, setActiveGroup] = useState('');
+  const [providers, setProviders] = useState<ChatbotProvider[]>([]);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -111,9 +121,33 @@ export default function SettingsPage() {
     void loadSettings();
   }, [loadSettings]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const list = await getChatbotProviders();
+        if (!cancelled) setProviders(list);
+      } catch {
+        // Non-fatal: the model field falls back to a free-text input.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function setValue(draftKey: string, value: string) {
     setDraft((prev) => ({ ...prev, [draftKey]: value }));
     setSavedGroup(null);
+  }
+
+  function handleProviderChange(nextId: string) {
+    setValue('chatbot.provider', nextId);
+    const provider = providers.find((p) => p.id === nextId);
+    const currentModel = draft['chatbot.model'] ?? '';
+    if (provider && !provider.models.includes(currentModel)) {
+      setValue('chatbot.model', provider.defaultModel);
+    }
   }
 
   function validateGroup(group: SettingGroup): string {
@@ -234,6 +268,79 @@ export default function SettingsPage() {
                         const draftKey = `${activeGroupData.group}.${setting.key}`;
                         const fieldMeta = FIELD_META[setting.key] ?? { label: setting.key };
                         const value = draft[draftKey] ?? setting.value;
+
+                        if (setting.key === 'provider') {
+                          const options = providers.length
+                            ? providers.map((p) => ({ value: p.id, label: p.label }))
+                            : (setting.options ?? []).map((id) => ({ value: id, label: id }));
+                          return (
+                            <Select
+                              key={setting.key}
+                              label={fieldMeta.label}
+                              hint={fieldMeta.hint}
+                              value={value}
+                              options={options}
+                              onChange={(event) => handleProviderChange(event.target.value)}
+                            />
+                          );
+                        }
+
+                        if (setting.key === 'model') {
+                          const provider = providers.find(
+                            (p) => p.id === (draft['chatbot.provider'] ?? value),
+                          );
+                          if (!provider) {
+                            return (
+                              <Input
+                                key={setting.key}
+                                label={fieldMeta.label}
+                                hint={fieldMeta.hint}
+                                value={value}
+                                onChange={(event) => setValue(draftKey, event.target.value)}
+                              />
+                            );
+                          }
+                          const models =
+                            value && !provider.models.includes(value)
+                              ? [value, ...provider.models]
+                              : provider.models;
+                          return (
+                            <Select
+                              key={setting.key}
+                              label={fieldMeta.label}
+                              hint={fieldMeta.hint}
+                              value={value}
+                              options={models.map((m) => ({ value: m, label: m }))}
+                              onChange={(event) => setValue(draftKey, event.target.value)}
+                            />
+                          );
+                        }
+
+                        if (setting.key === 'api_key') {
+                          const provider = providers.find(
+                            (p) => p.id === (draft['chatbot.provider'] ?? ''),
+                          );
+                          return (
+                            <PasswordInput
+                              key={setting.key}
+                              label={fieldMeta.label}
+                              showStrength={false}
+                              autoComplete="off"
+                              placeholder={
+                                setting.configured
+                                  ? 'A key is already stored'
+                                  : provider?.keyPlaceholder ?? 'Paste your API key'
+                              }
+                              hint={
+                                setting.configured
+                                  ? 'A key is stored. Leave blank to keep it unchanged.'
+                                  : provider?.keyHint ?? setting.description
+                              }
+                              value={value}
+                              onChange={(event) => setValue(draftKey, event.target.value)}
+                            />
+                          );
+                        }
 
                         if (setting.dataType === 'BOOLEAN') {
                           return (

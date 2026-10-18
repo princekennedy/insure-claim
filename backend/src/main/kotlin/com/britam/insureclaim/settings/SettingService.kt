@@ -1,5 +1,7 @@
 package com.britam.insureclaim.settings
 
+import com.britam.insureclaim.chatbot.ChatProvider
+import com.britam.insureclaim.chatbot.ChatProviders
 import com.britam.insureclaim.common.ValidationException
 import com.britam.insureclaim.security.ChatbotProperties
 import com.britam.insureclaim.security.ClaimProperties
@@ -14,10 +16,17 @@ import org.springframework.transaction.annotation.Transactional
 @Schema(name = "SettingValue", description = "One configuration value with its type and help text")
 data class SettingValueResponse(
 	val key: String,
+	@param:Schema(description = "Empty for secret values; use `configured` to tell whether one is stored")
 	val value: String,
 	@param:Schema(description = "STRING, NUMBER or BOOLEAN")
 	val dataType: SettingDataType,
 	val description: String,
+	@param:Schema(description = "True when the value is write-only and never returned")
+	val secret: Boolean = false,
+	@param:Schema(description = "For secret values: whether a value is currently stored")
+	val configured: Boolean = false,
+	@param:Schema(description = "Allowed values for enum-like fields, empty when free-form")
+	val options: List<String> = emptyList(),
 )
 
 data class SettingGroupResponse(
@@ -71,6 +80,10 @@ class SettingService(
 		val description: String,
 		val defaultValue: String,
 		val validate: (String) -> String? = { null },
+		/** Write-only values (API keys) are never returned; a blank update keeps the stored value. */
+		val secret: Boolean = false,
+		/** Allowed values for enum-like fields, surfaced to the UI. */
+		val options: List<String> = emptyList(),
 	)
 
 	private val definitions: List<SettingDefinition> = listOf(
@@ -81,10 +94,24 @@ class SettingService(
 			booleanRule,
 		),
 		SettingDefinition(
+			CHATBOT, "provider", SettingDataType.STRING,
+			"AI provider the assistant talks to",
+			chatbotProperties.provider,
+			enumRule(ChatProviders.ids),
+			options = ChatProviders.ids,
+		),
+		SettingDefinition(
 			CHATBOT, "model", SettingDataType.STRING,
 			"Model used for assistant replies",
 			chatbotProperties.model,
 			nonBlankRule,
+		),
+		SettingDefinition(
+			CHATBOT, "api_key", SettingDataType.STRING,
+			"API key for the selected provider (stored write-only)",
+			chatbotProperties.apiKey,
+			{ null },
+			secret = true,
 		),
 		SettingDefinition(
 			CHATBOT, "max_tokens", SettingDataType.NUMBER,
@@ -131,11 +158,23 @@ class SettingService(
 				group = group,
 				settings = groupDefinitions.map { definition ->
 					val row = stored["${definition.group}.${definition.key}"]
+					val storedValue = row?.settingValue
+					// The model default depends on the selected provider, so show
+					// exactly what the assistant will call.
+					val effective = if (definition.group == CHATBOT && definition.key == "model") {
+						chatbotModel()
+					} else {
+						storedValue ?: definition.defaultValue
+					}
 					SettingValueResponse(
 						key = definition.key,
-						value = row?.settingValue ?: definition.defaultValue,
+						value = if (definition.secret) "" else effective,
 						dataType = definition.dataType,
 						description = row?.description?.takeIf { it.isNotBlank() } ?: definition.description,
+						secret = definition.secret,
+						configured = definition.secret &&
+							(storedValue?.isNotBlank() == true || definition.defaultValue.isNotBlank()),
+						options = definition.options,
 					)
 				},
 			)
@@ -158,6 +197,8 @@ class SettingService(
 						"UNKNOWN_SETTING",
 					)
 				val value = setting.value.trim()
+				// A blank secret means "leave the stored key untouched".
+				if (definition.secret && value.isBlank()) continue
 				val error = definition.validate(value)
 					?: if (value.length > MAX_VALUE_LENGTH) "must be at most $MAX_VALUE_LENGTH characters" else null
 				if (error != null) {
@@ -178,8 +219,30 @@ class SettingService(
 	fun chatbotEnabled(): Boolean =
 		storedValue(CHATBOT, "enabled")?.toBooleanStrictOrNull() ?: chatbotProperties.enabled
 
-	fun chatbotModel(): String =
-		storedValue(CHATBOT, "model")?.takeIf { it.isNotBlank() } ?: chatbotProperties.model
+	fun chatbotProvider(): String =
+		storedValue(CHATBOT, "provider")
+			?.takeIf { it.isNotBlank() && ChatProviders.ids.contains(it) }
+			?: chatbotProperties.provider.takeIf { ChatProviders.ids.contains(it) }
+			?: ChatProviders.ANTHROPIC
+
+	fun chatbotApiKey(): String =
+		storedValue(CHATBOT, "api_key")?.takeIf { it.isNotBlank() } ?: chatbotProperties.apiKey
+
+	/** True when an effective key exists (stored in Settings or supplied by the environment). */
+	fun chatbotHasProvider(): Boolean = chatbotApiKey().isNotBlank()
+
+	fun chatbotModel(): String {
+		storedValue(CHATBOT, "model")?.takeIf { it.isNotBlank() }?.let { return it }
+		val provider = chatbotProvider()
+		return if (provider == ChatProviders.ANTHROPIC) {
+			chatbotProperties.model
+		} else {
+			ChatProviders.byId(provider)?.defaultModel ?: chatbotProperties.model
+		}
+	}
+
+	/** Providers the assistant can be pointed at, with their model catalogs. */
+	fun chatbotProviders(): List<ChatProvider> = ChatProviders.all
 
 	fun chatbotMaxTokens(): Int =
 		storedValue(CHATBOT, "max_tokens")?.toIntOrNull() ?: chatbotProperties.maxTokens
@@ -236,6 +299,10 @@ class SettingService(
 
 		private val nonBlankRule: (String) -> String? = { value ->
 			if (value.isBlank()) "must not be empty" else null
+		}
+
+		private fun enumRule(allowed: List<String>): (String) -> String? = { value ->
+			if (allowed.contains(value)) null else "must be one of ${allowed.joinToString(", ")}"
 		}
 
 		private fun intRule(min: Int, max: Int): (String) -> String? = { value ->

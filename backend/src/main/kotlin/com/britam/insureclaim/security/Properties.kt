@@ -56,6 +56,8 @@ data class GarageProperties(
 @ConfigurationProperties(prefix = "insureclaim.chatbot")
 data class ChatbotProperties(
 	val enabled: Boolean = true,
+	/** anthropic, openai, google or custom (OpenAI-compatible). Overridable from Settings. */
+	val provider: String = "anthropic",
 	val apiKey: String = "",
 	val baseUrl: String = "https://api.anthropic.com",
 	val model: String = "claude-sonnet-5",
