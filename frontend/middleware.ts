@@ -90,8 +90,10 @@ export async function middleware(request: NextRequest) {
   const validation = await validateToken(accessToken);
 
   if (!validation.valid) {
-    // Token is invalid, clear cookies and redirect to login
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    // Token is invalid: clear cookies and send the user to the login form.
+    // The `blocked` flag tells that page we just rejected the session, so it
+    // clears any leftover tokens instead of bouncing straight back here.
+    const response = NextResponse.redirect(new URL('/login?blocked=1', request.url));
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     return response;
@@ -102,7 +104,7 @@ export async function middleware(request: NextRequest) {
 
   if (!userRole) {
     // If role is missing, redirect to login
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    const response = NextResponse.redirect(new URL('/login?blocked=1', request.url));
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     return response;

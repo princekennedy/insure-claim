@@ -52,7 +52,10 @@ export async function requireAuth(): Promise<ServerUser> {
   const validation = await validateToken(accessToken);
 
   if (!validation.valid || !validation.user) {
-    redirect('/login');
+    // `blocked=1` marks this as a rejection (not a plain visit to /login):
+    // the login page then drops the leftover tokens instead of redirecting
+    // back here, which is what used to cause the /login <-> /dashboard loop.
+    redirect('/login?blocked=1');
   }
 
   return validation.user;

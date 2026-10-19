@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useSyncExternalStore, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input, Button, PasswordInput } from '@/lib/components/ui';
@@ -8,26 +8,50 @@ import { login, isAuthenticated } from '@/lib/services/auth';
 import { clearTokens } from '@/lib/services/api';
 import styles from './login.module.css';
 
+// Subscribing to the query string keeps the server and first client render
+// identical (empty), so the "blocked" note only appears after hydration.
+function useLocationSearch(): string {
+  return useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener('popstate', onChange);
+      return () => window.removeEventListener('popstate', onChange);
+    },
+    () => window.location.search,
+    () => '',
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const blocked = new URLSearchParams(useLocationSearch()).get('blocked') === '1';
 
-  // Only bounce to the portal when the session cookie middleware checks is
-  // actually present. Middleware clears that cookie when a token is invalid or
-  // the backend is unreachable; trusting localStorage alone then sends us back
-  // to /dashboard, which bounces us here again - an endless refresh loop.
+  // Two directions bounce between /login and /dashboard:
+  //   * this page sends us to the portal whenever a session token exists,
+  //   * the guards (middleware + the server layout) send us back to /login
+  //     whenever they reject it.
+  // A guard that rejects but leaves the tokens behind would therefore bounce
+  // forever, so every rejection is tagged with `?blocked=1`. Seeing that tag
+  // means "the last attempt was turned away" - drop the tokens and show the
+  // form instead of asking for the portal again.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    if (blocked) {
+      clearTokens();
+      return;
+    }
+
     const hasSessionCookie = /(?:^|;\s*)accessToken=/.test(document.cookie);
     if (hasSessionCookie && isAuthenticated()) {
       router.replace('/dashboard');
     } else if (!hasSessionCookie) {
       clearTokens();
     }
-  }, [router]);
+  }, [router, blocked]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -49,7 +73,7 @@ export default function LoginPage() {
     <form onSubmit={handleSubmit} className={styles.form}>
       <h1 className={styles.title}>Welcome back</h1>
 
-      {error && (
+      {(error || blocked) && (
         <div className={styles.error}>
           <svg viewBox="0 0 20 20" fill="currentColor" className={styles.errorIcon}>
             <path
@@ -58,7 +82,7 @@ export default function LoginPage() {
               clipRule="evenodd"
             />
           </svg>
-          {error}
+          {error || 'Your session expired. Please sign in again.'}
         </div>
       )}
 
