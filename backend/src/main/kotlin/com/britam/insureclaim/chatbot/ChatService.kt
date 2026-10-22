@@ -261,7 +261,7 @@ class ChatService(
 			put("model", model)
 			put("max_tokens", maxTokens)
 			put("system", SYSTEM_PROMPT)
-			set<ArrayNode>(
+			set(
 				"messages",
 				objectMapper.createArrayNode().apply {
 					history.forEach { (sender, text) ->
@@ -306,7 +306,7 @@ class ChatService(
 		val body = objectMapper.createObjectNode().apply {
 			put("model", model)
 			put("max_tokens", maxTokens)
-			set<ArrayNode>(
+			set(
 				"messages",
 				objectMapper.createArrayNode().apply {
 					addObject().put("role", "system").put("content", SYSTEM_PROMPT)
@@ -347,29 +347,29 @@ class ChatService(
 		baseUrl: String,
 	): String? {
 		val body = objectMapper.createObjectNode().apply {
-			set<ObjectNode>(
+			set(
 				"system_instruction",
 				objectMapper.createObjectNode().apply {
-					set<ArrayNode>(
+					set(
 						"parts",
 						objectMapper.createArrayNode().apply { addObject().put("text", SYSTEM_PROMPT) },
 					)
 				},
 			)
-			set<ArrayNode>(
+			set(
 				"contents",
 				objectMapper.createArrayNode().apply {
 					history.forEach { (sender, text) ->
 						addObject()
 							.put("role", if (sender == ChatSender.CUSTOMER) "user" else "model")
-							.set<ArrayNode>(
+							.set(
 								"parts",
 								objectMapper.createArrayNode().apply { addObject().put("text", text) },
 							)
 					}
 				},
 			)
-			set<ObjectNode>("generationConfig", objectMapper.createObjectNode().put("maxOutputTokens", maxTokens))
+			set("generationConfig", objectMapper.createObjectNode().put("maxOutputTokens", maxTokens))
 		}
 
 		val raw = restClient.post()
