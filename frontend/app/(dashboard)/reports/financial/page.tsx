@@ -22,6 +22,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { ReportExportActions } from '@/lib/components/reports/report-export-actions';
 
 export default function FinancialSummaryReportPage() {
   const revenueData = [
@@ -55,10 +56,33 @@ export default function FinancialSummaryReportPage() {
     { month: 'May', ratio: 41 },
     { month: 'Jun', ratio: 41 },
   ];
+  const reportTitle = 'Financial Summary Report';
 
   return (
     <div className="p-6">
-      <PageHeader title="Financial Summary Report" />
+      <PageHeader
+        title={reportTitle}
+        actions={
+          <ReportExportActions
+            title={reportTitle}
+            sections={[
+              {
+                title: 'Summary',
+                rows: [
+                  { Metric: 'Total Revenue', Value: 'MK 1.47B', Notes: '+12.5% vs last month' },
+                  { Metric: 'Total Claims Paid', Value: 'MK 577.5M', Notes: 'This quarter' },
+                  { Metric: 'Net Profit', Value: 'MK 577.5M', Notes: '+8.2% vs last quarter' },
+                  { Metric: 'Claim Ratio', Value: '39%', Notes: 'Industry avg: 42%' },
+                ],
+              },
+              { title: 'Revenue vs Claims Trend', rows: revenueData },
+              { title: 'Expense Breakdown', rows: expenseBreakdown.map(({ name, value }) => ({ name, value })) },
+              { title: 'Revenue by Policy Type', rows: policyRevenue },
+              { title: 'Claim Ratio Trend', rows: claimRatio },
+            ]}
+          />
+        }
+      />
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

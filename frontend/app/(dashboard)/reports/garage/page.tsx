@@ -22,6 +22,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { ReportExportActions } from '@/lib/components/reports/report-export-actions';
 
 export default function GaragePerformanceReportPage() {
   const garageData = [
@@ -46,10 +47,31 @@ export default function GaragePerformanceReportPage() {
     { name: 'In Progress', value: 15, color: '#f59e0b' },
     { name: 'Pending', value: 10, color: '#6366f1' },
   ];
+  const reportTitle = 'Garage Performance Report';
 
   return (
     <div className="p-6">
-      <PageHeader title="Garage Performance Report" />
+      <PageHeader
+        title={reportTitle}
+        actions={
+          <ReportExportActions
+            title={reportTitle}
+            sections={[
+              {
+                title: 'Summary',
+                rows: [
+                  { Metric: 'Total Repairs', Value: 205, Notes: 'This month' },
+                  { Metric: 'Average Repair Time', Value: '2.8 days', Notes: 'Across all garages' },
+                  { Metric: 'Average Rating', Value: '4.6/5', Notes: 'Customer satisfaction' },
+                ],
+              },
+              { title: 'Repairs by Garage', rows: garageData },
+              { title: 'Monthly Repair Trends', rows: monthlyData },
+              { title: 'Repair Status Distribution', rows: statusData.map(({ name, value }) => ({ name, value })) },
+            ]}
+          />
+        }
+      />
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
