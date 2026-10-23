@@ -1,5 +1,6 @@
 package com.britam.insureclaim.settings
 
+import com.britam.insureclaim.chatbot.ChatProvider
 import com.britam.insureclaim.common.Auditable
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,6 +21,11 @@ class SettingController(private val settingService: SettingService) {
 	@GetMapping
 	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
 	fun settings(): SettingsResponse = settingService.settings()
+
+	@Operation(summary = "AI providers and the models the assistant can use")
+	@GetMapping("/chatbot/providers")
+	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	fun chatbotProviders(): List<ChatProvider> = settingService.chatbotProviders()
 
 	@Operation(summary = "Apply partial settings updates (insurer admins and admins)")
 	@PutMapping

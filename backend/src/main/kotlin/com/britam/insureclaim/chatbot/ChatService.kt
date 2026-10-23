@@ -7,9 +7,10 @@ import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.security.ChatbotProperties
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.ObjectNode
 import org.slf4j.LoggerFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.MediaType
@@ -47,12 +48,15 @@ class ChatService(
 		)
 		.build()
 
-	fun config(): ChatConfigResponse = ChatConfigResponse(
-		enabled = settingService.chatbotEnabled(),
-		mode = if (chatbotProperties.hasLlmProvider) MODE_LIVE else MODE_DEMO,
-		model = if (chatbotProperties.hasLlmProvider) settingService.chatbotModel() else null,
-		greeting = GREETING,
-	)
+	fun config(): ChatConfigResponse {
+		val live = settingService.chatbotHasProvider()
+		return ChatConfigResponse(
+			enabled = settingService.chatbotEnabled(),
+			mode = if (live) MODE_LIVE else MODE_DEMO,
+			model = if (live) settingService.chatbotModel() else null,
+			greeting = GREETING,
+		)
+	}
 
 	@Transactional(readOnly = true)
 	fun myConversations(userId: Long?): List<ConversationResponse> {
@@ -201,11 +205,11 @@ class ChatService(
 		content: String,
 		classification: ChatClassification,
 	): String {
-		if (!chatbotProperties.hasLlmProvider) {
+		if (!settingService.chatbotHasProvider()) {
 			return ChatIntents.replyFor(classification, GREETING)
 		}
 		return try {
-			llmReply(conversation, content) ?: ChatIntents.replyFor(classification, GREETING)
+			llmReply(conversation) ?: ChatIntents.replyFor(classification, GREETING)
 		} catch (e: Exception) {
 			log.warn("LLM reply failed for conversation ${conversation.id}, falling back to rule-based bot", e)
 			ChatIntents.replyFor(classification, GREETING)
@@ -213,35 +217,65 @@ class ChatService(
 	}
 
 	/**
-	 * Calls the Anthropic Messages API with the conversation history. Returns
-	 * the assistant text or null when the provider returned nothing usable.
+	 * Calls the configured provider (Anthropic, OpenAI, Google Gemini or an
+	 * OpenAI-compatible gateway) with the conversation history. Returns the
+	 * assistant text or null when the provider returned nothing usable.
 	 * Throws on HTTP errors / network failures so callers can fall back.
 	 */
-	private fun llmReply(conversation: ChatConversation, currentContent: String): String? {
+	private fun llmReply(conversation: ChatConversation): String? {
+		val provider = settingService.chatbotProvider()
+		val apiKey = settingService.chatbotApiKey()
 		val model = settingService.chatbotModel()
 		val maxTokens = settingService.chatbotMaxTokens()
 		val history = messageRepository.findByConversationIdOrderByCreatedAt(conversation.id ?: 0L)
 			.takeLast(MAX_LLM_HISTORY)
 			.filter { it.sender != ChatSender.AGENT }
-			.map { message ->
-				message.sender.name.replace("CUSTOMER", "user").replace("ASSISTANT", "assistant") to message.content
-			}
+			.map { it.sender to it.content }
 
+		val baseUrl = baseUrlFor(provider)
+		return when (provider) {
+			ChatProviders.OPENAI, ChatProviders.CUSTOM ->
+				openAiReply(history, model, maxTokens, apiKey, baseUrl)
+			ChatProviders.GOOGLE ->
+				geminiReply(history, model, maxTokens, apiKey, baseUrl)
+			else ->
+				anthropicReply(history, model, maxTokens, apiKey, baseUrl)
+		}
+	}
+
+	/** Base URL per provider; anthropic/custom honour the environment override. */
+	private fun baseUrlFor(provider: String): String = when (provider) {
+		ChatProviders.OPENAI -> OPENAI_BASE_URL
+		ChatProviders.GOOGLE -> GOOGLE_BASE_URL
+		else -> chatbotProperties.baseUrl.trimEnd('/')
+	}
+
+	private fun anthropicReply(
+		history: List<Pair<ChatSender, String>>,
+		model: String,
+		maxTokens: Int,
+		apiKey: String,
+		baseUrl: String,
+	): String? {
 		val body = objectMapper.createObjectNode().apply {
 			put("model", model)
 			put("max_tokens", maxTokens)
 			put("system", SYSTEM_PROMPT)
-			set<ArrayNode>(
+			set(
 				"messages",
 				objectMapper.createArrayNode().apply {
-					history.forEach { (role, text) -> addObject().put("role", role).put("content", text) }
+					history.forEach { (sender, text) ->
+						addObject()
+							.put("role", if (sender == ChatSender.CUSTOMER) "user" else "assistant")
+							.put("content", text)
+					}
 				},
 			)
 		}
 
 		val raw = restClient.post()
-			.uri(chatbotProperties.baseUrl.trimEnd('/') + "/v1/messages")
-			.header("x-api-key", chatbotProperties.apiKey)
+			.uri("$baseUrl/v1/messages")
+			.header("x-api-key", apiKey)
 			.header("anthropic-version", "2023-06-01")
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(body)
@@ -262,11 +296,111 @@ class ChatService(
 			?: throw IOException("Anthropic returned no text content")
 	}
 
+	private fun openAiReply(
+		history: List<Pair<ChatSender, String>>,
+		model: String,
+		maxTokens: Int,
+		apiKey: String,
+		baseUrl: String,
+	): String? {
+		val body = objectMapper.createObjectNode().apply {
+			put("model", model)
+			put("max_tokens", maxTokens)
+			set(
+				"messages",
+				objectMapper.createArrayNode().apply {
+					addObject().put("role", "system").put("content", SYSTEM_PROMPT)
+					history.forEach { (sender, text) ->
+						addObject()
+							.put("role", if (sender == ChatSender.CUSTOMER) "user" else "assistant")
+							.put("content", text)
+					}
+				},
+			)
+		}
+
+		val raw = restClient.post()
+			.uri("$baseUrl/v1/chat/completions")
+			.header("Authorization", "Bearer $apiKey")
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(body)
+			.retrieve()
+			.onStatus({ status -> status.isError }) { _, response ->
+				throw IOException("OpenAI returned HTTP ${response.statusCode.value()}")
+			}
+			.body(String::class.java)
+
+		val root: JsonNode = objectMapper.readTree(raw)
+		return root.path("choices").path(0).path("message").path("content")
+			.takeIf { it.isTextual }
+			?.asText()
+			?.trim()
+			?.takeUnless { it.isBlank() }
+			?: throw IOException("OpenAI returned no text content")
+	}
+
+	private fun geminiReply(
+		history: List<Pair<ChatSender, String>>,
+		model: String,
+		maxTokens: Int,
+		apiKey: String,
+		baseUrl: String,
+	): String? {
+		val body = objectMapper.createObjectNode().apply {
+			set(
+				"system_instruction",
+				objectMapper.createObjectNode().apply {
+					set(
+						"parts",
+						objectMapper.createArrayNode().apply { addObject().put("text", SYSTEM_PROMPT) },
+					)
+				},
+			)
+			set(
+				"contents",
+				objectMapper.createArrayNode().apply {
+					history.forEach { (sender, text) ->
+						addObject()
+							.put("role", if (sender == ChatSender.CUSTOMER) "user" else "model")
+							.set(
+								"parts",
+								objectMapper.createArrayNode().apply { addObject().put("text", text) },
+							)
+					}
+				},
+			)
+			set("generationConfig", objectMapper.createObjectNode().put("maxOutputTokens", maxTokens))
+		}
+
+		val raw = restClient.post()
+			.uri("$baseUrl/v1beta/models/$model:generateContent?key=$apiKey")
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(body)
+			.retrieve()
+			.onStatus({ status -> status.isError }) { _, response ->
+				throw IOException("Google Gemini returned HTTP ${response.statusCode.value()}")
+			}
+			.body(String::class.java)
+
+		val root: JsonNode = objectMapper.readTree(raw)
+		val parts = root.path("candidates").path(0).path("content").path("parts") as? ArrayNode
+			?: throw IOException("Google returned no content")
+		return parts.elements().asSequence()
+			.mapNotNull { it.path("text").takeIf { text -> text.isTextual }?.asText() }
+			.joinToString("")
+			.trim()
+			.takeUnless { it.isBlank() }
+			?: throw IOException("Google returned no text content")
+	}
+
 	companion object {
 		private const val MODE_LIVE = "live"
 		private const val MODE_DEMO = "demo"
 		private const val MAX_CONCERN_SUMMARY = 500
 		private const val MAX_LLM_HISTORY = 12
+
+		private const val OPENAI_BASE_URL = "https://api.openai.com"
+		private const val GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com"
 
 		private const val GREETING =
 			"Hello! I'm the Britam claims assistant. I can help with claim updates, payouts, policy cover, " +

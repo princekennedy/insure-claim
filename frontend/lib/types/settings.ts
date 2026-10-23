@@ -5,6 +5,19 @@ export interface SettingValue {
   value: string;
   dataType: SettingDataType;
   description: string;
+  secret?: boolean;
+  configured?: boolean;
+  options?: string[];
+}
+
+export interface ChatbotProvider {
+  id: string;
+  label: string;
+  defaultModel: string;
+  models: string[];
+  keyPlaceholder: string;
+  keyHint: string;
+  docsUrl: string;
 }
 
 export interface SettingGroup {
