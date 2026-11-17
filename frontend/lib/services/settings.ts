@@ -1,6 +1,12 @@
 import { request } from './api';
 import { authenticatedRequest } from './auth';
-import type { ChatbotProvider, SettingsResponse, SettingsUpdateRequest } from '../types';
+import type {
+  ChatbotProvider,
+  ChatbotTestRequest,
+  ChatbotTestResult,
+  SettingsResponse,
+  SettingsUpdateRequest,
+} from '../types';
 
 export function getSettings(): Promise<SettingsResponse> {
   return authenticatedRequest(() => request<SettingsResponse>('/admin/settings'));
@@ -14,6 +20,15 @@ export function updateSettings(body: SettingsUpdateRequest): Promise<SettingsRes
   return authenticatedRequest(() =>
     request<SettingsResponse>('/admin/settings', {
       method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+export function testChatbotProvider(body: ChatbotTestRequest): Promise<ChatbotTestResult> {
+  return authenticatedRequest(() =>
+    request<ChatbotTestResult>('/admin/settings/chatbot/test', {
+      method: 'POST',
       body: JSON.stringify(body),
     }),
   );

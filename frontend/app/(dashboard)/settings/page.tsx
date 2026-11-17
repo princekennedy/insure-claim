@@ -15,9 +15,20 @@ import {
   PageLoader,
   PasswordInput,
   Select,
+  Textarea,
 } from '@/lib/components/ui';
-import { getChatbotProviders, getSettings, updateSettings } from '@/lib/services/settings';
-import type { ChatbotProvider, SettingGroup, SettingsResponse } from '@/lib/types';
+import {
+  getChatbotProviders,
+  getSettings,
+  testChatbotProvider,
+  updateSettings,
+} from '@/lib/services/settings';
+import type {
+  ChatbotProvider,
+  ChatbotTestResult,
+  SettingGroup,
+  SettingsResponse,
+} from '@/lib/types';
 import styles from './settings.module.css';
 
 const GROUP_META: Record<string, { title: string; description: string }> = {
@@ -54,6 +65,10 @@ const FIELD_META: Record<string, FieldMeta> = {
   api_key: {
     label: 'API key',
     hint: 'Stored write-only and never shown again.',
+  },
+  company_info: {
+    label: 'Company knowledge',
+    hint: 'Paste the company information the assistant should rely on: products, cover, claims process, contacts and FAQs. It is added to every AI reply.',
   },
   max_tokens: { label: 'Max reply length', hint: 'Tokens per reply, 64 to 4096.' },
   escalate_threshold: {
@@ -103,6 +118,9 @@ export default function SettingsPage() {
   const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
   const [activeGroup, setActiveGroup] = useState('');
   const [providers, setProviders] = useState<ChatbotProvider[]>([]);
+  const [testingChatbot, setTestingChatbot] = useState(false);
+  const [chatbotTest, setChatbotTest] = useState<ChatbotTestResult | null>(null);
+  const [chatbotTestError, setChatbotTestError] = useState('');
 
   const loadSettings = useCallback(async () => {
     try {
@@ -139,6 +157,8 @@ export default function SettingsPage() {
   function setValue(draftKey: string, value: string) {
     setDraft((prev) => ({ ...prev, [draftKey]: value }));
     setSavedGroup(null);
+    setChatbotTest(null);
+    setChatbotTestError('');
   }
 
   function handleProviderChange(nextId: string) {
@@ -194,6 +214,27 @@ export default function SettingsPage() {
       }));
     } finally {
       setSavingGroup(null);
+    }
+  }
+
+  async function handleTestChatbot() {
+    setTestingChatbot(true);
+    setChatbotTest(null);
+    setChatbotTestError('');
+    try {
+      const result = await testChatbotProvider({
+        provider: draft['chatbot.provider'],
+        model: draft['chatbot.model'],
+        apiKey: draft['chatbot.api_key'],
+        companyInfo: draft['chatbot.company_info'],
+      });
+      setChatbotTest(result);
+    } catch (err) {
+      setChatbotTestError(
+        err instanceof Error ? err.message : 'The connection test could not be completed.',
+      );
+    } finally {
+      setTestingChatbot(false);
     }
   }
 
@@ -342,6 +383,23 @@ export default function SettingsPage() {
                           );
                         }
 
+                        if (setting.key === 'company_info') {
+                          return (
+                            <div key={setting.key} className={styles.fullWidth}>
+                              <Textarea
+                                label={fieldMeta.label}
+                                hint={fieldMeta.hint}
+                                rows={14}
+                                maxLength={20000}
+                                placeholder="e.g. Britam Comprehensive motor cover includes… Claims are filed at… The claims hotline is…"
+                                value={value}
+                                onChange={(event) => setValue(draftKey, event.target.value)}
+                                className={styles.knowledgeInput}
+                              />
+                            </div>
+                          );
+                        }
+
                         if (setting.dataType === 'BOOLEAN') {
                           return (
                             <Select
@@ -383,9 +441,38 @@ export default function SettingsPage() {
                         Saved. New values apply to the next request.
                       </Alert>
                     )}
+                    {activeGroupData.group === 'chatbot' && chatbotTestError && (
+                      <Alert type="error" className={styles.groupError}>
+                        {chatbotTestError}
+                      </Alert>
+                    )}
+                    {activeGroupData.group === 'chatbot' && chatbotTest && (
+                      <Alert
+                        type={chatbotTest.ok ? 'success' : 'error'}
+                        className={styles.groupError}
+                        dismissible
+                        onDismiss={() => setChatbotTest(null)}
+                      >
+                        {chatbotTest.ok
+                          ? `Connected to ${chatbotTest.provider} · ${chatbotTest.model} in ${chatbotTest.latencyMs} ms.${
+                              chatbotTest.reply ? ` Reply: “${chatbotTest.reply}”` : ''
+                            }`
+                          : `Connection failed: ${chatbotTest.message}`}
+                      </Alert>
+                    )}
                   </CardContent>
                   <CardFooter className={styles.footer}>
                     <span className={styles.footerActions}>
+                      {activeGroupData.group === 'chatbot' && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => void handleTestChatbot()}
+                          loading={testingChatbot}
+                        >
+                          Test connection
+                        </Button>
+                      )}
                       <Button type="submit" loading={activeIsSaving}>
                         Save {activeMeta.title.toLowerCase()}
                       </Button>
