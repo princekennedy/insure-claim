@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -51,21 +51,37 @@ export function KnowledgeBasePanel({ canManage }: KnowledgeBasePanelProps) {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
+  async function refresh() {
     try {
       const data = await getKnowledgeEntries();
       setEntries(data);
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load the knowledge base.');
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await getKnowledgeEntries();
+        if (!cancelled) {
+          setEntries(data);
+          setError('');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load the knowledge base.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function startCreate() {
     setEditingId(null);
@@ -117,7 +133,7 @@ export function KnowledgeBasePanel({ canManage }: KnowledgeBasePanelProps) {
       }
       setDraft(null);
       setEditingId(null);
-      await load();
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'The article could not be saved.');
     } finally {
@@ -137,7 +153,7 @@ export function KnowledgeBasePanel({ canManage }: KnowledgeBasePanelProps) {
         setDraft(null);
         setEditingId(null);
       }
-      await load();
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'The article could not be deleted.');
     } finally {
