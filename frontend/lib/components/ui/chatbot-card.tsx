@@ -152,7 +152,7 @@ export function ChatbotCard({ className = '', onOpenChat, claimId }: ChatbotCard
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Card hover>
+      <Card hover className={styles.fillCard}>
         {!isChatOpen ? (
           <>
             <CardHeader className={styles.header}>
