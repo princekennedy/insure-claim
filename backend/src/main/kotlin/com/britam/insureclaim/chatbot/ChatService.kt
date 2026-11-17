@@ -1,11 +1,15 @@
 package com.britam.insureclaim.chatbot
 
+import com.britam.insureclaim.claim.Claim
 import com.britam.insureclaim.claim.ClaimRepository
+import com.britam.insureclaim.claim.ClaimService
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.ForbiddenException
 import com.britam.insureclaim.common.NotFoundException
 import com.britam.insureclaim.common.ValidationException
+import com.britam.insureclaim.knowledge.KnowledgeService
 import com.britam.insureclaim.settings.SettingService
+import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.security.ChatbotProperties
 import tools.jackson.databind.JsonNode
@@ -32,7 +36,9 @@ class ChatService(
 	private val supportConcernRepository: SupportConcernRepository,
 	private val userRepository: UserRepository,
 	private val claimRepository: ClaimRepository,
+	private val claimService: ClaimService,
 	private val settingService: SettingService,
+	private val knowledgeService: KnowledgeService,
 	private val chatbotProperties: ChatbotProperties,
 	private val objectMapper: ObjectMapper,
 	restClientBuilder: RestClient.Builder,
@@ -79,8 +85,11 @@ class ChatService(
 		}
 		val user = userId?.let { userRepository.findById(it).orElse(null) }
 		val claim = request.claimId?.let { claimId ->
+			if (user == null) {
+				throw ForbiddenException("Sign in to discuss a claim with the assistant")
+			}
 			val found = claimRepository.findById(claimId).orElseThrow { NotFoundException("Claim", claimId) }
-			if (user != null && !user.isStaff() && found.customer.id != user.id) {
+			if (!user.isStaff() && found.customer.id != user.id) {
 				throw ForbiddenException("This claim belongs to another customer")
 			}
 			found
@@ -128,8 +137,9 @@ class ChatService(
 		)
 
 		val classification = ChatIntents.classify(content)
-		val shouldEscalate = shouldEscalate(classification)
-		val reply = generateReply(conversation, content, classification)
+		val lookup = resolveClaimLookup(conversation, content)
+		val shouldEscalate = shouldEscalate(content, classification, lookup)
+		val reply = generateReply(conversation, classification, lookup)
 
 		val assistantMessage = messageRepository.save(
 			ChatMessage(
@@ -203,7 +213,7 @@ class ChatService(
 			)
 		}
 
-		val systemPrompt = ChatPrompt.system(request.companyInfo ?: settingService.chatbotCompanyInfo())
+		val systemPrompt = ChatPrompt.system(knowledgeService.promptText())
 		val history = listOf(ChatSender.CUSTOMER to "Reply with the single word: OK")
 		val startedAt = System.nanoTime()
 		return try {
@@ -240,6 +250,12 @@ class ChatService(
 
 	// --------------------------------------------------------- internals -----
 
+	private data class ClaimLookup(
+		val context: ClaimChatContext? = null,
+		val promptNote: String? = null,
+		val fallbackReply: String? = null,
+	)
+
 	private fun requireConversation(conversationId: Long, userId: Long?): ChatConversation {
 		val conversation = conversationRepository.findById(conversationId)
 			.orElseThrow { NotFoundException("Conversation", conversationId) }
@@ -254,27 +270,85 @@ class ChatService(
 		return conversation
 	}
 
-	private fun shouldEscalate(classification: ChatClassification): Boolean = when {
+	private fun shouldEscalate(
+		content: String,
+		classification: ChatClassification,
+		lookup: ClaimLookup,
+	): Boolean = when {
 		classification.category == null -> false
+		// A bare claim number (or a claim we could resolve) is a lookup, not a
+		// complaint: answer it instead of opening a support concern.
+		classification.category == ConcernCategory.OTHER &&
+			(lookup.context != null || ChatClaimContextBuilder.extractClaimNumber(content) != null) -> false
 		classification.category.needsHuman -> true
 		classification.category == ConcernCategory.OTHER -> true
 		classification.confidence < settingService.chatbotEscalateThreshold() -> true
 		else -> false
 	}
 
+	/**
+	 * Resolves the claim/customer data the assistant may use for this message.
+	 * Claim numbers are only honoured for the signed-in owner (staff may look up
+	 * any claim); anonymous visitors are never shown customer data.
+	 */
+	private fun resolveClaimLookup(conversation: ChatConversation, content: String): ClaimLookup {
+		val owner = conversation.user
+		conversation.claim?.let { existing ->
+			return if (owner == null) {
+				ClaimLookup(
+					promptNote = "This conversation is anonymous, so claim data must not be disclosed. " +
+						"Ask the customer to sign in to view their claim.",
+					fallbackReply = ChatClaimContextBuilder.anonymousReply(),
+				)
+			} else {
+				contextFor(existing, owner)
+			}
+		}
+
+		val claimNumber = ChatClaimContextBuilder.extractClaimNumber(content) ?: return ClaimLookup()
+
+		if (owner == null) {
+			return ClaimLookup(
+				promptNote = "The customer supplied claim number $claimNumber but is not signed in. " +
+					"Do not look up or reveal any claim or customer data; ask them to sign in or use their tracking link.",
+				fallbackReply = ChatClaimContextBuilder.anonymousReply(),
+			)
+		}
+
+		val claim = claimRepository.findByClaimNumberWithDetails(claimNumber).orElse(null)
+		if (claim == null || (!owner.isStaff() && claim.customer.id != owner.id)) {
+			return ClaimLookup(
+				promptNote = "The customer supplied claim number $claimNumber but it is not on their account. " +
+					"Do not invent details; ask them to check the number or sign in with the right account.",
+				fallbackReply = ChatClaimContextBuilder.notFoundReply(claimNumber),
+			)
+		}
+
+		if (conversation.claim == null) conversation.claim = claim
+		return contextFor(claim, owner)
+	}
+
+	private fun contextFor(claim: Claim, actor: User): ClaimLookup = try {
+		ClaimLookup(context = ChatClaimContextBuilder.build(claim, claimService.toDetail(claim, actor)))
+	} catch (e: Exception) {
+		log.warn("Could not build claim context for {}", claim.claimNumber, e)
+		ClaimLookup()
+	}
+
 	private fun generateReply(
 		conversation: ChatConversation,
-		content: String,
 		classification: ChatClassification,
+		lookup: ClaimLookup,
 	): String {
+		val fallback = lookup.fallbackReply ?: ChatIntents.replyFor(classification, GREETING)
 		if (!settingService.chatbotHasProvider()) {
-			return ChatIntents.replyFor(classification, GREETING)
+			return fallback
 		}
 		return try {
-			llmReply(conversation) ?: ChatIntents.replyFor(classification, GREETING)
+			llmReply(conversation, lookup) ?: fallback
 		} catch (e: Exception) {
 			log.warn("LLM reply failed for conversation ${conversation.id}, falling back to rule-based bot", e)
-			ChatIntents.replyFor(classification, GREETING)
+			fallback
 		}
 	}
 
@@ -284,7 +358,7 @@ class ChatService(
 	 * assistant text or null when the provider returned nothing usable.
 	 * Throws on HTTP errors / network failures so callers can fall back.
 	 */
-	private fun llmReply(conversation: ChatConversation): String? {
+	private fun llmReply(conversation: ChatConversation, lookup: ClaimLookup): String? {
 		val provider = settingService.chatbotProvider()
 		val apiKey = settingService.chatbotApiKey()
 		val model = settingService.chatbotModel()
@@ -293,7 +367,10 @@ class ChatService(
 			.takeLast(MAX_LLM_HISTORY)
 			.filter { it.sender != ChatSender.AGENT }
 			.map { it.sender to it.content }
-		val systemPrompt = ChatPrompt.system(settingService.chatbotCompanyInfo())
+		val systemPrompt = ChatPrompt.system(
+			knowledgeService.promptText(),
+			lookup.context?.promptBlock ?: lookup.promptNote,
+		)
 
 		val baseUrl = baseUrlFor(provider)
 		return when (provider) {
@@ -472,6 +549,7 @@ class ChatService(
 
 		private const val GREETING =
 			"Hello! I'm the Britam claims assistant. I can help with claim updates, payouts, policy cover, " +
-				"KYC verification and garage repairs. What would you like to know?"
+				"KYC verification and garage repairs. Send your claim number (for example CLM-2026-AB12CD) " +
+				"and I'll look up the latest status for you."
 	}
 }

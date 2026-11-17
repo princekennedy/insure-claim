@@ -47,7 +47,23 @@ export interface ChatbotTestRequest {
   provider?: string;
   model?: string;
   apiKey?: string;
-  companyInfo?: string;
+}
+
+export interface KnowledgeEntry {
+  id: number;
+  title: string;
+  category: string;
+  content: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KnowledgeEntryRequest {
+  title: string;
+  category: string;
+  content: string;
+  enabled: boolean;
 }
 
 export interface ChatbotTestResult {

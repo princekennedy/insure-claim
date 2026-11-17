@@ -34,4 +34,24 @@ class ChatPromptTest {
 				prompt.indexOf("Company knowledge base"),
 		)
 	}
+
+	@Test
+	fun `asks for a claim number when no verified claim is supplied`() {
+		val prompt = ChatPrompt.system(null)
+
+		assertContains(prompt, "CLM-YYYY-XXXXXX")
+		assertFalse(prompt.contains("Verified account data"))
+	}
+
+	@Test
+	fun `appends verified claim data after the company knowledge`() {
+		val prompt = ChatPrompt.system("Britam covers motor claims.", "Claim status: Approved")
+
+		assertContains(prompt, "Verified account data")
+		assertContains(prompt, "Claim status: Approved")
+		assertEquals(
+			true,
+			prompt.indexOf("Company knowledge base") < prompt.indexOf("Verified account data"),
+		)
+	}
 }

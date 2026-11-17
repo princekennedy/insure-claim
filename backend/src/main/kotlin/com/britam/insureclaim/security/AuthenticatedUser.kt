@@ -12,16 +12,20 @@ class AuthenticatedUser(
 	val email: String,
 	val role: String,
 	private val displayName: String,
+	val permissions: Collection<String> = emptyList(),
 ) : UserDetails {
 
 	/**
 	 * Every non-CUSTOMER role also receives ROLE_STAFF, so admin-created
 	 * roles work across the staff consoles without editing security matchers.
+	 * Role permissions come from the admin-managed role catalogue and let
+	 * endpoints grant access without naming a specific role.
 	 */
 	override fun getAuthorities(): Collection<GrantedAuthority> = buildList {
 		add(SimpleGrantedAuthority("ROLE_${role}"))
 		if (role != CUSTOMER_ROLE) add(SimpleGrantedAuthority(STAFF_AUTHORITY))
 		add(SimpleGrantedAuthority("SCOPE_${role.lowercase()}"))
+		permissions.forEach { add(SimpleGrantedAuthority(it)) }
 	}
 
 	override fun getPassword(): String? = null

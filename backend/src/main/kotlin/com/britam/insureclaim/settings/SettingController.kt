@@ -26,23 +26,23 @@ class SettingController(
 
 	@Operation(summary = "Every settings group with current values")
 	@GetMapping
-	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	@PreAuthorize("hasRole('ADMIN') or hasAuthority('SETTINGS_READ') or hasAuthority('SETTINGS_UPDATE')")
 	fun settings(): SettingsResponse = settingService.settings()
 
 	@Operation(summary = "AI providers and the models the assistant can use")
 	@GetMapping("/chatbot/providers")
-	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	@PreAuthorize("hasRole('ADMIN') or hasAuthority('SETTINGS_READ') or hasAuthority('SETTINGS_UPDATE')")
 	fun chatbotProviders(): List<ChatProvider> = settingService.chatbotProviders()
 
 	@Operation(summary = "Test the AI provider credentials and model before saving")
 	@PostMapping("/chatbot/test")
-	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	@PreAuthorize("hasRole('ADMIN') or hasAuthority('SETTINGS_UPDATE')")
 	fun testChatbotProvider(@Valid @RequestBody request: ChatProviderTestRequest): ChatProviderTestResponse =
 		chatService.testProvider(request)
 
-	@Operation(summary = "Apply partial settings updates (insurer admins and admins)")
+	@Operation(summary = "Apply partial settings updates (admins and settings managers)")
 	@PutMapping
-	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	@PreAuthorize("hasRole('ADMIN') or hasAuthority('SETTINGS_UPDATE')")
 	@Auditable(action = "SETTINGS_UPDATE", description = "Updated portal settings", entityType = "SETTING")
 	fun update(@Valid @RequestBody request: SettingsUpdateRequest): SettingsResponse =
 		settingService.update(request)

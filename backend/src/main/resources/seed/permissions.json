@@ -18,6 +18,10 @@
     {"code": "GARAGE_READ", "name": "Read Garages", "description": "View garages"},
     {"code": "GARAGE_MANAGE", "name": "Manage Garages", "description": "Manage garages"},
     {"code": "KYC_READ", "name": "Read KYC", "description": "View KYC"},
-    {"code": "KYC_MANAGE", "name": "Manage KYC", "description": "Review/verify KYC"}
+    {"code": "KYC_MANAGE", "name": "Manage KYC", "description": "Review/verify KYC"},
+    {"code": "SETTINGS_READ", "name": "Read Settings", "description": "View portal settings"},
+    {"code": "SETTINGS_UPDATE", "name": "Update Settings", "description": "Change portal settings"},
+    {"code": "KNOWLEDGE_READ", "name": "Read Knowledge Base", "description": "View assistant knowledge articles"},
+    {"code": "KNOWLEDGE_MANAGE", "name": "Manage Knowledge Base", "description": "Create, edit and retire assistant knowledge articles"}
   ]
 }

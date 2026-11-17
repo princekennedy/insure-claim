@@ -25,6 +25,7 @@ class AuthService(
 	private val passwordEncoder: PasswordEncoder,
 	private val jwtService: JwtService,
 	private val roleRepository: com.britam.insureclaim.role.RoleRepository,
+	private val rolePermissionRepository: com.britam.insureclaim.role.RolePermissionRepository,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -160,6 +161,12 @@ class AuthService(
 	@Transactional(readOnly = true)
 	fun findById(id: Long): User =
 		userRepository.findById(id).orElseThrow { NotFoundException("User", id) }
+
+	@Transactional(readOnly = true)
+	fun permissionsFor(role: String): List<String> =
+		rolePermissionRepository.findAllByRoleCodes(listOf(role))
+			.map { it.id.permissionCode }
+			.sorted()
 
 	@Transactional(readOnly = true)
 	fun search(
@@ -330,7 +337,7 @@ class AuthService(
 			accessToken = access.token,
 			refreshToken = refreshValue,
 			expiresIn = access.expiresInSeconds,
-			user = UserResponse.from(user),
+			user = UserResponse.from(user, permissionsFor(role)),
 		)
 	}
 

@@ -115,8 +115,6 @@ data class ChatProviderTestRequest(
 	val model: String? = null,
 	@param:Schema(description = "Draft API key to verify before saving; blank uses the stored key")
 	val apiKey: String? = null,
-	@param:Schema(description = "Draft company knowledge to include in the test prompt")
-	val companyInfo: String? = null,
 )
 
 @Schema(name = "ChatProviderTestResult", description = "Outcome of a provider connectivity test")

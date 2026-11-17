@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class JwtAuthenticationFilter(
 	private val jwtService: JwtService,
 	private val userRepository: com.britam.insureclaim.user.UserRepository,
+	private val rolePermissionRepository: com.britam.insureclaim.role.RolePermissionRepository,
 ) : OncePerRequestFilter() {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -31,14 +32,20 @@ class JwtAuthenticationFilter(
 				if (account == null) {
 					log.debug("Token references unknown user ${parsed.userId}")
 				} else if (!account.isUsable()) {
-					log.debug("Rejecting token for unusable account ${account.id}")						} else if (account.role != parsed.role) {
+					log.debug("Rejecting token for unusable account ${account.id}")
+				} else if (account.role != parsed.role) {
 					log.debug("Rejecting token with stale role for account ${account.id}")
-				} else {							val principal = AuthenticatedUser(
-								id = account.id ?: 0L,
-								email = account.email,
-								role = account.role,
-								displayName = account.fullNameOrEmail(),
-							)
+				} else {
+					val permissions = rolePermissionRepository
+						.findAllByRoleCodes(listOf(account.role))
+						.map { it.id.permissionCode }
+					val principal = AuthenticatedUser(
+						id = account.id ?: 0L,
+						email = account.email,
+						role = account.role,
+						displayName = account.fullNameOrEmail(),
+						permissions = permissions,
+					)
 					val authentication = UsernamePasswordAuthenticationToken(
 						principal,
 						null,

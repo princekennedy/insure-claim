@@ -114,12 +114,6 @@ class SettingService(
 			secret = true,
 		),
 		SettingDefinition(
-			CHATBOT, "company_info", SettingDataType.STRING,
-			"Company knowledge the assistant uses when answering customer questions",
-			chatbotProperties.companyInfo,
-			{ null },
-		),
-		SettingDefinition(
 			CHATBOT, "max_tokens", SettingDataType.NUMBER,
 			"Maximum tokens in a single assistant reply",
 			chatbotProperties.maxTokens.toString(),
@@ -246,10 +240,6 @@ class SettingService(
 			ChatProviders.byId(provider)?.defaultModel ?: chatbotProperties.model
 		}
 	}
-
-	/** Admin-authored company knowledge injected into the assistant's system prompt. */
-	fun chatbotCompanyInfo(): String =
-		storedValue(CHATBOT, "company_info") ?: chatbotProperties.companyInfo
 
 	/** Providers the assistant can be pointed at, with their model catalogs. */
 	fun chatbotProviders(): List<ChatProvider> = ChatProviders.all

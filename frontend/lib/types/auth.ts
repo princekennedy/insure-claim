@@ -47,6 +47,7 @@ export interface UserResponse {
   enabled: boolean;
   initials: string;
   lastLoginAt: string | null;
+  permissions?: string[];
 }
 
 export interface UpdateProfileRequest {

@@ -63,8 +63,6 @@ data class ChatbotProperties(
 	val model: String = "claude-sonnet-5",
 	val maxTokens: Int = 700,
 	val escalateScoreThreshold: Double = 0.65,
-	/** Admin-managed company knowledge appended to the assistant's system prompt. */
-	val companyInfo: String = "",
 ) {
 	/** A real LLM is only used when a key is present; otherwise a rule-based bot answers. */
 	val hasLlmProvider: Boolean
