@@ -12,7 +12,6 @@ import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.security.ChatbotProperties
-import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
@@ -414,19 +413,20 @@ class ChatService(
 			)
 		}
 
-		val raw = restClient.post()
+		val root = restClient.post()
 			.uri("$baseUrl/v1/messages")
 			.header("x-api-key", apiKey)
 			.header("anthropic-version", "2023-06-01")
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(body)
-			.retrieve()
-			.onStatus({ status -> status.isError }) { _, response ->
-				throw IOException("Anthropic returned HTTP ${response.statusCode.value()}")
+			.exchange { _, response ->
+				if (response.statusCode.isError) {
+					throw IOException("Anthropic returned HTTP ${response.statusCode.value()}")
+				}
+				objectMapper.readTree(response.body)
 			}
-			.body(String::class.java)
+			?: throw IOException("Anthropic returned an empty response")
 
-		val root: JsonNode = objectMapper.readTree(raw)
 		return (root["content"] as? ArrayNode)?.elements()?.asSequence()
 			?.firstOrNull { it.path("type").asText() == "text" }
 			?.path("text")
@@ -461,18 +461,19 @@ class ChatService(
 			)
 		}
 
-		val raw = restClient.post()
+		val root = restClient.post()
 			.uri("$baseUrl/v1/chat/completions")
 			.header("Authorization", "Bearer $apiKey")
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(body)
-			.retrieve()
-			.onStatus({ status -> status.isError }) { _, response ->
-				throw IOException("OpenAI returned HTTP ${response.statusCode.value()}")
+			.exchange { _, response ->
+				if (response.statusCode.isError) {
+					throw IOException("OpenAI returned HTTP ${response.statusCode.value()}")
+				}
+				objectMapper.readTree(response.body)
 			}
-			.body(String::class.java)
+			?: throw IOException("OpenAI returned an empty response")
 
-		val root: JsonNode = objectMapper.readTree(raw)
 		return root.path("choices").path(0).path("message").path("content")
 			.takeIf { it.isTextual }
 			?.asText()
@@ -515,17 +516,18 @@ class ChatService(
 			set("generationConfig", objectMapper.createObjectNode().put("maxOutputTokens", maxTokens))
 		}
 
-		val raw = restClient.post()
+		val root = restClient.post()
 			.uri("$baseUrl/v1beta/models/$model:generateContent?key=$apiKey")
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(body)
-			.retrieve()
-			.onStatus({ status -> status.isError }) { _, response ->
-				throw IOException("Google Gemini returned HTTP ${response.statusCode.value()}")
+			.exchange { _, response ->
+				if (response.statusCode.isError) {
+					throw IOException("Google Gemini returned HTTP ${response.statusCode.value()}")
+				}
+				objectMapper.readTree(response.body)
 			}
-			.body(String::class.java)
+			?: throw IOException("Google returned an empty response")
 
-		val root: JsonNode = objectMapper.readTree(raw)
 		val parts = root.path("candidates").path(0).path("content").path("parts") as? ArrayNode
 			?: throw IOException("Google returned no content")
 		return parts.elements().asSequence()
