@@ -22,6 +22,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { ReportExportActions } from '@/lib/components/reports/report-export-actions';
 
 export default function ClaimsReportPage() {
   const claimsByStatus = [
@@ -56,10 +57,33 @@ export default function ClaimsReportPage() {
     { stage: 'Approval', avgDays: 10 },
     { stage: 'Settlement', avgDays: 14 },
   ];
+  const reportTitle = 'Claims Report';
 
   return (
     <div className="p-6">
-      <PageHeader title="Claims Report" />
+      <PageHeader
+        title={reportTitle}
+        actions={
+          <ReportExportActions
+            title={reportTitle}
+            sections={[
+              {
+                title: 'Summary',
+                rows: [
+                  { Metric: 'Total Claims', Value: 246, Notes: 'This month' },
+                  { Metric: 'Pending', Value: 77, Notes: 'Awaiting action' },
+                  { Metric: 'Settled', Value: 89, Notes: 'This month' },
+                  { Metric: 'Average Processing', Value: '14 days', Notes: 'From submission' },
+                ],
+              },
+              { title: 'Claims by Status', rows: claimsByStatus.map(({ name, value }) => ({ name, value })) },
+              { title: 'Claims by Type', rows: claimsByType },
+              { title: 'Monthly Claims Trend', rows: monthlyClaims },
+              { title: 'Average Processing Time by Stage', rows: processingTime },
+            ]}
+          />
+        }
+      />
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

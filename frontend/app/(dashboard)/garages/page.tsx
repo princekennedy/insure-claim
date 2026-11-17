@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   PageHeader,
   Card,
@@ -89,45 +90,47 @@ export default function GaragesPage() {
         <>
           <div className={styles.grid}>
             {garages.map((garage) => (
-              <Card key={garage.id} className={styles.garageCard}>
-                <CardHeader className={styles.garageHeader}>
-                  <div>
-                    <CardTitle>{garage.name}</CardTitle>
-                    <p className={styles.city}>{garage.city}</p>
-                  </div>
-                  <Badge variant={statusVariant(garage.performanceStatus)}>
-                    {garage.performanceLabel}
-                  </Badge>
-                </CardHeader>
-                <CardContent>
-                  <p className={styles.address}>{garage.address}</p>
-                  <p className={styles.phone}>{garage.contactPhone}</p>
-                  <div className={styles.stats}>
-                    <div className={styles.stat}>
-                      <span className={styles.statValue}>
-                        {garage.ratingCount > 0 ? garage.ratingAverage.toFixed(1) : '—'}
-                      </span>
-                      <span className={styles.statLabel}>Rating</span>
+              <Link key={garage.id} href={`/garages/${garage.id}`} className={styles.garageLink}>
+                <Card className={styles.garageCard}>
+                  <CardHeader className={styles.garageHeader}>
+                    <div>
+                      <CardTitle>{garage.name}</CardTitle>
+                      <p className={styles.city}>{garage.city}</p>
                     </div>
-                    <div className={styles.stat}>
-                      <span className={styles.statValue}>{garage.jobsCompleted}</span>
-                      <span className={styles.statLabel}>Jobs</span>
-                    </div>
-                    <div className={styles.stat}>
-                      <span className={styles.statValue}>{garage.complaintCount}</span>
-                      <span className={styles.statLabel}>Complaints</span>
-                    </div>
-                  </div>
-                  <div className={styles.foot}>
-                    {garage.isPanelGarage && (
-                      <Badge variant="info" size="sm">Panel</Badge>
-                    )}
-                    <Badge variant={garage.acceptingWork ? 'success' : 'secondary'} size="sm">
-                      {garage.acceptingWork ? 'Accepting work' : 'Not accepting'}
+                    <Badge variant={statusVariant(garage.performanceStatus)}>
+                      {garage.performanceLabel}
                     </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <p className={styles.address}>{garage.address}</p>
+                    <p className={styles.phone}>{garage.contactPhone}</p>
+                    <div className={styles.stats}>
+                      <div className={styles.stat}>
+                        <span className={styles.statValue}>
+                          {garage.ratingCount > 0 ? garage.ratingAverage.toFixed(1) : '—'}
+                        </span>
+                        <span className={styles.statLabel}>Rating</span>
+                      </div>
+                      <div className={styles.stat}>
+                        <span className={styles.statValue}>{garage.jobsCompleted}</span>
+                        <span className={styles.statLabel}>Jobs</span>
+                      </div>
+                      <div className={styles.stat}>
+                        <span className={styles.statValue}>{garage.complaintCount}</span>
+                        <span className={styles.statLabel}>Complaints</span>
+                      </div>
+                    </div>
+                    <div className={styles.foot}>
+                      {garage.isPanelGarage && (
+                        <Badge variant="info" size="sm">Panel</Badge>
+                      )}
+                      <Badge variant={garage.acceptingWork ? 'success' : 'secondary'} size="sm">
+                        {garage.acceptingWork ? 'Accepting work' : 'Not accepting'}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
 

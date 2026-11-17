@@ -44,3 +44,35 @@ body {
 :root[data-theme='dark'] .text-gray-500 {
   color: var(--theme-text-muted);
 }
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body[data-report-print='true'] {
+    background: #fff !important;
+    color: #111827 !important;
+  }
+
+  body[data-report-print='true'] aside,
+  body[data-report-print='true'] main > header,
+  body[data-report-print='true'] [data-report-export-actions] {
+    display: none !important;
+  }
+
+  body[data-report-print='true'] main {
+    display: block !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  body[data-report-print='true'] main > div {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body[data-report-print='true'] main > div > div {
+    padding: 0 !important;
+  }
+}

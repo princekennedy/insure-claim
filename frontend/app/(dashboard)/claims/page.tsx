@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, Badge, ProgressBar, EmptyState, PageLoader, Button } from '@/lib/components/ui';
-import { getMyClaims } from '@/lib/services/claims';
+import { Alert, PageHeader, Card, Badge, ProgressBar, EmptyState, PageLoader, Button } from '@/lib/components/ui';
+import { getClaims } from '@/lib/services/claims';
 import { formatCurrency, formatDateTime } from '@/lib/types/claim';
 import type { ClaimSummaryResponse, ClaimStatus } from '@/lib/types/claim';
 import styles from './claims.module.css';
@@ -19,10 +19,11 @@ export default function ClaimsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState('');
 
   const loadClaims = useCallback(async (pageNum: number) => {
     try {
-      const response = await getMyClaims(pageNum, 20);
+      const response = await getClaims(pageNum, 20);
       setClaims((prev) => {
         if (pageNum === 0) return response.content;
         const existing = new Set(prev.map((c) => c.id));
@@ -30,27 +31,46 @@ export default function ClaimsPage() {
       });
       setHasMore(!response.last);
     } catch (error) {
-      console.error('Failed to load claims:', error);
+      setError(error instanceof Error ? error.message : 'Unable to load customer claims.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    getMyClaims(0, 20)
+    let cancelled = false;
+
+    getClaims(0, 20)
       .then((response) => {
+        if (cancelled) return;
         setClaims(response.content);
         setHasMore(!response.last);
       })
-      .catch((error) => console.error('Failed to load claims:', error))
-      .finally(() => setLoading(false));
+      .catch((error) => {
+        if (cancelled) return;
+        setError(error instanceof Error ? error.message : 'Unable to load customer claims.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
+    setError('');
     setLoading(true);
-    loadClaims(nextPage);
+    void loadClaims(nextPage);
+  };
+
+  const retryLoading = () => {
+    setError('');
+    setLoading(true);
+    void loadClaims(page);
   };
 
   if (loading && claims.length === 0) {
@@ -61,15 +81,26 @@ export default function ClaimsPage() {
     <div className={styles.page}>
       <PageHeader
         title="Claims"
-        description="View and manage your insurance claims"
+        description="Review and manage claims submitted by customers."
       />
 
-      {claims.length === 0 ? (
+      {error && (
+        <Alert type="error">
+          <div>
+            <p>{error}</p>
+            <Button variant="secondary" size="sm" onClick={retryLoading}>
+              Try again
+            </Button>
+          </div>
+        </Alert>
+      )}
+
+      {claims.length === 0 && !error ? (
         <EmptyState
-          title="No claims yet"
-          description="You haven't filed any claims yet."
+          title="No customer claims yet"
+          description="Claims submitted by customers will appear here."
         />
-      ) : (
+      ) : claims.length > 0 ? (
         <div className={styles.claimsGrid}>
           {claims.map((claim) => (
             <Link key={claim.id} href={`/claims/${claim.id}`} className={styles.claimLink}>
@@ -124,9 +155,9 @@ export default function ClaimsPage() {
             </Link>
           ))}
         </div>
-      )}
+      ) : null}
 
-      {hasMore && (
+      {hasMore && claims.length > 0 && (
         <div className={styles.loadMore}>
           <Button onClick={loadMore} loading={loading}>
             Load More
