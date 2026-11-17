@@ -15,7 +15,6 @@ import {
   PageLoader,
   PasswordInput,
   Select,
-  Textarea,
 } from '@/lib/components/ui';
 import {
   getChatbotProviders,
@@ -23,13 +22,17 @@ import {
   testChatbotProvider,
   updateSettings,
 } from '@/lib/services/settings';
+import { getCurrentUser } from '@/lib/services/auth';
 import type {
   ChatbotProvider,
   ChatbotTestResult,
   SettingGroup,
   SettingsResponse,
 } from '@/lib/types';
+import { KnowledgeBasePanel } from './knowledge-base-panel';
 import styles from './settings.module.css';
+
+const KNOWLEDGE_TAB = 'knowledge';
 
 const GROUP_META: Record<string, { title: string; description: string }> = {
   chatbot: {
@@ -65,10 +68,6 @@ const FIELD_META: Record<string, FieldMeta> = {
   api_key: {
     label: 'API key',
     hint: 'Stored write-only and never shown again.',
-  },
-  company_info: {
-    label: 'Company knowledge',
-    hint: 'Paste the company information the assistant should rely on: products, cover, claims process, contacts and FAQs. It is added to every AI reply.',
   },
   max_tokens: { label: 'Max reply length', hint: 'Tokens per reply, 64 to 4096.' },
   escalate_threshold: {
@@ -116,8 +115,10 @@ export default function SettingsPage() {
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
   const [savedGroup, setSavedGroup] = useState<string | null>(null);
   const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
-  const [activeGroup, setActiveGroup] = useState('');
+  const [activeTab, setActiveTab] = useState('');
   const [providers, setProviders] = useState<ChatbotProvider[]>([]);
+  const [canReadKnowledge, setCanReadKnowledge] = useState(false);
+  const [canManageKnowledge, setCanManageKnowledge] = useState(false);
   const [testingChatbot, setTestingChatbot] = useState(false);
   const [chatbotTest, setChatbotTest] = useState<ChatbotTestResult | null>(null);
   const [chatbotTestError, setChatbotTestError] = useState('');
@@ -147,6 +148,30 @@ export default function SettingsPage() {
         if (!cancelled) setProviders(list);
       } catch {
         // Non-fatal: the model field falls back to a free-text input.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const user = await getCurrentUser();
+        if (cancelled) return;
+        const permissions = user.permissions ?? [];
+        setCanReadKnowledge(
+          user.role === 'ADMIN' ||
+            permissions.includes('KNOWLEDGE_READ') ||
+            permissions.includes('KNOWLEDGE_MANAGE'),
+        );
+        setCanManageKnowledge(
+          user.role === 'ADMIN' || permissions.includes('KNOWLEDGE_MANAGE'),
+        );
+      } catch {
+        // The settings request already surfaces authentication/authorization failures.
       }
     })();
     return () => {
@@ -226,7 +251,6 @@ export default function SettingsPage() {
         provider: draft['chatbot.provider'],
         model: draft['chatbot.model'],
         apiKey: draft['chatbot.api_key'],
-        companyInfo: draft['chatbot.company_info'],
       });
       setChatbotTest(result);
     } catch (err) {
@@ -239,7 +263,9 @@ export default function SettingsPage() {
   }
 
   const groups = response?.groups ?? [];
-  const activeGroupData = groups.find((g) => g.group === activeGroup) ?? groups[0];
+  const activeGroupData = groups.find((g) => g.group === activeTab) ?? groups[0];
+  const currentTab = activeTab || activeGroupData?.group || '';
+  const showingKnowledge = currentTab === KNOWLEDGE_TAB && canReadKnowledge;
   const activeMeta = activeGroupData
     ? GROUP_META[activeGroupData.group] ?? { title: activeGroupData.group, description: '' }
     : null;
@@ -271,7 +297,7 @@ export default function SettingsPage() {
         <>
           <div className={styles.tabs} role="tablist" aria-label="Settings sections">
             {groups.map((group) => {
-              const isActive = group.group === activeGroupData.group;
+              const isActive = group.group === currentTab;
               return (
                 <button
                   key={group.group}
@@ -281,15 +307,37 @@ export default function SettingsPage() {
                   aria-selected={isActive}
                   aria-controls={`panel-${group.group}`}
                   className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                  onClick={() => setActiveGroup(group.group)}
+                  onClick={() => setActiveTab(group.group)}
                 >
                   {GROUP_META[group.group]?.title ?? group.group}
                 </button>
               );
             })}
+            {canReadKnowledge && (
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${KNOWLEDGE_TAB}`}
+                aria-selected={currentTab === KNOWLEDGE_TAB}
+                aria-controls={`panel-${KNOWLEDGE_TAB}`}
+                className={`${styles.tab} ${currentTab === KNOWLEDGE_TAB ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(KNOWLEDGE_TAB)}
+              >
+                Knowledge base
+              </button>
+            )}
           </div>
 
-          {activeGroupData && activeMeta && (
+          {showingKnowledge ? (
+            <div
+              className={styles.tabPanel}
+              role="tabpanel"
+              id={`panel-${KNOWLEDGE_TAB}`}
+              aria-labelledby={`tab-${KNOWLEDGE_TAB}`}
+            >
+              <KnowledgeBasePanel canManage={canManageKnowledge} />
+            </div>
+          ) : activeGroupData && activeMeta && (
             <div
               key={activeGroupData.group}
               className={styles.tabPanel}
@@ -380,23 +428,6 @@ export default function SettingsPage() {
                               value={value}
                               onChange={(event) => setValue(draftKey, event.target.value)}
                             />
-                          );
-                        }
-
-                        if (setting.key === 'company_info') {
-                          return (
-                            <div key={setting.key} className={styles.fullWidth}>
-                              <Textarea
-                                label={fieldMeta.label}
-                                hint={fieldMeta.hint}
-                                rows={14}
-                                maxLength={20000}
-                                placeholder="e.g. Britam Comprehensive motor cover includes… Claims are filed at… The claims hotline is…"
-                                value={value}
-                                onChange={(event) => setValue(draftKey, event.target.value)}
-                                className={styles.knowledgeInput}
-                              />
-                            </div>
                           );
                         }
 

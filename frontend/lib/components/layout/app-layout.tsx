@@ -132,6 +132,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [viewerRole, setViewerRole] = useState<Role | null>(null);
+  const [viewerPermissions, setViewerPermissions] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<{ fullName: string } | null>(null);
   const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 
@@ -141,12 +142,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       .then((currentUser) => {
         if (!cancelled) {
           setViewerRole(currentUser.role);
+          setViewerPermissions(currentUser.permissions ?? []);
           setCurrentUser({ fullName: currentUser.fullName });
         }
       })
       .catch(() => {
         if (!cancelled) {
           setViewerRole(null);
+          setViewerPermissions([]);
           setCurrentUser(null);
         }
       });
@@ -158,7 +161,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const visibleManagementItems = viewerRole
     ? userManagementItems.filter((item) => item.roles.includes(viewerRole))
     : [];
-  const showSettings = viewerRole !== null && settingsItem.roles.includes(viewerRole);
+  const showSettings =
+    viewerRole !== null &&
+    (settingsItem.roles.includes(viewerRole) ||
+      viewerPermissions.includes('SETTINGS_READ') ||
+      viewerPermissions.includes('SETTINGS_UPDATE'));
   const showAdministration = visibleManagementItems.length > 0 || showSettings;
   const settingsActive = pathname === settingsItem.href || pathname.startsWith(`${settingsItem.href}/`);
   const userManagementActive = visibleManagementItems.some(

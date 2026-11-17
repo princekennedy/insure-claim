@@ -44,15 +44,6 @@
   gap: 1rem;
 }
 
-.fullWidth {
-  grid-column: 1 / -1;
-}
-
-.knowledgeInput {
-  min-height: 220px;
-  line-height: 1.5;
-}
-
 .footer {
   align-items: center;
   justify-content: space-between;
