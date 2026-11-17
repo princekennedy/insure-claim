@@ -1,0 +1,27 @@
+.track {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 9999;
+  width: min(24rem, 80vw);
+  height: 0.35rem;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background-color: var(--theme-surface-hover);
+}
+
+.fill {
+  width: 100%;
+  height: 100%;
+  background-color: #0066cc;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: progress 1.5s linear forwards;
+}
+
+@keyframes progress {
+  to {
+    transform: scaleX(1);
+  }
+}

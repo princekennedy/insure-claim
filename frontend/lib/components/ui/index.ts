@@ -8,6 +8,7 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Badge } from './badge';
 export { Avatar } from './avatar';
 export { ProgressBar } from './progress-bar';
+export { LoginTransitionProgress, startLoginTransition } from './login-progress-bar';
 export { Spinner, PageLoader } from './spinner';
 export { EmptyState } from './empty-state';
 export { PageHeader } from './page-header';

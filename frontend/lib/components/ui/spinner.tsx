@@ -33,9 +33,14 @@ interface PageLoaderProps {
 
 export function PageLoader({ message = 'Loading...' }: PageLoaderProps) {
   return (
-    <div className={styles.pageLoader}>
+    <div
+      className={styles.pageLoader}
+      role="status"
+      aria-live="polite"
+      aria-label={message ? undefined : 'Loading'}
+    >
       <Spinner size="lg" />
-      <p className={styles.message}>{message}</p>
+      {message && <p className={styles.message}>{message}</p>}
     </div>
   );
 }
