@@ -2,7 +2,7 @@
   position: relative;
   background: linear-gradient(135deg, var(--theme-surface) 0%, var(--theme-surface-muted) 100%);
   border: 1px solid var(--theme-border);
-  height: 320px;
+  height: var(--chatbot-card-height, 320px);
   max-width: 100%;
   width: 100%;
   display: flex;
@@ -293,6 +293,6 @@
 
 @media (min-width: 768px) {
   .chatbotCard {
-    height: 380px;
+    height: var(--chatbot-card-height-desktop, var(--chatbot-card-height, 380px));
   }
 }
