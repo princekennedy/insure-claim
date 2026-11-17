@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Input, Button, PasswordInput } from '@/lib/components/ui';
+import { Input, Button, PasswordInput, startLoginTransition } from '@/lib/components/ui';
 import { login, isAuthenticated } from '@/lib/services/auth';
 import { clearTokens } from '@/lib/services/api';
 import styles from './login.module.css';
@@ -60,6 +60,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
+      startLoginTransition();
       // Middleware will handle role-based redirect after successful login
       router.push('/dashboard');
     } catch (err) {
@@ -113,8 +114,8 @@ export default function LoginPage() {
         <span>Secure login with end-to-end encryption</span>
       </div>
 
-      <Button type="submit" fullWidth loading={loading}>
-        Sign in
+      <Button type="submit" fullWidth disabled={loading}>
+        {loading ? 'Signing in...' : 'Sign in'}
       </Button>
 
       <div style={{ textAlign: 'center' }}>

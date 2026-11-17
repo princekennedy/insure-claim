@@ -370,7 +370,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Button variant="danger" onClick={handleLogoutConfirm}>
               Yes
             </Button>
-            <Button variant="secondary" onClick={handleLogoutCancel}>
+            <Button variant="primary" onClick={handleLogoutCancel}>
               No
             </Button>
           </div>

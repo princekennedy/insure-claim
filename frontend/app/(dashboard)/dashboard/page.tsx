@@ -50,7 +50,7 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <PageLoader message="Loading dashboard..." />;
+    return <PageLoader message="" />;
   }
 
   return (

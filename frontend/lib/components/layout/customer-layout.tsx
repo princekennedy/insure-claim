@@ -4,6 +4,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
+import { Button } from '../ui/button';
+import { Dialog } from '../ui/dialog';
 import { getCurrentUser, logout } from '../../services/auth';
 import styles from './app-layout.module.css';
 
@@ -98,6 +100,7 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<{ fullName: string } | null>(null);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,8 +120,8 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
     };
   }, []);
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleLogoutConfirm = () => {
+    setLogoutModalOpen(false);
     void logout().catch(() => undefined).then(() => router.replace('/'));
   };
 
@@ -159,14 +162,14 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <Link href="/login" onClick={handleLogout} className={styles.navItem}>
+          <button type="button" onClick={() => setLogoutModalOpen(true)} className={styles.navItem}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -207,6 +210,27 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
         </header>
         <div className={styles.content}>{children}</div>
       </main>
+
+      <Dialog
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        title="Confirm Logout"
+        size="sm"
+        showCloseButton={false}
+        closeOnOverlay={false}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Button variant="danger" onClick={handleLogoutConfirm}>
+              Yes
+            </Button>
+            <Button variant="primary" onClick={() => setLogoutModalOpen(false)}>
+              No
+            </Button>
+          </div>
+        }
+      >
+        <p>Are you sure you want to logout?</p>
+      </Dialog>
     </div>
   );
 }
