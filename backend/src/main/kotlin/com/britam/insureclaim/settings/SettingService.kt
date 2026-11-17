@@ -39,7 +39,7 @@ data class SettingsResponse(val groups: List<SettingGroupResponse>)
 @Schema(name = "SettingUpdate", description = "A single key and its new value")
 data class SettingUpdateRequest(
 	@field:NotBlank @field:Size(max = 64) val key: String,
-	@field:Size(max = 2000) val value: String = "",
+	@field:Size(max = 20000) val value: String = "",
 )
 
 data class SettingGroupUpdateRequest(
@@ -112,6 +112,12 @@ class SettingService(
 			chatbotProperties.apiKey,
 			{ null },
 			secret = true,
+		),
+		SettingDefinition(
+			CHATBOT, "company_info", SettingDataType.STRING,
+			"Company knowledge the assistant uses when answering customer questions",
+			chatbotProperties.companyInfo,
+			{ null },
 		),
 		SettingDefinition(
 			CHATBOT, "max_tokens", SettingDataType.NUMBER,
@@ -241,6 +247,10 @@ class SettingService(
 		}
 	}
 
+	/** Admin-authored company knowledge injected into the assistant's system prompt. */
+	fun chatbotCompanyInfo(): String =
+		storedValue(CHATBOT, "company_info") ?: chatbotProperties.companyInfo
+
 	/** Providers the assistant can be pointed at, with their model catalogs. */
 	fun chatbotProviders(): List<ChatProvider> = ChatProviders.all
 
@@ -287,7 +297,7 @@ class SettingService(
 		private const val CHATBOT = "chatbot"
 		private const val CLAIMS = "claims"
 		private const val FRAUD = "fraud"
-		private const val MAX_VALUE_LENGTH = 2000
+		private const val MAX_VALUE_LENGTH = 20000
 
 		private val booleanRule: (String) -> String? = { value ->
 			if (value.equals("true", ignoreCase = true) || value.equals("false", ignoreCase = true)) {

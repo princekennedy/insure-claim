@@ -1,11 +1,15 @@
 package com.britam.insureclaim.settings
 
 import com.britam.insureclaim.chatbot.ChatProvider
+import com.britam.insureclaim.chatbot.ChatProviderTestRequest
+import com.britam.insureclaim.chatbot.ChatProviderTestResponse
+import com.britam.insureclaim.chatbot.ChatService
 import com.britam.insureclaim.common.Auditable
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -15,7 +19,10 @@ import org.springframework.security.access.prepost.PreAuthorize
 @Tag(name = "Settings", description = "Admin-managed runtime configuration for the portal")
 @RestController
 @RequestMapping("/api/v1/admin/settings")
-class SettingController(private val settingService: SettingService) {
+class SettingController(
+	private val settingService: SettingService,
+	private val chatService: ChatService,
+) {
 
 	@Operation(summary = "Every settings group with current values")
 	@GetMapping
@@ -26,6 +33,12 @@ class SettingController(private val settingService: SettingService) {
 	@GetMapping("/chatbot/providers")
 	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
 	fun chatbotProviders(): List<ChatProvider> = settingService.chatbotProviders()
+
+	@Operation(summary = "Test the AI provider credentials and model before saving")
+	@PostMapping("/chatbot/test")
+	@PreAuthorize("hasAnyRole('INSURER_ADMIN', 'ADMIN')")
+	fun testChatbotProvider(@Valid @RequestBody request: ChatProviderTestRequest): ChatProviderTestResponse =
+		chatService.testProvider(request)
 
 	@Operation(summary = "Apply partial settings updates (insurer admins and admins)")
 	@PutMapping

@@ -4,6 +4,7 @@ import com.britam.insureclaim.claim.ClaimRepository
 import com.britam.insureclaim.common.BusinessRuleException
 import com.britam.insureclaim.common.ForbiddenException
 import com.britam.insureclaim.common.NotFoundException
+import com.britam.insureclaim.common.ValidationException
 import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.security.ChatbotProperties
@@ -176,6 +177,67 @@ class ChatService(
 			.findAll(org.springframework.data.domain.PageRequest.of(0, 50))
 			.content.map { SupportConcernResponse.from(it) }
 
+	/**
+	 * Diagnostic used by the Settings screen: sends a tiny prompt to the chosen
+	 * provider and reports whether the credentials/model actually work. Values
+	 * passed in the request take precedence over stored settings so admins can
+	 * verify a key before saving it. Provider failures are returned as
+	 * `ok = false` rather than thrown, so the UI can show the reason.
+	 */
+	fun testProvider(request: ChatProviderTestRequest): ChatProviderTestResponse {
+		val provider = request.provider?.takeIf { it.isNotBlank() } ?: settingService.chatbotProvider()
+		if (!ChatProviders.ids.contains(provider)) {
+			throw ValidationException("Unknown AI provider: $provider", "UNKNOWN_CHATBOT_PROVIDER")
+		}
+		val model = request.model?.takeIf { it.isNotBlank() }
+			?: ChatProviders.byId(provider)?.defaultModel
+			?: settingService.chatbotModel()
+		val apiKey = request.apiKey?.takeIf { it.isNotBlank() } ?: settingService.chatbotApiKey()
+		if (apiKey.isBlank()) {
+			return ChatProviderTestResponse(
+				ok = false,
+				provider = provider,
+				model = model,
+				latencyMs = 0,
+				message = "Add an API key before testing the connection.",
+			)
+		}
+
+		val systemPrompt = ChatPrompt.system(request.companyInfo ?: settingService.chatbotCompanyInfo())
+		val history = listOf(ChatSender.CUSTOMER to "Reply with the single word: OK")
+		val startedAt = System.nanoTime()
+		return try {
+			val baseUrl = baseUrlFor(provider)
+			val reply = when (provider) {
+				ChatProviders.OPENAI, ChatProviders.CUSTOM ->
+					openAiReply(history, model, TEST_MAX_TOKENS, apiKey, baseUrl, systemPrompt)
+				ChatProviders.GOOGLE ->
+					geminiReply(history, model, TEST_MAX_TOKENS, apiKey, baseUrl, systemPrompt)
+				else ->
+					anthropicReply(history, model, TEST_MAX_TOKENS, apiKey, baseUrl, systemPrompt)
+			}
+			ChatProviderTestResponse(
+				ok = true,
+				provider = provider,
+				model = model,
+				latencyMs = elapsedMs(startedAt),
+				message = "Connected successfully.",
+				reply = reply?.take(MAX_TEST_REPLY),
+			)
+		} catch (e: Exception) {
+			log.warn("Chat provider test failed for $provider/$model", e)
+			ChatProviderTestResponse(
+				ok = false,
+				provider = provider,
+				model = model,
+				latencyMs = elapsedMs(startedAt),
+				message = e.message ?: "The provider could not be reached.",
+			)
+		}
+	}
+
+	private fun elapsedMs(startedAt: Long): Long = (System.nanoTime() - startedAt) / 1_000_000
+
 	// --------------------------------------------------------- internals -----
 
 	private fun requireConversation(conversationId: Long, userId: Long?): ChatConversation {
@@ -231,15 +293,16 @@ class ChatService(
 			.takeLast(MAX_LLM_HISTORY)
 			.filter { it.sender != ChatSender.AGENT }
 			.map { it.sender to it.content }
+		val systemPrompt = ChatPrompt.system(settingService.chatbotCompanyInfo())
 
 		val baseUrl = baseUrlFor(provider)
 		return when (provider) {
 			ChatProviders.OPENAI, ChatProviders.CUSTOM ->
-				openAiReply(history, model, maxTokens, apiKey, baseUrl)
+				openAiReply(history, model, maxTokens, apiKey, baseUrl, systemPrompt)
 			ChatProviders.GOOGLE ->
-				geminiReply(history, model, maxTokens, apiKey, baseUrl)
+				geminiReply(history, model, maxTokens, apiKey, baseUrl, systemPrompt)
 			else ->
-				anthropicReply(history, model, maxTokens, apiKey, baseUrl)
+				anthropicReply(history, model, maxTokens, apiKey, baseUrl, systemPrompt)
 		}
 	}
 
@@ -256,11 +319,12 @@ class ChatService(
 		maxTokens: Int,
 		apiKey: String,
 		baseUrl: String,
+		systemPrompt: String,
 	): String? {
 		val body = objectMapper.createObjectNode().apply {
 			put("model", model)
 			put("max_tokens", maxTokens)
-			put("system", SYSTEM_PROMPT)
+			put("system", systemPrompt)
 			set(
 				"messages",
 				objectMapper.createArrayNode().apply {
@@ -302,6 +366,7 @@ class ChatService(
 		maxTokens: Int,
 		apiKey: String,
 		baseUrl: String,
+		systemPrompt: String,
 	): String? {
 		val body = objectMapper.createObjectNode().apply {
 			put("model", model)
@@ -309,7 +374,7 @@ class ChatService(
 			set(
 				"messages",
 				objectMapper.createArrayNode().apply {
-					addObject().put("role", "system").put("content", SYSTEM_PROMPT)
+					addObject().put("role", "system").put("content", systemPrompt)
 					history.forEach { (sender, text) ->
 						addObject()
 							.put("role", if (sender == ChatSender.CUSTOMER) "user" else "assistant")
@@ -345,6 +410,7 @@ class ChatService(
 		maxTokens: Int,
 		apiKey: String,
 		baseUrl: String,
+		systemPrompt: String,
 	): String? {
 		val body = objectMapper.createObjectNode().apply {
 			set(
@@ -352,7 +418,7 @@ class ChatService(
 				objectMapper.createObjectNode().apply {
 					set(
 						"parts",
-						objectMapper.createArrayNode().apply { addObject().put("text", SYSTEM_PROMPT) },
+						objectMapper.createArrayNode().apply { addObject().put("text", systemPrompt) },
 					)
 				},
 			)
@@ -398,6 +464,8 @@ class ChatService(
 		private const val MODE_DEMO = "demo"
 		private const val MAX_CONCERN_SUMMARY = 500
 		private const val MAX_LLM_HISTORY = 12
+		private const val TEST_MAX_TOKENS = 48
+		private const val MAX_TEST_REPLY = 200
 
 		private const val OPENAI_BASE_URL = "https://api.openai.com"
 		private const val GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com"
@@ -405,14 +473,5 @@ class ChatService(
 		private const val GREETING =
 			"Hello! I'm the Britam claims assistant. I can help with claim updates, payouts, policy cover, " +
 				"KYC verification and garage repairs. What would you like to know?"
-
-		private const val SYSTEM_PROMPT =
-			"You are the Britam motor insurance claims assistant, a friendly and concise support bot. " +
-				"Help customers with claim progress, payouts, policy cover, KYC verification, garage repairs " +
-				"and portal issues. Never invent claim numbers, amounts or dates the user has not given you - " +
-				"ask for a claim number and point them to the portal when you need specific data. " +
-				"When the user reports fraud, wishes to complain, or seems confused or frustrated, say clearly " +
-				"that you have escalated the matter to the relevant Britam team and that someone will follow up. " +
-				"Keep replies under 200 words and end with one question or next step."
 	}
 }
