@@ -91,6 +91,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: '/claims', label: 'Claims', icon: ClaimsIcon },
       { href: '/customers', label: 'Customers', icon: CustomerIcon },
+      { href: '/vehicles', label: 'Vehicles', icon: VehicleIcon },
     ],
   },
   {
@@ -116,6 +117,14 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     ],
   },
 ];
+
+function VehicleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <path d="M5 17H3v-5l2-5h14l2 5v5h-2M5 17h14M5 17v2m14-2v2M3 12h18M7 15h.01M17 15h.01" />
+    </svg>
+  );
+}
 
 const STAFF_ROLES: readonly Role[] = ['AGENT', 'INSURER_ADMIN', 'ADMIN'];
 const ADMIN_ROLES: readonly Role[] = ['INSURER_ADMIN', 'ADMIN'];

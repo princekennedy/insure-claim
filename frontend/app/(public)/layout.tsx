@@ -34,7 +34,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <span>InsureClaim Portal</span>
           </div>
           <div className={styles.footerLinks}>
-            <Link href="/login">File a Claim</Link>
+            <Link href="/customer/claims?newClaim=true">File a Claim</Link>
             <Link href="/login">Track Claim</Link>
             <Link href="/login">Feedback</Link>
             <Link href="/staff/login">Staff Portal</Link>

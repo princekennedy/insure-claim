@@ -12,15 +12,17 @@ import {
   Badge,
   ProgressBar,
   EmptyState,
-  PageLoader,
   Button,
   ChatbotCard,
 } from '@/lib/components/ui';
+import { finishDashboardLoading, startDashboardLoading } from '@/lib/components/ui/login-progress-bar';
 import { getMeSummary, getCurrentUser } from '@/lib/services/auth';
 import { getClaims } from '@/lib/services/claims';
 import { formatCurrency, formatDate } from '@/lib/types/claim';
 import type { CustomerSummary, UserResponse, ClaimSummaryResponse } from '@/lib/types';
 import styles from './dashboard.module.css';
+
+const MIN_LOADING_DURATION_MS = 600;
 
 export default function CustomerDashboardPage() {
   const router = useRouter();
@@ -30,7 +32,10 @@ export default function CustomerDashboardPage() {
   const [recentClaims, setRecentClaims] = useState<ClaimSummaryResponse[]>([]);
 
   useEffect(() => {
+    startDashboardLoading();
+
     async function fetchData() {
+      const startedAt = Date.now();
       try {
         const [summaryData, userData, claimsData] = await Promise.all([
           getMeSummary(),
@@ -43,14 +48,21 @@ export default function CustomerDashboardPage() {
       } catch (error) {
         console.error('Failed to load dashboard:', error);
       } finally {
+        const remainingLoadingTime = MIN_LOADING_DURATION_MS - (Date.now() - startedAt);
+        if (remainingLoadingTime > 0) {
+          await new Promise<void>((resolve) => window.setTimeout(resolve, remainingLoadingTime));
+        }
         setLoading(false);
+        finishDashboardLoading();
       }
     }
     fetchData();
+
+    return finishDashboardLoading;
   }, []);
 
   if (loading) {
-    return <PageLoader message="" />;
+    return null;
   }
 
   return (
@@ -150,7 +162,7 @@ export default function CustomerDashboardPage() {
                 description="Start by filing your first claim to get started."
                 action={{
                   label: 'File your first claim',
-                  onClick: () => router.push('/customer/claims/new'),
+                  onClick: () => router.push('/customer/claims?newClaim=true'),
                 }}
               />
             ) : (

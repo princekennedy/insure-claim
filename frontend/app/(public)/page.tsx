@@ -22,7 +22,7 @@ export default function HomePage() {
               File your claim in minutes, track progress in real-time, and get back on the road faster. Powered by Britam Insurance PLC.
             </p>
             <div className={styles.heroButtons}>
-              <Link href="/login" className={styles.heroCtaButton}>
+              <Link href="/customer/claims?newClaim=true" className={styles.heroCtaButton}>
                 File a Claim Now
               </Link>
             </div>

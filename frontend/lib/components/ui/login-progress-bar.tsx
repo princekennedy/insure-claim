@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import styles from './login-progress-bar.module.css';
 
 const LOGIN_TRANSITION_EVENT = 'insure-claim:login-transition';
+const DASHBOARD_LOADING_START_EVENT = 'insure-claim:dashboard-loading-start';
+const DASHBOARD_LOADING_END_EVENT = 'insure-claim:dashboard-loading-end';
 const VISIBLE_DURATION = 1500;
 const MAX_TRANSITION_DURATION = 15000;
 
@@ -12,9 +14,18 @@ export function startLoginTransition() {
   window.dispatchEvent(new Event(LOGIN_TRANSITION_EVENT));
 }
 
+export function startDashboardLoading() {
+  window.dispatchEvent(new Event(DASHBOARD_LOADING_START_EVENT));
+}
+
+export function finishDashboardLoading() {
+  window.dispatchEvent(new Event(DASHBOARD_LOADING_END_EVENT));
+}
+
 export function LoginTransitionProgress() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [transitionId, setTransitionId] = useState(0);
   const fallbackTimer = useRef<number | null>(null);
 
@@ -32,9 +43,21 @@ export function LoginTransitionProgress() {
       }, MAX_TRANSITION_DURATION);
     }
 
+    function handleDashboardLoadingStart() {
+      setDashboardLoading(true);
+    }
+
+    function handleDashboardLoadingEnd() {
+      setDashboardLoading(false);
+    }
+
     window.addEventListener(LOGIN_TRANSITION_EVENT, handleLoginTransition);
+    window.addEventListener(DASHBOARD_LOADING_START_EVENT, handleDashboardLoadingStart);
+    window.addEventListener(DASHBOARD_LOADING_END_EVENT, handleDashboardLoadingEnd);
     return () => {
       window.removeEventListener(LOGIN_TRANSITION_EVENT, handleLoginTransition);
+      window.removeEventListener(DASHBOARD_LOADING_START_EVENT, handleDashboardLoadingStart);
+      window.removeEventListener(DASHBOARD_LOADING_END_EVENT, handleDashboardLoadingEnd);
       if (fallbackTimer.current !== null) {
         window.clearTimeout(fallbackTimer.current);
       }
@@ -58,7 +81,8 @@ export function LoginTransitionProgress() {
     return () => window.clearTimeout(timer);
   }, [active, pathname]);
 
-  if (!active || (pathname !== '/dashboard' && pathname !== '/customer/dashboard')) {
+  const isDashboardPath = pathname === '/dashboard' || pathname === '/customer/dashboard';
+  if (!isDashboardPath || (!active && !dashboardLoading)) {
     return null;
   }
 

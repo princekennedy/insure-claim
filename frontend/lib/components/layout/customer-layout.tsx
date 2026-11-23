@@ -187,7 +187,7 @@ export function CustomerLayout({ children }: CustomerLayoutProps) {
           </div>
           <div className={styles.headerRight}>
             {pathname === '/customer/dashboard' && (
-              <Link href="/customer/claims/new" className={styles.newClaimButton}>
+              <Link href="/customer/claims?newClaim=true" className={styles.newClaimButton}>
                 <PlusIcon />
                 <span>New Claim</span>
               </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Alert,
@@ -13,18 +13,22 @@ import {
   PageHeader,
   PageLoader,
   Pagination,
+  Select,
 } from '@/lib/components/ui';
 import {
   createUser,
   getUsers,
 } from '@/lib/services/admin';
-import { getAdminPolicies } from '@/lib/services/policies';
+import { createPolicy, getAdminPolicies } from '@/lib/services/policies';
+import { getStaffVehicles } from '@/lib/services/vehicles';
 import type {
   PageResponse,
   UserSummary,
 } from '@/lib/types';
 import type { PolicyAdminResponse } from '@/lib/types/policy';
+import type { VehicleResponse } from '@/lib/types/vehicle';
 import styles from '../management.module.css';
+import customerStyles from './customers.module.css';
 
 const PAGE_SIZE = 20;
 
@@ -40,12 +44,36 @@ interface CreateCustomerFormState {
   nic: string;
 }
 
+interface CreatePolicyFormState {
+  vehicleId: string;
+  policyNumber: string;
+  startDate: string;
+  endDate: string;
+  premiumAmount: string;
+  sumInsured: string;
+  excessAmount: string;
+  insurerName: string;
+  productCode: string;
+}
+
 const EMPTY_CREATE_FORM: CreateCustomerFormState = {
   email: '',
   password: '',
   fullName: '',
   phone: '',
   nic: '',
+};
+
+const EMPTY_POLICY_FORM: CreatePolicyFormState = {
+  vehicleId: '',
+  policyNumber: '',
+  startDate: '',
+  endDate: '',
+  premiumAmount: '',
+  sumInsured: '',
+  excessAmount: '',
+  insurerName: '',
+  productCode: '',
 };
 
 export default function CustomersPage() {
@@ -61,6 +89,16 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false);
 
   const [customerPolicies, setCustomerPolicies] = useState<Record<number, PolicyAdminResponse[]>>({});
+  const [policyCustomer, setPolicyCustomer] = useState<UserSummary | null>(null);
+  const [policyOpen, setPolicyOpen] = useState(false);
+  const [policyForm, setPolicyForm] = useState<CreatePolicyFormState>(EMPTY_POLICY_FORM);
+  const [policyError, setPolicyError] = useState('');
+  const [policySaving, setPolicySaving] = useState(false);
+  const [policyVehicles, setPolicyVehicles] = useState<VehicleResponse[]>([]);
+  const [vehiclesLoading, setVehiclesLoading] = useState(false);
+  const [vehiclesError, setVehiclesError] = useState('');
+  const [notice, setNotice] = useState('');
+  const vehicleRequest = useRef(0);
 
   const loadCustomers = useCallback(async (page: number, filters: CustomerFilters) => {
     setLoading(true);
@@ -107,6 +145,105 @@ export default function CustomersPage() {
     setAppliedFilters({ query: '' });
   }
 
+  async function loadCustomerVehicles(customerId: number) {
+    const requestId = ++vehicleRequest.current;
+    setVehiclesLoading(true);
+    setVehiclesError('');
+    setPolicyVehicles([]);
+    try {
+      const firstPage = await getStaffVehicles(0);
+      const remainingPages = await Promise.all(
+        Array.from(
+          { length: Math.max(0, firstPage.totalPages - 1) },
+          (_, index) => getStaffVehicles(index + 1),
+        ),
+      );
+      if (requestId !== vehicleRequest.current) return;
+      setPolicyVehicles(
+        [firstPage, ...remainingPages]
+          .flatMap((page) => page.content)
+          .filter((entry) => entry.customerId === customerId)
+          .map((entry) => entry.vehicle),
+      );
+    } catch (err) {
+      if (requestId === vehicleRequest.current) {
+        setVehiclesError(err instanceof Error ? err.message : 'Unable to load this customer’s vehicles.');
+      }
+    } finally {
+      if (requestId === vehicleRequest.current) setVehiclesLoading(false);
+    }
+  }
+
+  function openPolicyDialog(customer: UserSummary) {
+    setPolicyCustomer(customer);
+    setPolicyForm(EMPTY_POLICY_FORM);
+    setPolicyError('');
+    setVehiclesError('');
+    setPolicyOpen(true);
+    void loadCustomerVehicles(customer.id);
+  }
+
+  function closePolicyDialog() {
+    if (policySaving) return;
+    vehicleRequest.current++;
+    setPolicyOpen(false);
+    setPolicyCustomer(null);
+  }
+
+  async function handleCreatePolicy(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!policyCustomer) return;
+    const premiumAmount = Number(policyForm.premiumAmount);
+    const sumInsured = Number(policyForm.sumInsured);
+    const excessAmount = policyForm.excessAmount ? Number(policyForm.excessAmount) : 0;
+    const today = new Date();
+    const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    if (!policyForm.vehicleId || !policyForm.startDate || !policyForm.endDate ||
+      !Number.isFinite(premiumAmount) || premiumAmount <= 0 ||
+      !Number.isFinite(sumInsured) || sumInsured <= 0 ||
+      !Number.isFinite(excessAmount) || excessAmount < 0) {
+      setPolicyError('Select a vehicle and enter valid dates, premium, and sum insured.');
+      return;
+    }
+    if (policyForm.endDate < policyForm.startDate) {
+      setPolicyError('The end date cannot be before the start date.');
+      return;
+    }
+    if (policyForm.endDate < todayInput) {
+      setPolicyError('The end date cannot be in the past.');
+      return;
+    }
+
+    setPolicySaving(true);
+    setPolicyError('');
+    try {
+      const created = await createPolicy({
+        customerId: policyCustomer.id,
+        vehicleId: Number(policyForm.vehicleId),
+        policyNumber: policyForm.policyNumber.trim() || undefined,
+        startDate: policyForm.startDate,
+        endDate: policyForm.endDate,
+        premiumAmount,
+        sumInsured,
+        excessAmount,
+        insurerName: policyForm.insurerName.trim() || undefined,
+        productCode: policyForm.productCode.trim() || undefined,
+      });
+      setCustomerPolicies((previous) => ({
+        ...previous,
+        [policyCustomer.id]: [...(previous[policyCustomer.id] ?? []), created],
+      }));
+      setNotice(`Policy ${created.policyNumber} was added for ${policyCustomer.fullName}.`);
+      setPolicyOpen(false);
+      setPolicyCustomer(null);
+    } catch (err) {
+      setPolicyError(err instanceof Error ? err.message : 'The policy could not be created.');
+    } finally {
+      setPolicySaving(false);
+    }
+  }
+
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
@@ -148,6 +285,8 @@ export default function CustomersPage() {
           </Button>
         }
       />
+
+      {notice && <div role="status"><Alert type="success" dismissible onDismiss={() => setNotice('')}>{notice}</Alert></div>}
 
       <form className={styles.filterBar} onSubmit={handleSearch} aria-label="Filter customers">
         <div className={styles.filterField}>
@@ -200,9 +339,20 @@ export default function CustomersPage() {
                     {result.content.map((customer) => (
                       <tr key={customer.id}>
                         <td className={styles.primaryCell}>
-                          <Link className={styles.customerLink} href={`/customers/${customer.id}`}>
-                            {customer.fullName}
-                          </Link>
+                          <div className={customerStyles.customerNameActions}>
+                            <Link className={styles.customerLink} href={`/customers/${customer.id}`}>
+                              {customer.fullName}
+                            </Link>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              onClick={() => openPolicyDialog(customer)}
+                              aria-label={`Add policy for ${customer.fullName}`}
+                            >
+                              Add policy
+                            </Button>
+                          </div>
                         </td>
                         <td>{customer.email}</td>
                         <td>
@@ -290,6 +440,134 @@ export default function CustomersPage() {
             onChange={(event) => setCreateForm((prev) => ({ ...prev, nic: event.target.value }))}
             maxLength={32}
           />
+        </form>
+      </Dialog>
+
+      <Dialog
+        isOpen={policyOpen}
+        onClose={closePolicyDialog}
+        title="Add policy"
+        size="lg"
+        closeOnOverlay={!policySaving}
+        showCloseButton={!policySaving}
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={closePolicyDialog} disabled={policySaving}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="create-policy-form"
+              loading={policySaving}
+              disabled={vehiclesLoading || !!vehiclesError || policyVehicles.length === 0}
+            >
+              Create policy
+            </Button>
+          </>
+        }
+      >
+        <form id="create-policy-form" className={`${styles.dialogForm} ${customerStyles.policyForm}`} onSubmit={handleCreatePolicy} noValidate>
+          {policyCustomer && (
+            <p className={customerStyles.policyIntro}>
+              Create cover for <strong>{policyCustomer.fullName}</strong> · {policyCustomer.email}
+            </p>
+          )}
+          {policyError && <div role="alert"><Alert type="error">{policyError}</Alert></div>}
+          {vehiclesError && (
+            <div role="alert">
+              <Alert type="error">
+                {vehiclesError}{' '}
+                <button type="button" onClick={() => policyCustomer && void loadCustomerVehicles(policyCustomer.id)} disabled={vehiclesLoading || policySaving}>
+                  Retry
+                </button>
+              </Alert>
+            </div>
+          )}
+          <Select
+            label="Customer vehicle *"
+            value={policyForm.vehicleId}
+            onChange={(event) => setPolicyForm((previous) => ({ ...previous, vehicleId: event.target.value }))}
+            options={policyVehicles.map((vehicle) => ({
+              value: String(vehicle.id),
+              label: `${vehicle.registrationNumber} · ${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+            }))}
+            placeholder={vehiclesLoading ? 'Loading customer vehicles…' : 'Select a vehicle'}
+            disabled={vehiclesLoading || !!vehiclesError || policyVehicles.length === 0 || policySaving}
+            required
+          />
+          {!vehiclesLoading && !vehiclesError && policyVehicles.length === 0 && (
+            <p className={customerStyles.policyHelp}>This customer has no registered vehicles to insure.</p>
+          )}
+          <div className={customerStyles.policyGrid}>
+            <Input
+              label="Start date"
+              type="date"
+              value={policyForm.startDate}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, startDate: event.target.value }))}
+              required
+              disabled={policySaving}
+            />
+            <Input
+              label="End date"
+              type="date"
+              value={policyForm.endDate}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, endDate: event.target.value }))}
+              required
+              disabled={policySaving}
+            />
+            <Input
+              label="Premium amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={policyForm.premiumAmount}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, premiumAmount: event.target.value }))}
+              required
+              disabled={policySaving}
+            />
+            <Input
+              label="Sum insured"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={policyForm.sumInsured}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, sumInsured: event.target.value }))}
+              required
+              disabled={policySaving}
+            />
+            <Input
+              label="Excess amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={policyForm.excessAmount}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, excessAmount: event.target.value }))}
+              disabled={policySaving}
+            />
+            <Input
+              label="Policy number"
+              maxLength={48}
+              value={policyForm.policyNumber}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, policyNumber: event.target.value }))}
+              hint="Leave blank to generate a number automatically."
+              disabled={policySaving}
+            />
+            <Input
+              label="Insurer name"
+              maxLength={160}
+              value={policyForm.insurerName}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, insurerName: event.target.value }))}
+              disabled={policySaving}
+            />
+            <Input
+              label="Product code"
+              maxLength={64}
+              value={policyForm.productCode}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, productCode: event.target.value }))}
+              disabled={policySaving}
+            />
+          </div>
+          <p className={customerStyles.policyHelp}>Fields marked * are required. The policy is created as active by default.</p>
         </form>
       </Dialog>
 

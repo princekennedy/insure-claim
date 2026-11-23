@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useId, useRef } from 'react';
 import styles from './dialog.module.css';
 
 interface DialogProps {
@@ -24,23 +24,50 @@ export function Dialog({
   closeOnOverlay = true,
   showCloseButton = true,
 }: DialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  const titleId = useId();
+
   useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
+      'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
+    ) ?? []);
+    (focusable()[0] ?? dialog)?.focus();
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        closeRef.current();
+      } else if (e.key === 'Tab') {
+        const items = focusable();
+        if (!items.length) {
+          e.preventDefault();
+          dialog?.focus();
+        } else if (e.shiftKey && (document.activeElement === items[0] || !dialog?.contains(document.activeElement))) {
+          e.preventDefault();
+          items[items.length - 1].focus();
+        } else if (!e.shiftKey && (document.activeElement === items[items.length - 1] || !dialog?.contains(document.activeElement))) {
+          e.preventDefault();
+          items[0].focus();
+        }
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
+    document.addEventListener('keydown', handleEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -49,14 +76,16 @@ export function Dialog({
   return (
     <div className={styles.overlay} onClick={closeOnOverlay ? onClose : undefined}>
       <div
+        ref={dialogRef}
         className={`${styles.dialog} ${sizeClass}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="dialog-title"
+        aria-labelledby={titleId}
+        tabIndex={-1}
       >
         <div className={styles.header}>
-          <h2 id="dialog-title" className={styles.title}>
+          <h2 id={titleId} className={styles.title}>
             {title}
           </h2>
           {showCloseButton && (

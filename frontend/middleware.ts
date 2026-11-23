@@ -35,6 +35,14 @@ function isCustomerRoute(pathname: string): boolean {
   return customerRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
 }
 
+function getSafeRedirect(path: string | null): string | undefined {
+  if (!path || !path.startsWith('/') || path.startsWith('//') || path.includes('\\')) {
+    return undefined;
+  }
+
+  return path;
+}
+
 // Helper to validate token with backend
 async function validateToken(accessToken: string): Promise<{ valid: boolean; role?: Role }> {
   try {
@@ -72,7 +80,11 @@ export async function middleware(request: NextRequest) {
     if (accessToken && (pathname === '/login' || pathname === '/register' || pathname === '/staff/login')) {
       const validation = await validateToken(accessToken);
       if (validation.valid && validation.role) {
-        const redirectUrl = isStaffRole(validation.role) ? '/dashboard' : '/customer/home';
+        const requestedRedirect = pathname === '/login'
+          ? getSafeRedirect(request.nextUrl.searchParams.get('redirect'))
+          : undefined;
+        const redirectUrl = requestedRedirect
+          || (isStaffRole(validation.role) ? '/dashboard' : '/customer/home');
         return NextResponse.redirect(new URL(redirectUrl, request.url));
       }
     }
@@ -82,7 +94,7 @@ export async function middleware(request: NextRequest) {
   // Protected routes require authentication
   if (!accessToken) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -93,7 +105,10 @@ export async function middleware(request: NextRequest) {
     // Token is invalid: clear cookies and send the user to the login form.
     // The `blocked` flag tells that page we just rejected the session, so it
     // clears any leftover tokens instead of bouncing straight back here.
-    const response = NextResponse.redirect(new URL('/login?blocked=1', request.url));
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('blocked', '1');
+    loginUrl.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
+    const response = NextResponse.redirect(loginUrl);
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     return response;
@@ -104,7 +119,10 @@ export async function middleware(request: NextRequest) {
 
   if (!userRole) {
     // If role is missing, redirect to login
-    const response = NextResponse.redirect(new URL('/login?blocked=1', request.url));
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('blocked', '1');
+    loginUrl.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
+    const response = NextResponse.redirect(loginUrl);
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     return response;

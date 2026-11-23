@@ -1,5 +1,24 @@
 import { request } from './api';
 import type { VehicleRequest, VehicleResponse } from '../types';
+import type { PageResponse } from '../types';
+
+export interface StaffVehicle {
+  vehicle: VehicleResponse;
+  customerId: number;
+  customerName: string;
+  customerEmail: string;
+}
+
+export function getStaffVehicles(page = 0): Promise<PageResponse<StaffVehicle>> {
+  return request<PageResponse<StaffVehicle>>(`/vehicles?page=${page}&size=20`);
+}
+
+export function createCustomerVehicle(customerId: number, data: VehicleRequest): Promise<VehicleResponse> {
+  return request<VehicleResponse>(`/vehicles/customers/${customerId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
 
 export async function getVehicles(): Promise<VehicleResponse[]> {
   return request<VehicleResponse[]>('/me/vehicles');

@@ -21,13 +21,25 @@ function useLocationSearch(): string {
   );
 }
 
+function getSafeRedirect(search: string): string | undefined {
+  const redirect = new URLSearchParams(search).get('redirect');
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//') || redirect.includes('\\')) {
+    return undefined;
+  }
+
+  return redirect;
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const search = useLocationSearch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const blocked = new URLSearchParams(useLocationSearch()).get('blocked') === '1';
+  const searchParams = new URLSearchParams(search);
+  const blocked = searchParams.get('blocked') === '1';
+  const redirectTo = getSafeRedirect(search);
 
   // Two directions bounce between /login and /dashboard:
   //   * this page sends us to the portal whenever a session token exists,
@@ -47,11 +59,11 @@ export default function LoginPage() {
 
     const hasSessionCookie = /(?:^|;\s*)accessToken=/.test(document.cookie);
     if (hasSessionCookie && isAuthenticated()) {
-      router.replace('/dashboard');
+      router.replace(redirectTo || '/dashboard');
     } else if (!hasSessionCookie) {
       clearTokens();
     }
-  }, [router, blocked]);
+  }, [router, blocked, redirectTo]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,8 +73,7 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       startLoginTransition();
-      // Middleware will handle role-based redirect after successful login
-      router.push('/dashboard');
+      router.push(redirectTo || '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {

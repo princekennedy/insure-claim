@@ -39,7 +39,6 @@ export function PageLoader({ message = 'Loading...' }: PageLoaderProps) {
       aria-live="polite"
       aria-label={message ? undefined : 'Loading'}
     >
-      <Spinner size="lg" />
       {message && <p className={styles.message}>{message}</p>}
     </div>
   );

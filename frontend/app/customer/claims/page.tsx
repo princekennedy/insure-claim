@@ -1,14 +1,17 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Badge,
   Button,
+  Dialog,
   EmptyState,
   PageHeader,
   PageLoader,
   ProgressBar,
 } from '@/lib/components/ui';
+import { ClaimSubmissionForm } from '@/lib/components/claims/claim-submission-form';
 import { getMyClaims } from '@/lib/services/claims';
 import {
   CLAIM_STATUS_LABELS,
@@ -32,12 +35,8 @@ const CUSTOMER_CLAIM_STATUSES: CustomerClaimStatus[] = [
   'SUBMITTED',
   'KYC_PENDING',
   'UNDER_REVIEW',
-  'FRAUD_CHECK',
   'APPROVED',
   'REJECTED',
-  'SETTLED',
-  'CLOSED',
-  'WITHDRAWN',
 ];
 
 function customerClaimStatus(status: ClaimStatus): CustomerClaimStatus {
@@ -59,6 +58,7 @@ function statusVariant(status: ClaimStatus): 'success' | 'danger' | 'info' {
 }
 
 export default function CustomerClaimsPage() {
+  const router = useRouter();
   const [claims, setClaims] = useState<ClaimSummaryResponse[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
@@ -69,6 +69,10 @@ export default function CustomerClaimsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryKey, setRetryKey] = useState(0);
+  const [claimFormOpen, setClaimFormOpen] = useState(
+    () => typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('newClaim') === 'true',
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +109,14 @@ export default function CustomerClaimsPage() {
     };
   }, [page, query, retryKey, status]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('newClaim') !== 'true') {
+      return;
+    }
+
+    router.replace('/customer/claims', { scroll: false });
+  }, [router]);
+
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPage(0);
@@ -125,17 +137,13 @@ export default function CustomerClaimsPage() {
       <PageHeader
         title="Claims"
         description="Track the status and progress of your insurance claims."
+        className={styles.pageHeader}
+        actions={
+          <Button onClick={() => setClaimFormOpen(true)}>
+            Apply for a New Claim
+          </Button>
+        }
       />
-
-      <section className={styles.overview} aria-label="Claims overview">
-        <div>
-          <span className={styles.overviewLabel}>Claims found</span>
-          <strong className={styles.overviewValue}>{totalElements}</strong>
-        </div>
-        <span className={styles.overviewNote}>
-          {status ? CLAIM_STATUS_LABELS[status] : 'Across all statuses'}
-        </span>
-      </section>
 
       <div className={styles.toolbar}>
         <form className={styles.searchForm} onSubmit={handleSearch} role="search">
@@ -148,11 +156,30 @@ export default function CustomerClaimsPage() {
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Claim number or vehicle"
           />
-          <Button type="submit" size="sm">Search</Button>
+          <button
+            type="submit"
+            className={styles.searchSubmit}
+            aria-label="Search claims"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
         </form>
 
         <div className={styles.statusFilter}>
-          <label htmlFor="claim-status">Status</label>
+          <label className={styles.srOnly} htmlFor="claim-status">
+            Filter claims by status
+          </label>
           <select
             id="claim-status"
             value={status}
@@ -247,6 +274,24 @@ export default function CustomerClaimsPage() {
           </div>
         </>
       ) : null}
+
+      <Dialog
+        isOpen={claimFormOpen}
+        onClose={() => setClaimFormOpen(false)}
+        title="Apply for a New Claim"
+        size="lg"
+      >
+        {claimFormOpen && (
+          <ClaimSubmissionForm
+            onSuccess={() => {
+              setClaimFormOpen(false);
+              setPage(0);
+              setRetryKey((key) => key + 1);
+            }}
+            onAddVehicle={() => router.push('/vehicles')}
+          />
+        )}
+      </Dialog>
     </div>
   );
 }
