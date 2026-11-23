@@ -160,12 +160,24 @@ export default function DashboardPage() {
           <CardContent>
             {recentClaims.length === 0 ? (
               <EmptyState
-                title="You haven't filed any claims yet"
-                description="Start by filing your first claim to get started."
-                action={{
-                  label: 'File your first claim',
-                  onClick: () => router.push('/claims/new'),
-                }}
+                title={
+                  user?.role === 'CUSTOMER'
+                    ? "You haven't filed any claims yet"
+                    : 'No recent claims submitted'
+                }
+                description={
+                  user?.role === 'CUSTOMER'
+                    ? 'Start by filing your first claim to get started.'
+                    : undefined
+                }
+                action={
+                  user?.role === 'CUSTOMER'
+                    ? {
+                        label: 'File your first claim',
+                        onClick: () => router.push('/claims/new'),
+                      }
+                    : undefined
+                }
               />
             ) : (
               <>

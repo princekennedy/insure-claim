@@ -17,7 +17,7 @@ import {
 import { deleteUser, getUser, setUserEnabled, updateUser } from '@/lib/services/admin';
 import { getClaims } from '@/lib/services/claims';
 import { getCustomerKycVerifications } from '@/lib/services/kyc';
-import { getAdminPolicies } from '@/lib/services/policies';
+import { getAdminPolicies, updatePolicy } from '@/lib/services/policies';
 import type { ClaimSummaryResponse, KycVerificationResponse, PolicyAdminResponse, UserDetail } from '@/lib/types';
 import { formatCurrency, formatDateTime } from '@/lib/types/claim';
 import { KYC_STATUS_LABELS } from '@/lib/types/kyc';
@@ -64,6 +64,10 @@ export default function CustomerDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<EditFormState>({ fullName: '', phone: '', nic: '' });
   const [editError, setEditError] = useState('');
+  const [insuredPolicy, setInsuredPolicy] = useState<PolicyAdminResponse | null>(null);
+  const [sumInsured, setSumInsured] = useState('');
+  const [insuredError, setInsuredError] = useState('');
+  const [insuredSaving, setInsuredSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,6 +159,27 @@ export default function CustomerDetailPage() {
       setEditError(errorMessage(err));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSetSumInsured(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!insuredPolicy) return;
+    const amount = Number(sumInsured);
+    if (!/^\d{1,12}(\.\d{1,2})?$/.test(sumInsured) || !Number.isFinite(amount) || amount <= 0) {
+      setInsuredError('Enter a valid sum insured greater than zero.');
+      return;
+    }
+    setInsuredSaving(true);
+    setInsuredError('');
+    try {
+      const updated = await updatePolicy(insuredPolicy.id, { sumInsured: amount });
+      setPolicies((previous) => previous.map((policy) => policy.id === updated.id ? updated : policy));
+      setInsuredPolicy(null);
+    } catch (err) {
+      setInsuredError(errorMessage(err));
+    } finally {
+      setInsuredSaving(false);
     }
   }
 
@@ -279,7 +304,7 @@ export default function CustomerDetailPage() {
               <div className={styles.tableScroll}>
                 <table className={styles.table}>
                   <caption className="sr-only">Customer policies</caption>
-                  <thead><tr><th>Policy</th><th>Product</th><th>Vehicle</th><th>Status</th><th>Coverage dates</th><th>Premium</th></tr></thead>
+                  <thead><tr><th>Policy</th><th>Product</th><th>Vehicle</th><th>Status</th><th>Coverage dates</th><th>Premium</th><th>Sum insured</th></tr></thead>
                   <tbody>
                     {policies.map((policy) => (
                       <tr key={policy.id}>
@@ -289,6 +314,15 @@ export default function CustomerDetailPage() {
                         <td><Badge variant={policy.isCurrentlyValid ? 'success' : 'warning'}>{policy.status}</Badge></td>
                         <td>{formatDateTime(policy.startDate)} to {formatDateTime(policy.endDate)}</td>
                         <td>{formatCurrency(policy.premiumAmount)}</td>
+                        <td>
+                          {policy.sumInsured == null ? (
+                            <Button type="button" size="sm" onClick={() => {
+                              setSumInsured('');
+                              setInsuredError('');
+                              setInsuredPolicy(policy);
+                            }}>Set sum insured</Button>
+                          ) : formatCurrency(policy.sumInsured)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -297,6 +331,26 @@ export default function CustomerDetailPage() {
             </Card>
           )
         )}
+
+        <Dialog
+          isOpen={insuredPolicy !== null}
+          onClose={() => { if (!insuredSaving) setInsuredPolicy(null); }}
+          title="Set sum insured"
+          closeOnOverlay={!insuredSaving}
+          showCloseButton={!insuredSaving}
+          footer={(
+            <>
+              <Button type="button" variant="secondary" disabled={insuredSaving} onClick={() => setInsuredPolicy(null)}>Cancel</Button>
+              <Button type="submit" form="set-sum-insured-form" loading={insuredSaving}>Save</Button>
+            </>
+          )}
+        >
+          <form id="set-sum-insured-form" className={styles.dialogForm} onSubmit={handleSetSumInsured}>
+            {insuredError && <Alert type="error">{insuredError}</Alert>}
+            <Input label="Sum insured" type="number" min="0.01" max="999999999999.99" step="0.01"
+              value={sumInsured} onChange={(event) => setSumInsured(event.target.value)} disabled={insuredSaving} required />
+          </form>
+        </Dialog>
 
         {tab === 'claims' && (
           tabErrors.claims ? <Alert type="error">{tabErrors.claims}</Alert> : claims.length === 0 ? (

@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Alert, Button, Card, Dialog, EmptyState, Input, PageHeader, PageLoader, Pagination, Select } from '@/lib/components/ui';
 import { getUsers } from '@/lib/services/admin';
-import { createCustomerVehicle, getStaffVehicles, type StaffVehicle } from '@/lib/services/vehicles';
+import { createCustomerVehicle, getCustomerVehicles, type CustomerVehicle } from '@/lib/services/vehicles';
 import type { PageResponse, UserSummary } from '@/lib/types';
 import styles from '../management.module.css';
 import vehicleStyles from './vehicles.module.css';
@@ -12,7 +12,7 @@ import vehicleStyles from './vehicles.module.css';
 const EMPTY_FORM = { customerId: '', registrationNumber: '', make: '', model: '', year: '', color: '', chassisNumber: '', engineNumber: '' };
 
 export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState<PageResponse<StaffVehicle> | null>(null);
+  const [vehicles, setVehicles] = useState<PageResponse<CustomerVehicle> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -31,7 +31,7 @@ export default function VehiclesPage() {
     setLoading(true);
     setError('');
     try {
-      setVehicles(await getStaffVehicles(page));
+      setVehicles(await getCustomerVehicles(page));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load vehicles.');
     } finally {
@@ -168,7 +168,6 @@ export default function VehiclesPage() {
             <Input label="Chassis number" maxLength={64} value={form.chassisNumber} disabled={saving} onChange={(e) => setForm({ ...form, chassisNumber: e.target.value })} />
             <Input label="Engine number" maxLength={64} value={form.engineNumber} disabled={saving} onChange={(e) => setForm({ ...form, engineNumber: e.target.value })} />
           </div>
-          <p className={vehicleStyles.help}>Fields marked * are required.</p>
         </form>
       </Dialog>
     </section>

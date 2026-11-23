@@ -28,7 +28,7 @@ export interface PolicyResponse {
   startDate: string;
   endDate: string;
   premiumAmount: number;
-  sumInsured: number;
+  sumInsured?: number | null;
   excessAmount: number;
   status: string;
   vehicle: import('./vehicle').VehicleResponse;

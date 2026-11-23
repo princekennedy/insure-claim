@@ -77,7 +77,7 @@ export default function CustomerPoliciesPage() {
                 <div className={styles.amountsGrid}>
                   <div className={styles.amountItem}>
                     <span className={styles.amountLabel}>Sum Insured</span>
-                    <span className={styles.amountValue}>{formatCurrency(policy.sumInsured)}</span>
+                    <span className={styles.amountValue}>{policy.sumInsured == null ? 'Not specified' : formatCurrency(policy.sumInsured)}</span>
                   </div>
                   <div className={styles.amountItem}>
                     <span className={styles.amountLabel}>Annual Premium</span>

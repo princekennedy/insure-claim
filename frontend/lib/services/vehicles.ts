@@ -2,15 +2,15 @@ import { request } from './api';
 import type { VehicleRequest, VehicleResponse } from '../types';
 import type { PageResponse } from '../types';
 
-export interface StaffVehicle {
+export interface CustomerVehicle {
   vehicle: VehicleResponse;
   customerId: number;
   customerName: string;
   customerEmail: string;
 }
 
-export function getStaffVehicles(page = 0): Promise<PageResponse<StaffVehicle>> {
-  return request<PageResponse<StaffVehicle>>(`/vehicles?page=${page}&size=20`);
+export function getCustomerVehicles(page = 0): Promise<PageResponse<CustomerVehicle>> {
+  return request<PageResponse<CustomerVehicle>>(`/vehicles?page=${page}&size=20`);
 }
 
 export function createCustomerVehicle(customerId: number, data: VehicleRequest): Promise<VehicleResponse> {

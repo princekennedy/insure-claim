@@ -20,7 +20,8 @@ import {
   getUsers,
 } from '@/lib/services/admin';
 import { createPolicy, getAdminPolicies } from '@/lib/services/policies';
-import { getStaffVehicles } from '@/lib/services/vehicles';
+import { getCustomerVehicles } from '@/lib/services/vehicles';
+import { oneYearAfter } from '@/lib/policy-dates';
 import type {
   PageResponse,
   UserSummary,
@@ -50,9 +51,6 @@ interface CreatePolicyFormState {
   startDate: string;
   endDate: string;
   premiumAmount: string;
-  sumInsured: string;
-  excessAmount: string;
-  insurerName: string;
   productCode: string;
 }
 
@@ -70,9 +68,6 @@ const EMPTY_POLICY_FORM: CreatePolicyFormState = {
   startDate: '',
   endDate: '',
   premiumAmount: '',
-  sumInsured: '',
-  excessAmount: '',
-  insurerName: '',
   productCode: '',
 };
 
@@ -151,11 +146,11 @@ export default function CustomersPage() {
     setVehiclesError('');
     setPolicyVehicles([]);
     try {
-      const firstPage = await getStaffVehicles(0);
+      const firstPage = await getCustomerVehicles(0);
       const remainingPages = await Promise.all(
         Array.from(
           { length: Math.max(0, firstPage.totalPages - 1) },
-          (_, index) => getStaffVehicles(index + 1),
+          (_, index) => getCustomerVehicles(index + 1),
         ),
       );
       if (requestId !== vehicleRequest.current) return;
@@ -194,20 +189,18 @@ export default function CustomersPage() {
     event.preventDefault();
     if (!policyCustomer) return;
     const premiumAmount = Number(policyForm.premiumAmount);
-    const sumInsured = Number(policyForm.sumInsured);
-    const excessAmount = policyForm.excessAmount ? Number(policyForm.excessAmount) : 0;
     const today = new Date();
     const todayInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    if (!policyForm.vehicleId || !policyForm.startDate || !policyForm.endDate ||
-      !Number.isFinite(premiumAmount) || premiumAmount <= 0 ||
-      !Number.isFinite(sumInsured) || sumInsured <= 0 ||
-      !Number.isFinite(excessAmount) || excessAmount < 0) {
-      setPolicyError('Select a vehicle and enter valid dates, premium, and sum insured.');
+    if (!policyForm.vehicleId || !policyForm.policyNumber.trim() || !policyForm.productCode ||
+      !policyForm.startDate || !policyForm.endDate ||
+      !/^\d{1,10}(\.\d{1,2})?$/.test(policyForm.premiumAmount) ||
+      !Number.isFinite(premiumAmount) || premiumAmount <= 0) {
+      setPolicyError('Select a vehicle and insurance type, and enter the policy number, dates, and a valid premium.');
       return;
     }
-    if (policyForm.endDate < policyForm.startDate) {
-      setPolicyError('The end date cannot be before the start date.');
+    if (!oneYearAfter(policyForm.startDate) || policyForm.endDate !== oneYearAfter(policyForm.startDate)) {
+      setPolicyError('The end date must be one year after the start date.');
       return;
     }
     if (policyForm.endDate < todayInput) {
@@ -221,14 +214,11 @@ export default function CustomersPage() {
       const created = await createPolicy({
         customerId: policyCustomer.id,
         vehicleId: Number(policyForm.vehicleId),
-        policyNumber: policyForm.policyNumber.trim() || undefined,
+        policyNumber: policyForm.policyNumber.trim(),
         startDate: policyForm.startDate,
         endDate: policyForm.endDate,
         premiumAmount,
-        sumInsured,
-        excessAmount,
-        insurerName: policyForm.insurerName.trim() || undefined,
-        productCode: policyForm.productCode.trim() || undefined,
+        productCode: policyForm.productCode,
       });
       setCustomerPolicies((previous) => ({
         ...previous,
@@ -484,7 +474,7 @@ export default function CustomersPage() {
             </div>
           )}
           <Select
-            label="Customer vehicle *"
+            label="Vehicle model and registration number *"
             value={policyForm.vehicleId}
             onChange={(event) => setPolicyForm((previous) => ({ ...previous, vehicleId: event.target.value }))}
             options={policyVehicles.map((vehicle) => ({
@@ -496,14 +486,19 @@ export default function CustomersPage() {
             required
           />
           {!vehiclesLoading && !vehiclesError && policyVehicles.length === 0 && (
-            <p className={customerStyles.policyHelp}>This customer has no registered vehicles to insure.</p>
+            <p className={customerStyles.policyHelp}>This customer has no registered vehicles to insure. Add one on the <Link href="/vehicles">vehicles page</Link> first.</p>
           )}
           <div className={customerStyles.policyGrid}>
             <Input
               label="Start date"
               type="date"
+              max="9998-12-31"
               value={policyForm.startDate}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, startDate: event.target.value }))}
+              onChange={(event) => setPolicyForm((previous) => ({
+                ...previous,
+                startDate: event.target.value,
+                endDate: event.target.value ? oneYearAfter(event.target.value) : '',
+              }))}
               required
               disabled={policySaving}
             />
@@ -512,6 +507,18 @@ export default function CustomersPage() {
               type="date"
               value={policyForm.endDate}
               onChange={(event) => setPolicyForm((previous) => ({ ...previous, endDate: event.target.value }))}
+              required
+              disabled={policySaving}
+            />
+            <Select
+              label="Vehicle insurance type *"
+              value={policyForm.productCode}
+              onChange={(event) => setPolicyForm((previous) => ({ ...previous, productCode: event.target.value }))}
+              options={[
+                { value: 'MOTOR_THIRD_PARTY', label: 'Third party' },
+                { value: 'MOTOR_COMPREHENSIVE', label: 'Comprehensive' },
+              ]}
+              placeholder="Select insurance type"
               required
               disabled={policySaving}
             />
@@ -526,48 +533,14 @@ export default function CustomersPage() {
               disabled={policySaving}
             />
             <Input
-              label="Sum insured"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={policyForm.sumInsured}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, sumInsured: event.target.value }))}
-              required
-              disabled={policySaving}
-            />
-            <Input
-              label="Excess amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={policyForm.excessAmount}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, excessAmount: event.target.value }))}
-              disabled={policySaving}
-            />
-            <Input
               label="Policy number"
               maxLength={48}
               value={policyForm.policyNumber}
               onChange={(event) => setPolicyForm((previous) => ({ ...previous, policyNumber: event.target.value }))}
-              hint="Leave blank to generate a number automatically."
-              disabled={policySaving}
-            />
-            <Input
-              label="Insurer name"
-              maxLength={160}
-              value={policyForm.insurerName}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, insurerName: event.target.value }))}
-              disabled={policySaving}
-            />
-            <Input
-              label="Product code"
-              maxLength={64}
-              value={policyForm.productCode}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, productCode: event.target.value }))}
+              required
               disabled={policySaving}
             />
           </div>
-          <p className={customerStyles.policyHelp}>Fields marked * are required. The policy is created as active by default.</p>
         </form>
       </Dialog>
 
