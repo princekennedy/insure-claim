@@ -38,7 +38,6 @@ data class CreatePolicyRequest(
 	@field:DecimalMin(value = "0.01")
 	val premiumAmount: BigDecimal? = null,
 
-	@field:NotNull
 	@field:DecimalMin(value = "0.01")
 	val sumInsured: BigDecimal? = null,
 
@@ -58,6 +57,7 @@ data class CreatePolicyRequest(
 data class UpdatePolicyRequest(
 	val endDate: LocalDate? = null,
 	val premiumAmount: BigDecimal? = null,
+	@field:DecimalMin(value = "0.01")
 	val sumInsured: BigDecimal? = null,
 	val excessAmount: BigDecimal? = null,
 	val status: PolicyStatus? = null,
@@ -73,7 +73,7 @@ data class PolicyAdminResponse(
 	val startDate: LocalDate,
 	val endDate: LocalDate,
 	val premiumAmount: BigDecimal,
-	val sumInsured: BigDecimal,
+	val sumInsured: BigDecimal?,
 	val excessAmount: BigDecimal,
 	val status: String,
 	val vehicle: VehicleResponse,

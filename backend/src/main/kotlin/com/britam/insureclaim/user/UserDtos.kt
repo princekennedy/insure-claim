@@ -174,7 +174,7 @@ data class PolicyResponse(
 	val startDate: LocalDate,
 	val endDate: LocalDate,
 	val premiumAmount: BigDecimal,
-	val sumInsured: BigDecimal,
+	val sumInsured: BigDecimal?,
 	val excessAmount: BigDecimal,
 	val status: String,
 	val vehicle: VehicleResponse,

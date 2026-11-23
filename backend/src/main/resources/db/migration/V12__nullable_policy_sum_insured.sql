@@ -1,0 +1,1 @@
+ALTER TABLE policies ALTER COLUMN sum_insured DROP NOT NULL;

@@ -69,7 +69,7 @@ class PolicyService(
 			this.startDate = startDate
 			this.endDate = endDate
 			premiumAmount = request.premiumAmount!!
-			sumInsured = request.sumInsured!!
+			sumInsured = request.sumInsured
 			excessAmount = request.excessAmount ?: java.math.BigDecimal.ZERO
 			this.status = status
 		}

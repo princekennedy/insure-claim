@@ -60,8 +60,8 @@ class Policy(
 	@Column(name = "premium_amount", nullable = false, precision = 12, scale = 2)
 	var premiumAmount: BigDecimal = BigDecimal.ZERO,
 
-	@Column(name = "sum_insured", nullable = false, precision = 14, scale = 2)
-	var sumInsured: BigDecimal = BigDecimal.ZERO,
+	@Column(name = "sum_insured", precision = 14, scale = 2)
+	var sumInsured: BigDecimal? = null,
 
 	@Column(name = "excess_amount", nullable = false, precision = 12, scale = 2)
 	var excessAmount: BigDecimal = BigDecimal.ZERO,

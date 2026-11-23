@@ -331,14 +331,19 @@ class ClaimService(
 		val amount = request.approvedAmount
 			?: claim.estimatedAmount
 			?: throw BusinessRuleException("An approved amount is required to approve a claim", "APPROVED_AMOUNT_REQUIRED")
-		claim.approvedAmount = amount
-		request.excessPaid?.let { claim.excessPaid = it }
-		if (claim.approvedAmount!! > claim.policy.sumInsured) {
+		val sumInsured = claim.policy.sumInsured
+			?: throw BusinessRuleException(
+				"Set the policy's sum insured before approving a claim",
+				"POLICY_SUM_INSURED_REQUIRED",
+			)
+		if (amount > sumInsured) {
 			throw BusinessRuleException(
-				"Approved amount cannot exceed the insured value ${claim.policy.sumInsured}",
+				"Approved amount cannot exceed the insured value $sumInsured",
 				"APPROVED_AMOUNT_EXCEEDS_SUM_INSURED",
 			)
 		}
+		claim.approvedAmount = amount
+		request.excessPaid?.let { claim.excessPaid = it }
 	}
 
 	private fun applyRejection(claim: Claim, request: UpdateClaimStatusRequest) {

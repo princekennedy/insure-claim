@@ -93,7 +93,7 @@ class FraudDetectionService(
 	private fun evaluateAmount(claim: Claim): FraudSignal? {
 		val estimated = claim.estimatedAmount ?: return null
 		val sumInsured = claim.policy.sumInsured
-		if (sumInsured > BigDecimal.ZERO && estimated > sumInsured) {
+		if (sumInsured != null && sumInsured > BigDecimal.ZERO && estimated > sumInsured) {
 			return FraudSignal(
 				ruleCode = "AMOUNT_EXCEEDS_SUM_INSURED",
 				category = FraudCategory.AMOUNT,
