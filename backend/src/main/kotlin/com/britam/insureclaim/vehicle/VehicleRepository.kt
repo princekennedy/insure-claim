@@ -11,7 +11,7 @@ import java.util.Optional
 interface VehicleRepository : JpaRepository<Vehicle, Long> {
 
 	@EntityGraph(attributePaths = ["owner"])
-	override fun findAll(pageable: Pageable): Page<Vehicle>
+	fun findByOwnerRole(role: String, pageable: Pageable): Page<Vehicle>
 
 	fun findByOwnerId(ownerId: Long): List<Vehicle>
 

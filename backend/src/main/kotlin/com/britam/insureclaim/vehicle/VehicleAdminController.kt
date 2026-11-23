@@ -2,6 +2,7 @@ package com.britam.insureclaim.vehicle
 
 import com.britam.insureclaim.common.Auditable
 import com.britam.insureclaim.common.PageResponse
+import com.britam.insureclaim.role.Role
 import com.britam.insureclaim.user.UserAccountService
 import com.britam.insureclaim.user.VehicleRequest
 import com.britam.insureclaim.user.VehicleResponse
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-data class StaffVehicleResponse(
+data class CustomerVehicleResponse(
 	val vehicle: VehicleResponse,
 	val customerId: Long,
 	val customerName: String,
@@ -39,12 +40,13 @@ class VehicleAdminController(
 	fun list(
 		@RequestParam(defaultValue = "0") page: Int,
 		@RequestParam(defaultValue = "20") size: Int,
-	): PageResponse<StaffVehicleResponse> {
-		val vehicles = vehicleRepository.findAll(
+	): PageResponse<CustomerVehicleResponse> {
+		val vehicles = vehicleRepository.findByOwnerRole(
+			Role.CUSTOMER.code,
 			PageRequest.of(page.coerceAtLeast(0), size.coerceIn(1, 100), Sort.by("registrationNumber")),
 		)
 		return PageResponse.map(vehicles) {
-			StaffVehicleResponse(VehicleResponse.from(it), it.owner.id!!, it.owner.fullName, it.owner.email)
+			CustomerVehicleResponse(VehicleResponse.from(it), it.owner.id!!, it.owner.fullName, it.owner.email)
 		}
 	}
 
