@@ -75,7 +75,10 @@ class AuthController(
 
 	@Operation(summary = "Return the currently authenticated account")
 	@GetMapping("/me")
-	fun me(): UserResponse = UserResponse.from(authService.findById(currentUser.requireId()))
+	fun me(): UserResponse {
+		val user = authService.findById(currentUser.requireId())
+		return UserResponse.from(user, authService.permissionsFor(user.role))
+	}
 
 	@Operation(summary = "Change the signed-in user's password")
 	@PostMapping("/change-password")

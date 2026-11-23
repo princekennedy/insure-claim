@@ -16,9 +16,23 @@ import {
   PasswordInput,
   Select,
 } from '@/lib/components/ui';
-import { getChatbotProviders, getSettings, updateSettings } from '@/lib/services/settings';
-import type { ChatbotProvider, SettingGroup, SettingsResponse } from '@/lib/types';
+import {
+  getChatbotProviders,
+  getSettings,
+  testChatbotProvider,
+  updateSettings,
+} from '@/lib/services/settings';
+import { getCurrentUser } from '@/lib/services/auth';
+import type {
+  ChatbotProvider,
+  ChatbotTestResult,
+  SettingGroup,
+  SettingsResponse,
+} from '@/lib/types';
+import { KnowledgeBasePanel } from './knowledge-base-panel';
 import styles from './settings.module.css';
+
+const KNOWLEDGE_TAB = 'knowledge';
 
 const GROUP_META: Record<string, { title: string; description: string }> = {
   chatbot: {
@@ -101,8 +115,13 @@ export default function SettingsPage() {
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
   const [savedGroup, setSavedGroup] = useState<string | null>(null);
   const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
-  const [activeGroup, setActiveGroup] = useState('');
+  const [activeTab, setActiveTab] = useState('');
   const [providers, setProviders] = useState<ChatbotProvider[]>([]);
+  const [canReadKnowledge, setCanReadKnowledge] = useState(false);
+  const [canManageKnowledge, setCanManageKnowledge] = useState(false);
+  const [testingChatbot, setTestingChatbot] = useState(false);
+  const [chatbotTest, setChatbotTest] = useState<ChatbotTestResult | null>(null);
+  const [chatbotTestError, setChatbotTestError] = useState('');
 
   const loadSettings = useCallback(async () => {
     try {
@@ -136,9 +155,35 @@ export default function SettingsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const user = await getCurrentUser();
+        if (cancelled) return;
+        const permissions = user.permissions ?? [];
+        setCanReadKnowledge(
+          user.role === 'ADMIN' ||
+            permissions.includes('KNOWLEDGE_READ') ||
+            permissions.includes('KNOWLEDGE_MANAGE'),
+        );
+        setCanManageKnowledge(
+          user.role === 'ADMIN' || permissions.includes('KNOWLEDGE_MANAGE'),
+        );
+      } catch {
+        // The settings request already surfaces authentication/authorization failures.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function setValue(draftKey: string, value: string) {
     setDraft((prev) => ({ ...prev, [draftKey]: value }));
     setSavedGroup(null);
+    setChatbotTest(null);
+    setChatbotTestError('');
   }
 
   function handleProviderChange(nextId: string) {
@@ -197,8 +242,30 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleTestChatbot() {
+    setTestingChatbot(true);
+    setChatbotTest(null);
+    setChatbotTestError('');
+    try {
+      const result = await testChatbotProvider({
+        provider: draft['chatbot.provider'],
+        model: draft['chatbot.model'],
+        apiKey: draft['chatbot.api_key'],
+      });
+      setChatbotTest(result);
+    } catch (err) {
+      setChatbotTestError(
+        err instanceof Error ? err.message : 'The connection test could not be completed.',
+      );
+    } finally {
+      setTestingChatbot(false);
+    }
+  }
+
   const groups = response?.groups ?? [];
-  const activeGroupData = groups.find((g) => g.group === activeGroup) ?? groups[0];
+  const activeGroupData = groups.find((g) => g.group === activeTab) ?? groups[0];
+  const currentTab = activeTab || activeGroupData?.group || '';
+  const showingKnowledge = currentTab === KNOWLEDGE_TAB && canReadKnowledge;
   const activeMeta = activeGroupData
     ? GROUP_META[activeGroupData.group] ?? { title: activeGroupData.group, description: '' }
     : null;
@@ -230,7 +297,7 @@ export default function SettingsPage() {
         <>
           <div className={styles.tabs} role="tablist" aria-label="Settings sections">
             {groups.map((group) => {
-              const isActive = group.group === activeGroupData.group;
+              const isActive = group.group === currentTab;
               return (
                 <button
                   key={group.group}
@@ -240,15 +307,37 @@ export default function SettingsPage() {
                   aria-selected={isActive}
                   aria-controls={`panel-${group.group}`}
                   className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                  onClick={() => setActiveGroup(group.group)}
+                  onClick={() => setActiveTab(group.group)}
                 >
                   {GROUP_META[group.group]?.title ?? group.group}
                 </button>
               );
             })}
+            {canReadKnowledge && (
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${KNOWLEDGE_TAB}`}
+                aria-selected={currentTab === KNOWLEDGE_TAB}
+                aria-controls={`panel-${KNOWLEDGE_TAB}`}
+                className={`${styles.tab} ${currentTab === KNOWLEDGE_TAB ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(KNOWLEDGE_TAB)}
+              >
+                Knowledge base
+              </button>
+            )}
           </div>
 
-          {activeGroupData && activeMeta && (
+          {showingKnowledge ? (
+            <div
+              className={styles.tabPanel}
+              role="tabpanel"
+              id={`panel-${KNOWLEDGE_TAB}`}
+              aria-labelledby={`tab-${KNOWLEDGE_TAB}`}
+            >
+              <KnowledgeBasePanel canManage={canManageKnowledge} />
+            </div>
+          ) : activeGroupData && activeMeta && (
             <div
               key={activeGroupData.group}
               className={styles.tabPanel}
@@ -383,9 +472,38 @@ export default function SettingsPage() {
                         Saved. New values apply to the next request.
                       </Alert>
                     )}
+                    {activeGroupData.group === 'chatbot' && chatbotTestError && (
+                      <Alert type="error" className={styles.groupError}>
+                        {chatbotTestError}
+                      </Alert>
+                    )}
+                    {activeGroupData.group === 'chatbot' && chatbotTest && (
+                      <Alert
+                        type={chatbotTest.ok ? 'success' : 'error'}
+                        className={styles.groupError}
+                        dismissible
+                        onDismiss={() => setChatbotTest(null)}
+                      >
+                        {chatbotTest.ok
+                          ? `Connected to ${chatbotTest.provider} · ${chatbotTest.model} in ${chatbotTest.latencyMs} ms.${
+                              chatbotTest.reply ? ` Reply: “${chatbotTest.reply}”` : ''
+                            }`
+                          : `Connection failed: ${chatbotTest.message}`}
+                      </Alert>
+                    )}
                   </CardContent>
                   <CardFooter className={styles.footer}>
                     <span className={styles.footerActions}>
+                      {activeGroupData.group === 'chatbot' && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => void handleTestChatbot()}
+                          loading={testingChatbot}
+                        >
+                          Test connection
+                        </Button>
+                      )}
                       <Button type="submit" loading={activeIsSaving}>
                         Save {activeMeta.title.toLowerCase()}
                       </Button>

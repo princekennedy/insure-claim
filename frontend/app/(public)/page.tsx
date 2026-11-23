@@ -65,6 +65,7 @@ export default function HomePage() {
           </div>
           <div className={styles.heroRight}>
             <ChatbotCard
+              className={styles.heroChatbot}
               onOpenChat={() => console.log('Chat opened')}
             />
           </div>

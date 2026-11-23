@@ -108,3 +108,22 @@ data class CreateConversationRequest(
 data class SendMessageRequest(
 	@field:NotBlank @field:Size(max = 4000) val content: String,
 )
+
+@Schema(name = "ChatProviderTestRequest", description = "Values to test; blank fields fall back to the stored settings")
+data class ChatProviderTestRequest(
+	val provider: String? = null,
+	val model: String? = null,
+	@param:Schema(description = "Draft API key to verify before saving; blank uses the stored key")
+	val apiKey: String? = null,
+)
+
+@Schema(name = "ChatProviderTestResult", description = "Outcome of a provider connectivity test")
+data class ChatProviderTestResponse(
+	val ok: Boolean,
+	val provider: String,
+	val model: String,
+	val latencyMs: Long,
+	val message: String,
+	@param:Schema(description = "Short reply returned by the model when the test succeeded")
+	val reply: String? = null,
+)

@@ -48,6 +48,11 @@
   max-width: 450px;
 }
 
+.heroChatbot {
+  --chatbot-card-height: 440px;
+  --chatbot-card-height-desktop: 560px;
+}
+
 .heroBadge {
   display: inline-flex;
   align-items: center;

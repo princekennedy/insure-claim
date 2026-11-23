@@ -39,7 +39,7 @@ data class SettingsResponse(val groups: List<SettingGroupResponse>)
 @Schema(name = "SettingUpdate", description = "A single key and its new value")
 data class SettingUpdateRequest(
 	@field:NotBlank @field:Size(max = 64) val key: String,
-	@field:Size(max = 2000) val value: String = "",
+	@field:Size(max = 20000) val value: String = "",
 )
 
 data class SettingGroupUpdateRequest(
@@ -287,7 +287,7 @@ class SettingService(
 		private const val CHATBOT = "chatbot"
 		private const val CLAIMS = "claims"
 		private const val FRAUD = "fraud"
-		private const val MAX_VALUE_LENGTH = 2000
+		private const val MAX_VALUE_LENGTH = 20000
 
 		private val booleanRule: (String) -> String? = { value ->
 			if (value.equals("true", ignoreCase = true) || value.equals("false", ignoreCase = true)) {

@@ -76,9 +76,11 @@ data class UserResponse(
 	val enabled: Boolean,
 	val initials: String,
 	val lastLoginAt: Instant?,
+	@param:Schema(description = "Permission codes granted by the account's role")
+	val permissions: List<String> = emptyList(),
 ) {
 	companion object {
-		fun from(user: User): UserResponse = UserResponse(
+		fun from(user: User, permissions: List<String> = emptyList()): UserResponse = UserResponse(
 			id = user.id ?: 0L,
 			email = user.email,
 			fullName = user.fullName,
@@ -89,6 +91,7 @@ data class UserResponse(
 			enabled = user.enabled,
 			initials = user.initials(),
 			lastLoginAt = user.lastLoginAt,
+			permissions = permissions,
 		)
 	}
 }
