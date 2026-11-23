@@ -90,6 +90,13 @@ class KycReviewController(
 		@RequestParam(defaultValue = "20") size: Int = 20,
 	): PageResponse<KycVerificationResponse> = kycService.queue(status, page, size)
 
+	@Operation(summary = "Verification history for one customer")
+	@GetMapping("/customers/{customerId}/verifications")
+	fun customerHistory(@PathVariable customerId: Long): List<KycVerificationResponse> {
+		accountService.requireUser(customerId)
+		return kycService.history(customerId)
+	}
+
 	@Operation(summary = "Approve a submission after manual checks")
 	@PostMapping("/verifications/{verificationId}/approve")
 @Auditable(action = "KYC_APPROVE", description = "Approved a KYC submission", entityType = "KYC")

@@ -92,6 +92,7 @@ class ClaimController(
 		@RequestParam(required = false) incidentType: Set<IncidentType>? = null,
 		@Parameter(description = "Only claims flagged by fraud screening")
 		@RequestParam(defaultValue = "false") fraudOnly: Boolean = false,
+		@RequestParam(required = false) customerId: Long? = null,
 		@Parameter(description = "Match claim number, vehicle registration or description")
 		@RequestParam(required = false) query: String? = null,
 		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) from: LocalDate? = null,
@@ -105,6 +106,7 @@ class ClaimController(
 			statuses = status,
 			incidentTypes = incidentType,
 			fraudOnly = fraudOnly,
+			customerId = customerId,
 			query = query,
 			from = from,
 			to = to,

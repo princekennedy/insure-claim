@@ -40,6 +40,12 @@ class GarageFeedback(
 	@Column(name = "overall_rating", nullable = false, precision = 3, scale = 2)
 	var overallRating: BigDecimal = BigDecimal.ZERO.setScale(2),
 
+	@Column(name = "customer_service_rating", precision = 3, scale = 2)
+	var customerServiceRating: BigDecimal? = null,
+
+	@Column(name = "repair_quality_rating", precision = 3, scale = 2)
+	var repairQualityRating: BigDecimal? = null,
+
 	@Column(name = "quality_rating", precision = 3, scale = 2)
 	var qualityRating: BigDecimal? = null,
 

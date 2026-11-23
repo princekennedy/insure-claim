@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 @Service
@@ -40,6 +41,16 @@ class GarageFeedbackService(
 
 	@Transactional
 	fun submit(claimId: Long, request: GarageFeedbackRequest, actor: User): GarageFeedbackResponse {
+		val customerServiceRating = request.customerServiceRating
+			?: throw BusinessRuleException("Customer service rating is required", "FEEDBACK_RATING_REQUIRED")
+		val repairQualityRating = request.repairQualityRating
+			?: throw BusinessRuleException("Repair quality rating is required", "FEEDBACK_RATING_REQUIRED")
+		val recommendAgain = request.recommendAgain
+			?: throw BusinessRuleException("Please tell us whether you would choose this garage again", "FEEDBACK_RECOMMENDATION_REQUIRED")
+		val overallRating = customerServiceRating
+			.add(repairQualityRating)
+			.divide(BigDecimal("2"), 2, RoundingMode.HALF_UP)
+
 		val claim = claimRepository.findByIdWithDetails(claimId)
 			.orElseThrow { NotFoundException("Claim", claimId) }
 		if (claim.customer.id != actor.id && !actor.isStaff()) {
@@ -66,13 +77,15 @@ class GarageFeedbackService(
 			garage = job.garage,
 			repairJob = job,
 			customer = actor,
-			overallRating = request.overallRating,
+			overallRating = overallRating,
+			customerServiceRating = customerServiceRating,
+			repairQualityRating = repairQualityRating,
 			qualityRating = request.qualityRating,
 			timelinessRating = request.timelinessRating,
 			priceFairnessRating = request.priceFairnessRating,
 			staffCourtesyRating = request.staffCourtesyRating,
 			comments = request.comments?.trim()?.takeIf { it.isNotEmpty() },
-			recommendAgain = request.recommendAgain,
+			recommendAgain = recommendAgain,
 		)
 		val saved = feedbackRepository.save(feedback)
 		recomputeGarage(job.garage)

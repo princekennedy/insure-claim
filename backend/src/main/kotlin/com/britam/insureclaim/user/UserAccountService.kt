@@ -72,6 +72,14 @@ class UserAccountService(
 		return VehicleResponse.from(vehicle)
 	}
 
+	fun addVehicleForCustomer(customerId: Long, request: VehicleRequest): VehicleResponse {
+		val customer = requireUser(customerId)
+		if (customer.role != com.britam.insureclaim.role.Role.CUSTOMER.code) {
+			throw BusinessRuleException("The selected account is not a customer", "NOT_A_CUSTOMER")
+		}
+		return addVehicle(customerId, request)
+	}
+
 	fun getVehicle(userId: Long, vehicleId: Long): VehicleResponse =
 		VehicleResponse.from(requireReadableVehicle(userId, vehicleId))
 

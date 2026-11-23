@@ -118,12 +118,20 @@ data class UpdateRepairJobRequest(
 	val notes: String? = null,
 )
 
-@Schema(name = "GarageFeedbackRequest", description = "Customer rating of a completed repair")
+@Schema(
+	name = "GarageFeedbackRequest",
+	description = "Requires customer-service and repair-quality ratings plus a garage-again answer; overall rating is derived",
+)
 data class GarageFeedbackRequest(
-	@field:NotNull(message = "overallRating is required")
-	@field:DecimalMin(value = "1", message = "overallRating must be between 1 and 5")
-	@field:DecimalMax(value = "5", message = "overallRating must be between 1 and 5")
-	val overallRating: BigDecimal,
+	@field:NotNull(message = "customerServiceRating is required")
+	@field:DecimalMin(value = "1", message = "customerServiceRating must be between 1 and 5")
+	@field:DecimalMax(value = "5", message = "customerServiceRating must be between 1 and 5")
+	val customerServiceRating: BigDecimal? = null,
+
+	@field:NotNull(message = "repairQualityRating is required")
+	@field:DecimalMin(value = "1", message = "repairQualityRating must be between 1 and 5")
+	@field:DecimalMax(value = "5", message = "repairQualityRating must be between 1 and 5")
+	val repairQualityRating: BigDecimal? = null,
 
 	val qualityRating: BigDecimal? = null,
 	val timelinessRating: BigDecimal? = null,
@@ -133,10 +141,14 @@ data class GarageFeedbackRequest(
 	@field:Size(max = 1000, message = "comments must be 1000 characters or fewer")
 	val comments: String? = null,
 
+	@field:NotNull(message = "recommendAgain is required")
 	val recommendAgain: Boolean? = null,
 )
 
-@Schema(name = "GarageFeedbackResponse")
+@Schema(
+	name = "GarageFeedbackResponse",
+	description = "Overall rating is derived from the two required ratings for new feedback; dimensions may be null on legacy entries",
+)
 data class GarageFeedbackResponse(
 	val id: Long,
 	val claimId: Long,
@@ -146,6 +158,8 @@ data class GarageFeedbackResponse(
 	@Schema(description = "Comments are hidden from other customers but visible to insurer staff")
 	val comments: String?,
 	val overallRating: BigDecimal,
+	val customerServiceRating: BigDecimal?,
+	val repairQualityRating: BigDecimal?,
 	val qualityRating: BigDecimal?,
 	val timelinessRating: BigDecimal?,
 	val priceFairnessRating: BigDecimal?,
@@ -187,6 +201,8 @@ private fun GarageFeedback.toResponse(commentVisible: Boolean): GarageFeedbackRe
 	garageName = garage.name,
 	comments = comments.takeIf { commentVisible },
 	overallRating = overallRating,
+	customerServiceRating = customerServiceRating,
+	repairQualityRating = repairQualityRating,
 	qualityRating = qualityRating,
 	timelinessRating = timelinessRating,
 	priceFairnessRating = priceFairnessRating,

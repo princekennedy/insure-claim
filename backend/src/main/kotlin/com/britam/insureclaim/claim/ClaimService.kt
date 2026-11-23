@@ -207,6 +207,7 @@ class ClaimService(
 		statuses: Set<ClaimStatus>?,
 		incidentTypes: Set<IncidentType>?,
 		fraudOnly: Boolean,
+		customerId: Long?,
 		query: String?,
 		from: LocalDate?,
 		to: LocalDate?,
@@ -223,6 +224,8 @@ class ClaimService(
 
 			if (scopedToCustomer) {
 				predicates += cb.equal(customerJoin.get<Any>("id"), actor.id)
+			} else if (customerId != null) {
+				predicates += cb.equal(customerJoin.get<Any>("id"), customerId)
 			}
 			if (!statuses.isNullOrEmpty()) {
 				predicates += root.get<ClaimStatus>("status").`in`(statuses)
