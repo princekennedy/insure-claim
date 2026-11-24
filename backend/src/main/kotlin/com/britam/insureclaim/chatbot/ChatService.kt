@@ -428,10 +428,10 @@ class ChatService(
 			?: throw IOException("Anthropic returned an empty response")
 
 		return (root["content"] as? ArrayNode)?.elements()?.asSequence()
-			?.firstOrNull { it.path("type").asText() == "text" }
+			?.firstOrNull { it.path("type").asString() == "text" }
 			?.path("text")
-			?.takeIf { it.isTextual }
-			?.asText()
+			?.takeIf { it.isString }
+			?.asString()
 			?.trim()
 			?.takeUnless { it.isBlank() }
 			?: throw IOException("Anthropic returned no text content")
@@ -475,8 +475,8 @@ class ChatService(
 			?: throw IOException("OpenAI returned an empty response")
 
 		return root.path("choices").path(0).path("message").path("content")
-			.takeIf { it.isTextual }
-			?.asText()
+			.takeIf { it.isString }
+			?.asString()
 			?.trim()
 			?.takeUnless { it.isBlank() }
 			?: throw IOException("OpenAI returned no text content")
@@ -531,7 +531,7 @@ class ChatService(
 		val parts = root.path("candidates").path(0).path("content").path("parts") as? ArrayNode
 			?: throw IOException("Google returned no content")
 		return parts.elements().asSequence()
-			.mapNotNull { it.path("text").takeIf { text -> text.isTextual }?.asText() }
+			.mapNotNull { it.path("text").takeIf { text -> text.isString }?.asString() }
 			.joinToString("")
 			.trim()
 			.takeUnless { it.isBlank() }
