@@ -7,19 +7,21 @@ class Role(val code: String, val name: String) {
 
     companion object {
         /** Staff role codes that can view all claims and perform administrative actions. */
-        val STAFF_CODES: Set<String> = setOf("AGENT", "INSURER_ADMIN", "ADMIN")
+        val STAFF_CODES: Set<String> = setOf("AGENT", "INSURER_ADMIN", "ADMIN", "OFFICER", "MANAGER")
 
         /** All valid role codes. */
-        val VALID_CODES: Set<String> = setOf("CUSTOMER", "AGENT", "INSURER_ADMIN", "ADMIN")
+        val VALID_CODES: Set<String> = setOf("CUSTOMER", "AGENT", "INSURER_ADMIN", "ADMIN", "OFFICER", "MANAGER")
 
         /** Canonical role definitions. */
         val CUSTOMER = Role("CUSTOMER", "Policyholder")
         val AGENT = Role("AGENT", "Claims Agent")
         val INSURER_ADMIN = Role("INSURER_ADMIN", "Insurer Administrator")
         val ADMIN = Role("ADMIN", "Platform Administrator")
+        val OFFICER = Role("OFFICER", "Claims Officer")
+        val MANAGER = Role("MANAGER", "Claims Manager")
 
         /** Pseudo-enumeration used by seeders and admin UIs that expect enum-like access. */
-        val entries: List<Role> = listOf(ADMIN, INSURER_ADMIN, AGENT, CUSTOMER)
+        val entries: List<Role> = listOf(ADMIN, INSURER_ADMIN, AGENT, OFFICER, MANAGER, CUSTOMER)
 
         /** Looks up a role by its code. */
         fun fromCode(code: String): Role =
@@ -41,6 +43,8 @@ fun roleNameFor(code: String): String? = when (code.uppercase()) {
     "ADMIN" -> "Platform Administrator"
     "INSURER_ADMIN" -> "Insurer Administrator"
     "AGENT" -> "Claims Agent"
+    "OFFICER" -> "Claims Officer"
+    "MANAGER" -> "Claims Manager"
     "CUSTOMER" -> "Policyholder"
     else -> null
 }

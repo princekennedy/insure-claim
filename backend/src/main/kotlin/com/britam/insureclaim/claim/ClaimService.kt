@@ -16,6 +16,8 @@ import com.britam.insureclaim.policy.PolicyStatus
 import com.britam.insureclaim.settings.SettingService
 import com.britam.insureclaim.storage.LocalFileStorageService
 import com.britam.insureclaim.storage.StoredFile
+import com.britam.insureclaim.task.ClaimReviewTask
+import com.britam.insureclaim.task.ClaimReviewTaskRepository
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserAccountService
 import com.britam.insureclaim.vehicle.Vehicle
@@ -56,6 +58,7 @@ class ClaimService(
 	private val fraudDetectionService: FraudDetectionService,
 	private val storageService: LocalFileStorageService,
 	private val settingService: SettingService,
+	private val claimReviewTaskRepository: ClaimReviewTaskRepository,
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -165,6 +168,7 @@ class ClaimService(
 		)
 
 		val saved = claimRepository.save(claim)
+		claimReviewTaskRepository.save(ClaimReviewTask(claim = saved))
 		persistTimeline(saved)
 		fraudDetectionService.evaluate(saved)
 
@@ -305,6 +309,10 @@ class ClaimService(
 		}
 
 		claim.status = target
+		if (from == ClaimStatus.DRAFT && target == ClaimStatus.SUBMITTED &&
+			!claimReviewTaskRepository.existsByClaimId(requireNotNull(claim.id))) {
+			claimReviewTaskRepository.save(ClaimReviewTask(claim = claim))
+		}
 		val note = request.note ?: request.rejectionReason ?: defaultNoteFor(target, actor)
 		val customerVisible = target != ClaimStatus.FRAUD_CHECK
 		claim.addStatusEvent(

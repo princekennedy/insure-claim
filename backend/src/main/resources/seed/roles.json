@@ -4,6 +4,8 @@
     {"code": "ADMIN", "name": "Platform Administrator", "description": "Full system access"},
     {"code": "INSURER_ADMIN", "name": "Insurer Administrator", "description": "Manage insurer operations and staff"},
     {"code": "AGENT", "name": "Claims Agent", "description": "Handle claims and assessments"},
+    {"code": "OFFICER", "name": "Claims Officer", "description": "Review assigned claims"},
+    {"code": "MANAGER", "name": "Claims Manager", "description": "Assign claim review tasks"},
     {"code": "CUSTOMER", "name": "Policyholder", "description": "Customer access to policies and claims"}
   ]
 }

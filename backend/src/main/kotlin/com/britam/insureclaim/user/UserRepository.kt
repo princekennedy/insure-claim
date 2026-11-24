@@ -39,6 +39,8 @@ interface UserRepository : JpaRepository<User, Long> {
 	fun existsByRole(role: String): Boolean
 
 	fun countByRole(role: String): Long
+
+	fun findByRoleAndEnabledTrueOrderByFullNameAsc(role: String): List<User>
 }
 
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
