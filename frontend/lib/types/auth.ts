@@ -56,7 +56,7 @@ export interface UpdateProfileRequest {
   nic?: string;
 }
 
-export type Role = 'CUSTOMER' | 'AGENT' | 'INSURER_ADMIN' | 'ADMIN';
+export type Role = 'CUSTOMER' | 'AGENT' | 'INSURER_ADMIN' | 'ADMIN' | 'OFFICER' | 'MANAGER';
 
 export function isStaffRole(role: Role): boolean {
   return role !== 'CUSTOMER';

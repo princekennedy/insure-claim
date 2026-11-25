@@ -1,9 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { Role } from '../types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-type Role = 'CUSTOMER' | 'AGENT' | 'INSURER_ADMIN' | 'ADMIN';
 
 interface ServerUser {
   id: number;

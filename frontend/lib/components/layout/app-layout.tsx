@@ -20,6 +20,7 @@ interface NavItem {
   icon: React.ElementType;
   hasSubmenu?: boolean;
   subitems?: Array<{ href: string; label: string }>;
+  roles?: readonly Role[];
 }
 
 function DashboardIcon() {
@@ -41,6 +42,15 @@ function ClaimsIcon() {
       <line x1="16" y1="13" x2="8" y2="13" />
       <line x1="16" y1="17" x2="8" y2="17" />
       <polyline points="10 9 9 9 8 9" />
+    </svg>
+  );
+}
+
+function TasksIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="m8 9 1.5 1.5L12 8m-4 7 1.5 1.5L12 14m3-4h2m-2 6h2" />
     </svg>
   );
 }
@@ -84,7 +94,10 @@ function ChevronDownIcon() {
 const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: 'Overview',
-    items: [{ href: '/dashboard', label: 'Dashboard', icon: DashboardIcon }],
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+      { href: '/tasks', label: 'Tasks', icon: TasksIcon, roles: ['OFFICER', 'MANAGER', 'ADMIN', 'INSURER_ADMIN'] },
+    ],
   },
   {
     label: 'Claims & Customers',
@@ -221,7 +234,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {navGroups.map((group) => (
             <div className={styles.navGroup} key={group.label}>
               <p className={styles.groupLabel}>{group.label}</p>
-              {group.items.map((item) => {
+              {group.items.filter((item) => !item.roles || (viewerRole !== null && item.roles.includes(viewerRole))).map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const hasSubmenu = item.hasSubmenu;

@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import type { Role } from './lib/types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-// Role types matching the backend
-type Role = 'CUSTOMER' | 'AGENT' | 'INSURER_ADMIN' | 'ADMIN';
 
 // Public routes that don't require authentication
 const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/file-claim', '/track', '/submit-feedback', '/staff/login'];
 
 // Staff routes - only accessible by staff roles
-const staffRoutes = ['/dashboard', '/claims', '/customers', '/policies', '/kyc', '/garages', '/feedback', '/users', '/roles', '/audit-trail'];
+const staffRoutes = ['/dashboard', '/tasks', '/claims', '/customers', '/policies', '/kyc', '/garages', '/feedback', '/users', '/roles', '/audit-trail'];
 
 // Customer routes - only accessible by customers
 const customerRoutes = ['/customer'];
@@ -131,6 +129,10 @@ export async function middleware(request: NextRequest) {
   // Staff routes - only allow staff roles
   if (isStaffRoute(pathname) && !isStaffRole(userRole)) {
     return NextResponse.redirect(new URL('/customer/home', request.url));
+  }
+
+  if ((pathname === '/tasks' || pathname.startsWith('/tasks/')) && userRole !== 'OFFICER' && userRole !== 'MANAGER' && userRole !== 'ADMIN' && userRole !== 'INSURER_ADMIN') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Customer routes - only allow customer role
