@@ -30,6 +30,7 @@ export default function CustomerKycPage() {
   const [documentNumber, setDocumentNumber] = useState('');
   const [fullNameOnDocument, setFullNameOnDocument] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [frontImage, setFrontImage] = useState<File | null>(null);
 
   useEffect(() => {
     getCurrentKyc()
@@ -41,6 +42,11 @@ export default function CustomerKycPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    if (!frontImage) {
+      setError('A photo of the front of your identity document is required');
+      return;
+    }
     setSubmitting(true);
     try {
       const result = await submitKyc(
@@ -50,12 +56,13 @@ export default function CustomerKycPage() {
           fullNameOnDocument,
           dateOfBirth: dateOfBirth || undefined,
         },
-        {},
+        { frontImage },
       );
       setCurrent(result);
       setSuccess('KYC verification submitted for review');
       setDocumentNumber('');
       setFullNameOnDocument('');
+      setFrontImage(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit KYC');
     } finally {
@@ -163,6 +170,19 @@ export default function CustomerKycPage() {
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setDateOfBirth(e.target.value)}
                 />
+              </div>
+
+              <div className={styles.uploads}>
+                <label className={styles.uploadItem}>
+                  <span className={styles.uploadTitle}>Front of identity document *</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                    required
+                    onChange={(e) => setFrontImage(e.target.files?.[0] ?? null)}
+                  />
+                  <span className={styles.uploadHint}>JPEG, PNG, WebP, HEIC or PDF</span>
+                </label>
               </div>
 
               <div className={styles.submitRow}>

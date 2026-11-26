@@ -19,6 +19,7 @@ export interface KycVerificationResponse {
   documentLabel: string;
   maskedDocumentNumber: string;
   fullNameOnDocument: string;
+  customerName: string;
   dateOfBirth: string | null;
   confidenceScore: number | null;
   failureReason: string | null;

@@ -8,24 +8,24 @@ import type {
 } from '../types';
 
 export interface KycImageFiles {
-  frontImage?: File;
+  frontImage: File;
   backImage?: File;
   selfie?: File;
 }
 
 export async function submitKyc(
   submission: KycSubmissionRequest,
-  images: KycImageFiles = {},
+  images: KycImageFiles,
 ): Promise<KycVerificationResponse> {
   // Backend expects a multipart request: a JSON part named "submission"
-  // plus optional image parts "frontImage", "backImage", "selfie".
+  // and a required "frontImage", with optional "backImage" and "selfie".
   const formData = new FormData();
   formData.append(
     'submission',
     new Blob([JSON.stringify(submission)], { type: 'application/json' }),
     'submission.json',
   );
-  if (images.frontImage) formData.append('frontImage', images.frontImage);
+  formData.append('frontImage', images.frontImage);
   if (images.backImage) formData.append('backImage', images.backImage);
   if (images.selfie) formData.append('selfie', images.selfie);
 
@@ -67,17 +67,36 @@ export async function getKycVerification(verificationId: number): Promise<KycVer
   return request<KycVerificationResponse>(`/kyc/verifications/${verificationId}`);
 }
 
-export async function getKycImageUrl(verificationId: number, side: KycImageSide): Promise<string> {
+export async function getKycReviewDocumentNumber(verificationId: number): Promise<{ documentNumber: string }> {
+  return request<{ documentNumber: string }>(`/admin/kyc/verifications/${verificationId}/document-number`);
+}
+
+export async function getKycImageUrl(
+  verificationId: number,
+  side: KycImageSide,
+): Promise<{ url: string; contentType: string }> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const response = await fetch(
     `${API_BASE_URL}/api/v1/admin/kyc/verifications/${verificationId}/images/${side}`,
     { headers: token ? { Authorization: `Bearer ${token}` } : undefined },
   );
   if (!response.ok) {
-    throw new Error(`Failed to load KYC image (HTTP ${response.status})`);
+    const fallback = `Failed to load KYC image (HTTP ${response.status})`;
+    if (response.headers.get('content-type')?.includes('application/json')) {
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) throw error;
+      }
+      if (typeof body === 'object' && body !== null && 'message' in body && typeof body.message === 'string' && body.message.trim()) {
+        throw new Error(`${body.message} (HTTP ${response.status})`);
+      }
+    }
+    throw new Error(fallback);
   }
   const blob = await response.blob();
-  return URL.createObjectURL(blob);
+  return { url: URL.createObjectURL(blob), contentType: blob.type };
 }
 
 export async function getAdminKycVerifications(

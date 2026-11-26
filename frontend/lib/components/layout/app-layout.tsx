@@ -1,12 +1,14 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar } from '../ui/avatar';
 import { Dialog } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { getCurrentUser, logout } from '../../services/auth';
+import { getAdminKycVerifications } from '../../services/kyc';
+import type { KycVerificationResponse } from '../../types/kyc';
 import type { Role } from '../../types/auth';
 import styles from './app-layout.module.css';
 
@@ -96,7 +98,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     label: 'Overview',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
-      { href: '/tasks', label: 'Tasks', icon: TasksIcon, roles: ['OFFICER', 'MANAGER', 'ADMIN', 'INSURER_ADMIN'] },
+      { href: '/tasks', label: 'Tasks', icon: TasksIcon },
     ],
   },
   {
@@ -157,6 +159,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [viewerPermissions, setViewerPermissions] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<{ fullName: string } | null>(null);
   const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const [kycNotifications, setKycNotifications] = useState<KycVerificationResponse[]>([]);
+  const [kycCount, setKycCount] = useState<number | null>(null);
+  const [notificationError, setNotificationError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +186,35 @@ export function AppLayout({ children }: AppLayoutProps) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!viewerRole || viewerRole === 'CUSTOMER') return;
+    let active = true;
+    let requestNumber = 0;
+    const refresh = () => {
+      const currentRequest = ++requestNumber;
+      getAdminKycVerifications(0, 5)
+        .then((result) => {
+          if (!active || currentRequest !== requestNumber) return;
+          setKycNotifications(result.content);
+          setKycCount(result.totalElements);
+          setNotificationError('');
+        })
+        .catch((error: unknown) => {
+          if (!active || currentRequest !== requestNumber) return;
+          setNotificationError(error instanceof Error ? error.message : 'Unable to load KYC notifications.');
+          setKycCount(null);
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 30000);
+    window.addEventListener('kyc-review-updated', refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('kyc-review-updated', refresh);
+    };
+  }, [viewerRole, pathname]);
 
   const visibleManagementItems = viewerRole
     ? userManagementItems.filter((item) => item.roles.includes(viewerRole))
@@ -368,10 +404,36 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span>New Claim</span>
               </Link>
             )}
-            <button className={styles.notificationButton} aria-label="Notifications">
-              <BellIcon />
-              <span className={styles.notificationBadge}>3</span>
-            </button>
+            {viewerRole && viewerRole !== 'CUSTOMER' && (
+              <div className={styles.notifications}>
+                <button ref={notificationButtonRef} type="button" className={styles.notificationButton} aria-label={kycCount == null ? 'Notifications' : `Notifications: ${kycCount} KYC reviews pending`} aria-expanded={notificationsOpen} aria-controls="kyc-notifications" onClick={() => setNotificationsOpen((open) => !open)}>
+                  <BellIcon />
+                  {kycCount != null && kycCount > 0 && <span className={styles.notificationBadge}>{kycCount > 99 ? '99+' : kycCount}</span>}
+                </button>
+                {notificationsOpen && (
+                  <div className={styles.notificationPanel} id="kyc-notifications">
+                    <div className={styles.notificationHeader}>
+                      <strong>KYC review notifications</strong>
+                      <button type="button" className={styles.notificationClose} aria-label="Close notifications" onClick={() => { setNotificationsOpen(false); notificationButtonRef.current?.focus(); }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                          <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                      </button>
+                    </div>
+                    {notificationError ? <p role="alert">Unable to load notifications: {notificationError}</p> : kycCount === null ? <p>Loading notifications...</p> : kycCount === 0 ? <p>No KYC reviews pending.</p> : (
+                      <>
+                        <ul>
+                          {kycNotifications.map((verification) => (
+                            <li key={verification.id}>{verification.fullNameOnDocument} — {verification.documentLabel} awaiting review</li>
+                          ))}
+                        </ul>
+                        <Link href="/tasks#kyc-review" onClick={() => { setNotificationsOpen(false); window.dispatchEvent(new Event('kyc-review-requested')); }}>View all {kycCount} review {kycCount === 1 ? 'task' : 'tasks'}</Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             {currentUser && (
               <Link
                 href="/account"

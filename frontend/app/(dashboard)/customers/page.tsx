@@ -22,6 +22,7 @@ import {
 import { createPolicy, getAdminPolicies } from '@/lib/services/policies';
 import { getCustomerVehicles } from '@/lib/services/vehicles';
 import { oneYearAfter } from '@/lib/policy-dates';
+import { formatPremiumInput } from '@/lib/premium-amount';
 import type {
   PageResponse,
   UserSummary,
@@ -382,6 +383,7 @@ export default function CustomersPage() {
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
         title="New customer"
+        size="lg"
         footer={
           <>
             <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
@@ -393,43 +395,46 @@ export default function CustomersPage() {
           </>
         }
       >
-        <form id="create-customer-form" className={styles.dialogForm} onSubmit={handleCreate}>
+        <form id="create-customer-form" className={`${styles.dialogForm} ${customerStyles.customerForm}`} onSubmit={handleCreate}>
+          <p className={customerStyles.customerIntro}>Enter the customer&apos;s account and contact details.</p>
           {createError && <Alert type="error">{createError}</Alert>}
-          <Input
-            label="Full name"
-            value={createForm.fullName}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, fullName: event.target.value }))}
-            maxLength={160}
-            required
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={createForm.email}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, email: event.target.value }))}
-            required
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={createForm.password}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, password: event.target.value }))}
-            hint="At least 10 characters with upper, lower, digit and symbol"
-            autoComplete="new-password"
-            required
-          />
-          <Input
-            label="Phone"
-            value={createForm.phone}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
-            placeholder="+254 712 345 678"
-          />
-          <Input
-            label="NIC"
-            value={createForm.nic}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, nic: event.target.value }))}
-            maxLength={32}
-          />
+          <div className={customerStyles.customerGrid}>
+            <Input
+              label="Full name"
+              value={createForm.fullName}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, fullName: event.target.value }))}
+              maxLength={160}
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={createForm.email}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, email: event.target.value }))}
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={createForm.password}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, password: event.target.value }))}
+              hint="At least 10 characters with upper, lower, digit and symbol"
+              autoComplete="new-password"
+              required
+            />
+            <Input
+              label="Phone"
+              value={createForm.phone}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
+              placeholder="+254 712 345 678"
+            />
+            <Input
+              label="National Identity Card"
+              value={createForm.nic}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, nic: event.target.value }))}
+              maxLength={32}
+            />
+          </div>
         </form>
       </Dialog>
 
@@ -522,16 +527,27 @@ export default function CustomersPage() {
               required
               disabled={policySaving}
             />
-            <Input
-              label="Premium amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={policyForm.premiumAmount}
-              onChange={(event) => setPolicyForm((previous) => ({ ...previous, premiumAmount: event.target.value }))}
-              required
-              disabled={policySaving}
-            />
+            <div className={customerStyles.premiumField}>
+              <Input
+                label="Premium amount"
+                aria-label="Premium amount in Malawian kwacha"
+                aria-required="true"
+                type="text"
+                inputMode="decimal"
+                className={customerStyles.premiumInput}
+                value={formatPremiumInput(policyForm.premiumAmount, 0).formatted}
+                onChange={(event) => {
+                  const input = event.currentTarget;
+                  const { raw, formatted, cursor } = formatPremiumInput(input.value, input.selectionStart ?? input.value.length);
+                  input.value = formatted;
+                  input.setSelectionRange(cursor, cursor);
+                  setPolicyForm((previous) => ({ ...previous, premiumAmount: raw }));
+                }}
+                required
+                disabled={policySaving}
+              />
+              <span className={customerStyles.premiumPrefix} aria-hidden="true">MK</span>
+            </div>
             <Input
               label="Policy number"
               maxLength={48}

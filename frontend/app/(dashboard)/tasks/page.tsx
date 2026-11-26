@@ -1,11 +1,7 @@
-import { redirect } from 'next/navigation';
 import { requireStaffRole } from '@/lib/services/auth-server';
-import { TaskQueue } from './task-queue';
+import { TasksOverview } from './tasks-overview';
 
 export default async function TasksPage() {
   const user = await requireStaffRole();
-  if (user.role !== 'OFFICER' && user.role !== 'MANAGER' && user.role !== 'ADMIN' && user.role !== 'INSURER_ADMIN') {
-    redirect('/dashboard');
-  }
-  return <TaskQueue role={user.role} />;
+  return <TasksOverview role={user.role} />;
 }

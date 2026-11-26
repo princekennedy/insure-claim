@@ -131,10 +131,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/customer/home', request.url));
   }
 
-  if ((pathname === '/tasks' || pathname.startsWith('/tasks/')) && userRole !== 'OFFICER' && userRole !== 'MANAGER' && userRole !== 'ADMIN' && userRole !== 'INSURER_ADMIN') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
   // Customer routes - only allow customer role
   if (isCustomerRoute(pathname) && isStaffRole(userRole)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));

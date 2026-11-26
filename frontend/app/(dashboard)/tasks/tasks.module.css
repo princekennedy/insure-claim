@@ -14,10 +14,61 @@
 }
 
 .queue {
+  margin-bottom: 1.5rem;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+.reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.reviewForm textarea {
+  min-height: 4rem;
+  width: 100%;
+  resize: vertical;
+  padding: 0.5rem;
+  color: var(--theme-text-primary);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 0.375rem;
+}
+
+.reviewActions, .pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--theme-border);
+}
+
+.preview {
+  width: 100%;
+  height: 24rem;
+  border: 1px solid var(--theme-border);
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  max-height: 32rem;
+  object-fit: contain;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface-muted);
+}
+
+.kycDetails {
+  display: grid;
+  gap: 1.5rem;
 }
 
 .queueHeader {
@@ -50,14 +101,64 @@
 }
 
 .item {
+  padding: 0;
+}
+
+.itemDetails {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
   gap: 1.5rem;
-  padding: 1.25rem;
+}
+
+.dialogContent {
+  text-align: left;
 }
 
 .item + .item {
   border-top: 1px solid var(--theme-border);
+}
+
+.taskSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--theme-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  list-style: none;
+}
+
+.taskSummary:hover {
+  background: var(--theme-surface-muted);
+}
+
+.taskSummary:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.taskSummary:disabled {
+  cursor: wait;
+}
+
+.taskSummary span {
+  color: var(--theme-text-muted);
+}
+
+.taskSummary::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
 }
 
 .claimHeading {
@@ -192,7 +293,7 @@
 }
 
 @media (max-width: 700px) {
-  .item {
+  .itemDetails {
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
   }
