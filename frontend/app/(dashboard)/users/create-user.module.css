@@ -1,0 +1,190 @@
+.overlay {
+  background: rgba(15, 31, 52, 0.62);
+}
+
+.dialog {
+  max-width: 720px;
+  border: 1px solid #dce5ef;
+  border-radius: 0.875rem;
+  box-shadow: 0 24px 70px rgba(9, 29, 55, 0.28);
+  overflow: hidden;
+}
+
+.dialog .header {
+  align-items: flex-start;
+  padding: 1.4rem 1.75rem 1.2rem;
+  border-bottom: 1px solid #e3eaf2;
+  border-radius: 0;
+  background: var(--theme-surface);
+}
+
+.dialog .title {
+  color: var(--theme-text-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.dialog .title::before {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #15559b;
+  content: "USER MANAGEMENT / ACCOUNT SETUP";
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.dialog .closeButton {
+  margin: 0.15rem -0.3rem 0 0;
+  padding: 0.35rem;
+  color: #52657b;
+}
+
+.dialog .closeButton:hover {
+  background: #eaf1f8;
+}
+
+.dialog .closeButton:focus-visible,
+.dialog .footer button:focus-visible {
+  outline: 3px solid #78a8da;
+  outline-offset: 2px;
+}
+
+.dialog .content {
+  min-height: 0;
+  padding: 1.4rem 1.75rem 1.6rem;
+  text-align: left;
+}
+
+.dialog .footer {
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1rem 1.75rem;
+  border-top: 1px solid #e3eaf2;
+  border-radius: 0;
+  background: #f7f9fc;
+}
+
+.requiredNote {
+  margin-right: auto;
+  color: #52657b;
+  font-size: 0.75rem;
+}
+
+.requiredNote span {
+  color: #bd3030;
+}
+
+.form {
+  display: grid;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem;
+  border: 1px solid #dce8f7;
+  border-radius: 0.625rem;
+  background: #f3f8fe;
+}
+
+.introIcon {
+  display: grid;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: #dceafa;
+  color: #1e40af;
+}
+
+.introIcon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.form .introTitle {
+  margin: 0 0 0.2rem;
+  color: var(--theme-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.form .introText,
+.form .sectionHeading p {
+  margin: 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.section {
+  display: grid;
+  gap: 1rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.sectionHeading h3 {
+  margin: 0 0 0.2rem;
+  color: var(--theme-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.sectionHeading span {
+  color: #345b92;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dialog .fields input,
+.dialog .fields select {
+  min-height: 2.65rem;
+  background-color: var(--theme-surface);
+}
+
+.dialog .fields p {
+  color: var(--theme-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .dialog .header,
+  .dialog .content,
+  .dialog .footer {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .requiredNote {
+    font-size: 0.6875rem;
+  }
+}

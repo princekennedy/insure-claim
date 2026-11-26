@@ -12,6 +12,7 @@ interface DialogProps {
   size?: 'sm' | 'md' | 'lg';
   closeOnOverlay?: boolean;
   showCloseButton?: boolean;
+  classNames?: Partial<Record<'overlay' | 'dialog' | 'header' | 'title' | 'closeButton' | 'content' | 'footer', string>>;
 }
 
 export function Dialog({
@@ -23,6 +24,7 @@ export function Dialog({
   size = 'md',
   closeOnOverlay = true,
   showCloseButton = true,
+  classNames,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -74,24 +76,24 @@ export function Dialog({
   const sizeClass = styles[`size-${size}`];
 
   return (
-    <div className={styles.overlay} onClick={closeOnOverlay ? onClose : undefined}>
+    <div className={`${styles.overlay} ${classNames?.overlay ?? ''}`} onClick={closeOnOverlay ? onClose : undefined}>
       <div
         ref={dialogRef}
-        className={`${styles.dialog} ${sizeClass}`}
+        className={`${styles.dialog} ${sizeClass} ${classNames?.dialog ?? ''}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
       >
-        <div className={styles.header}>
-          <h2 id={titleId} className={styles.title}>
+        <div className={`${styles.header} ${classNames?.header ?? ''}`}>
+          <h2 id={titleId} className={`${styles.title} ${classNames?.title ?? ''}`}>
             {title}
           </h2>
           {showCloseButton && (
             <button
               type="button"
-              className={styles.closeButton}
+              className={`${styles.closeButton} ${classNames?.closeButton ?? ''}`}
               onClick={onClose}
               aria-label="Close"
             >
@@ -105,8 +107,8 @@ export function Dialog({
             </button>
           )}
         </div>
-        <div className={styles.content}>{children}</div>
-        {footer && <div className={styles.footer}>{footer}</div>}
+        <div className={`${styles.content} ${classNames?.content ?? ''}`}>{children}</div>
+        {footer && <div className={`${styles.footer} ${classNames?.footer ?? ''}`}>{footer}</div>}
       </div>
     </div>
   );

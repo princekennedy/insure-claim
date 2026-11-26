@@ -24,15 +24,18 @@ import {
   setUserRole,
   updateUser,
 } from '@/lib/services/admin';
+import { ApiError } from '@/lib/services/api';
+import { getCurrentUser } from '@/lib/services/auth';
 import type {
   PageResponse,
   UserDetail,
   UserSummary,
 } from '@/lib/types';
 import styles from '../management.module.css';
+import createStyles from './create-user.module.css';
 
 const PAGE_SIZE = 20;
-const FALLBACK_ROLES = ['CUSTOMER', 'AGENT', 'INSURER_ADMIN', 'ADMIN'];
+const REQUIRED_ROLES = ['CUSTOMER', 'OFFICER', 'MANAGER'];
 
 interface UserFilters {
   query: string;
@@ -74,7 +77,10 @@ export default function UsersPage() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<number | null>(null);
   const [actionError, setActionError] = useState('');
-  const [roleOptions, setRoleOptions] = useState<string[]>(FALLBACK_ROLES);
+  const [roleOptions, setRoleOptions] = useState<string[]>([]);
+  const [roleError, setRoleError] = useState('');
+  const [viewerRole, setViewerRole] = useState<string | null>(null);
+  const [viewerError, setViewerError] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateUserFormState>(EMPTY_CREATE_FORM);
@@ -118,14 +124,41 @@ export default function UsersPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await getAdminRoles(0, 100);
-        if (!cancelled && data.content.length > 0) {
-          setRoleOptions(data.content.map((entry) => entry.code));
+        const codes: string[] = [];
+        let page = 0;
+        let last = false;
+        while (!last) {
+          const data = await getAdminRoles(page, 100);
+          codes.push(...data.content.map((entry) => entry.code));
+          last = data.last;
+          page += 1;
         }
-      } catch {
-        // Fall back to the built-in codes; the server still validates every choice.
+        if (!cancelled) {
+          setRoleOptions(codes);
+          if (codes.length === 0) setRoleError('No roles are available in the role catalog.');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setRoleError(err instanceof Error ? `Unable to load roles: ${err.message}` : 'Unable to load roles.');
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then((user) => {
+        if (!cancelled) setViewerRole(user.role);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setViewerError(err instanceof Error ? `Unable to verify your account: ${err.message}` : 'Unable to verify your account.');
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -177,7 +210,7 @@ export default function UsersPage() {
   }
 
   function openCreate() {
-    setCreateForm(EMPTY_CREATE_FORM);
+    setCreateForm({ ...EMPTY_CREATE_FORM, role: roleOptions.includes('CUSTOMER') ? 'CUSTOMER' : '' });
     setCreateError('');
     setCreateOpen(true);
   }
@@ -232,7 +265,11 @@ export default function UsersPage() {
       setCreateOpen(false);
       await loadUsers(0, appliedFilters);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'The account could not be created.');
+      setCreateError(
+        err instanceof ApiError && err.status === 403
+          ? 'Only a platform or insurer administrator can create user accounts. Sign in as an administrator or contact one.'
+          : err instanceof Error ? err.message : 'The account could not be created.',
+      );
     } finally {
       setSaving(false);
     }
@@ -266,6 +303,7 @@ export default function UsersPage() {
   }
 
   const roleSelectOptions = roleOptions.map((code) => ({ value: code, label: code }));
+  const missingRoles = REQUIRED_ROLES.filter((code) => !roleOptions.includes(code));
 
   return (
     <section className={styles.page}>
@@ -273,7 +311,7 @@ export default function UsersPage() {
         title="Users"
         description="Browse the user directory, manage roles and create new accounts."
         actions={
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" onClick={openCreate} disabled={viewerRole !== 'ADMIN' && viewerRole !== 'INSURER_ADMIN'}>
             New user
           </Button>
         }
@@ -331,6 +369,17 @@ export default function UsersPage() {
         <Alert type="error">{actionError}</Alert>
       )}
 
+      {viewerError && <Alert type="error">{viewerError}</Alert>}
+      {viewerRole && viewerRole !== 'ADMIN' && viewerRole !== 'INSURER_ADMIN' && (
+        <Alert type="info">Only a platform or insurer administrator can create user accounts.</Alert>
+      )}
+      {roleError && <Alert type="error">{roleError}</Alert>}
+      {!roleError && roleOptions.length > 0 && missingRoles.length > 0 && (
+        <Alert type="warning">
+          The role catalog is missing {missingRoles.join(', ')}. Update the backend and apply its database migrations before creating those accounts.
+        </Alert>
+      )}
+
       {loading && !result ? (
         <PageLoader message="Loading users..." />
       ) : result ? (
@@ -369,7 +418,7 @@ export default function UsersPage() {
                           <select
                             className={styles.roleSelect}
                             value={user.role}
-                            disabled={busyId === user.id}
+                            disabled={busyId === user.id || roleOptions.length === 0}
                             aria-label={`Role for ${user.fullName}`}
                             onChange={(event) => handleRoleChange(user, event.target.value)}
                           >
@@ -440,60 +489,113 @@ export default function UsersPage() {
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
         title="New user"
+        size="lg"
+        classNames={{
+          overlay: createStyles.overlay,
+          dialog: createStyles.dialog,
+          header: createStyles.header,
+          title: createStyles.title,
+          closeButton: createStyles.closeButton,
+          content: createStyles.content,
+          footer: createStyles.footer,
+        }}
         footer={
           <>
+            <span className={createStyles.requiredNote}><span aria-hidden="true">*</span> Required fields</span>
             <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" form="create-user-form" loading={saving}>
-              Create
+            <Button type="submit" form="create-user-form" loading={saving} disabled={roleOptions.length === 0}>
+              Create user
             </Button>
           </>
         }
       >
-        <form id="create-user-form" className={styles.dialogForm} onSubmit={handleCreate}>
+        <form id="create-user-form" className={createStyles.form} onSubmit={handleCreate}>
           {createError && <Alert type="error">{createError}</Alert>}
-          <Input
-            label="Full name"
-            value={createForm.fullName}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, fullName: event.target.value }))}
-            maxLength={160}
-            required
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={createForm.email}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, email: event.target.value }))}
-            required
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={createForm.password}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, password: event.target.value }))}
-            hint="At least 10 characters with upper, lower, digit and symbol"
-            autoComplete="new-password"
-            required
-          />
-          <Input
-            label="Phone"
-            value={createForm.phone}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
-            placeholder="+94 77 000 0000"
-          />
-          <Input
-            label="NIC"
-            value={createForm.nic}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, nic: event.target.value }))}
-            maxLength={32}
-          />
-          <Select
-            label="Role"
-            value={createForm.role}
-            options={roleSelectOptions}
-            onChange={(event) => setCreateForm((prev) => ({ ...prev, role: event.target.value }))}
-          />
+          <div className={createStyles.intro}>
+            <span className={createStyles.introIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="8" r="3.25" />
+                <path d="M3.75 19v-1.1a6.25 6.25 0 0 1 11.6-3.23M18.5 15v6M15.5 18h6" />
+              </svg>
+            </span>
+            <div>
+              <h3 className={createStyles.introTitle}>Set up an account</h3>
+              <p className={createStyles.introText}>Add their details and choose the right access for their work.</p>
+            </div>
+          </div>
+
+          <section className={createStyles.section} aria-labelledby="create-identity-heading">
+            <div className={createStyles.sectionHeading}>
+              <div>
+                <h3 id="create-identity-heading">Account details</h3>
+                <p>Tell us who this account belongs to.</p>
+              </div>
+              <span>01</span>
+            </div>
+            <div className={createStyles.fields}>
+              <Input
+                label="Full name"
+                value={createForm.fullName}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, fullName: event.target.value }))}
+                maxLength={160}
+                required
+                aria-required="true"
+              />
+              <Input
+                label="Email"
+                type="email"
+                value={createForm.email}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, email: event.target.value }))}
+                required
+                aria-required="true"
+              />
+              <Input
+                label="Phone"
+                value={createForm.phone}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
+                placeholder="+94 77 000 0000"
+              />
+              <Input
+                label="NIC"
+                value={createForm.nic}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, nic: event.target.value }))}
+                maxLength={32}
+              />
+            </div>
+          </section>
+
+          <section className={createStyles.section} aria-labelledby="create-access-heading">
+            <div className={createStyles.sectionHeading}>
+              <div>
+                <h3 id="create-access-heading">Access &amp; security</h3>
+                <p>Choose a role and secure their sign-in.</p>
+              </div>
+              <span>02</span>
+            </div>
+            <div className={createStyles.fields}>
+              <Select
+                label="Role *"
+                value={createForm.role}
+                options={roleSelectOptions}
+                placeholder="Select a role"
+                required
+                disabled={roleOptions.length === 0}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, role: event.target.value }))}
+              />
+              <Input
+                label="Password"
+                type="password"
+                value={createForm.password}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, password: event.target.value }))}
+                hint="At least 10 characters with upper, lower, digit and symbol"
+                autoComplete="new-password"
+                required
+                aria-required="true"
+              />
+            </div>
+          </section>
         </form>
       </Dialog>
 
@@ -543,7 +645,8 @@ export default function UsersPage() {
             <Select
               label="Role"
               value={editForm.role}
-              options={roleSelectOptions}
+              options={[...new Set([editForm.role, ...roleOptions])].map((code) => ({ value: code, label: code }))}
+              disabled={roleOptions.length === 0}
               onChange={(event) => setEditForm((prev) => (prev ? { ...prev, role: event.target.value } : prev))}
             />
             <Input

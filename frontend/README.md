@@ -144,6 +144,8 @@ const claims = await getMyClaims(0, 20);
 
 The frontend expects a running backend at the URL specified by `NEXT_PUBLIC_API_URL`. See the root [readme.md](../readme.md) for backend setup instructions.
 
+On the Users page, platform and insurer administrators (`ADMIN` and `INSURER_ADMIN`) can create accounts. Available roles come from the backend role catalog, including `CUSTOMER`, `OFFICER`, and `MANAGER` when the backend is up to date. If those roles are missing, update the backend and apply its database migrations.
+
 ## License
 
 Proprietary - Britam Insurance PLC
