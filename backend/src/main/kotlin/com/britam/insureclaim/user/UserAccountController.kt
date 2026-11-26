@@ -119,7 +119,7 @@ class UserAdminController(
 	@GetMapping("/{userId}")
 	fun get(@PathVariable userId: Long): UserResponse = UserResponse.from(authService.findById(userId))
 
-	@Operation(summary = "Create an account (platform admin only)")
+	@Operation(summary = "Create an account (insurer admin or platform admin only)")
 	@PostMapping
 	@Auditable(action = "USER_CREATE", description = "Created a user account", entityType = "USER")
 	fun create(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserResponse> =

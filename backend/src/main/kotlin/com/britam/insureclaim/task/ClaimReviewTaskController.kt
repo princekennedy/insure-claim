@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/tasks")
-@PreAuthorize("hasAnyRole('OFFICER', 'MANAGER')")
+@PreAuthorize("hasAnyRole('OFFICER', 'MANAGER', 'ADMIN', 'INSURER_ADMIN')")
 class ClaimReviewTaskController(
 	private val service: ClaimReviewTaskService,
 	private val users: UserAccountService,

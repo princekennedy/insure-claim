@@ -13,6 +13,7 @@ import com.britam.insureclaim.common.ForbiddenException
 import com.britam.insureclaim.policy.Policy
 import com.britam.insureclaim.policy.PolicyRepository
 import com.britam.insureclaim.role.Role
+import com.britam.insureclaim.security.AuthenticatedUser
 import com.britam.insureclaim.user.User
 import com.britam.insureclaim.user.UserRepository
 import com.britam.insureclaim.vehicle.Vehicle
@@ -24,6 +25,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest(properties = [
@@ -45,7 +48,30 @@ class ClaimReviewTaskTest(
 	@Autowired private val tasks: ClaimReviewTaskRepository,
 	@Autowired private val assignments: ClaimReviewTaskAssignmentRepository,
 	@Autowired private val service: ClaimReviewTaskService,
+	@Autowired private val controller: ClaimReviewTaskController,
 ) {
+	@Test
+	fun `administrators can view tasks but cannot claim or assign them`() {
+		val task = reviewTask()
+		val officer = user("officer", Role.OFFICER.code)
+		for (role in listOf(Role.ADMIN.code, Role.INSURER_ADMIN.code)) {
+			val admin = user(role, role)
+			val principal = AuthenticatedUser(requireNotNull(admin.id), admin.email, admin.role, "Admin")
+			SecurityContextHolder.getContext().authentication =
+				UsernamePasswordAuthenticationToken(principal, null, principal.authorities)
+			try {
+				assertEquals(task.claim.id, controller.list().single().claimId)
+				assertFailsWith<ForbiddenException> { controller.officers() }
+				assertFailsWith<ForbiddenException> { controller.claim(requireNotNull(task.id)) }
+				assertFailsWith<ForbiddenException> {
+					controller.assign(requireNotNull(task.id), AssignTaskRequest(requireNotNull(officer.id)))
+				}
+			} finally {
+				SecurityContextHolder.clearContext()
+			}
+		}
+	}
+
 	@Test
 	fun `submitting a claim creates an unassigned task including when KYC is pending`() {
 		val customer = user("customer", Role.CUSTOMER.code)

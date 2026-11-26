@@ -83,8 +83,10 @@ class ClaimReviewTaskService(
 	}
 
 	private fun requireQueueRole(actor: User) {
-		if (actor.role != Role.OFFICER.code && actor.role != Role.MANAGER.code) {
-			throw ForbiddenException("Only officers and managers can access claim review tasks")
+		if (actor.role != Role.OFFICER.code && actor.role != Role.MANAGER.code &&
+			actor.role != Role.ADMIN.code && actor.role != Role.INSURER_ADMIN.code
+		) {
+			throw ForbiddenException("Only officers, managers and administrators can access claim review tasks")
 		}
 	}
 

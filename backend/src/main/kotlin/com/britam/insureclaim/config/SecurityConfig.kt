@@ -64,7 +64,7 @@ class SecurityConfig(
 					.requestMatchers(HttpMethod.GET, "/api/v1/admin/roles", "/api/v1/admin/roles/*").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
 					.requestMatchers("/api/v1/users/*/role").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
 					.requestMatchers("/api/v1/users/*/enabled").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
-					.requestMatchers(HttpMethod.POST, "/api/v1/users").hasRole(Role.ADMIN.code)
+					.requestMatchers(HttpMethod.POST, "/api/v1/users").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
 					.requestMatchers(HttpMethod.PUT, "/api/v1/users/*").hasAnyRole(Role.INSURER_ADMIN.code, Role.ADMIN.code)
 					.requestMatchers(HttpMethod.DELETE, "/api/v1/users/*").hasRole(Role.ADMIN.code)
 					.requestMatchers(HttpMethod.GET, "/api/v1/users", "/api/v1/users/*").hasAnyRole(Role.AGENT.code, Role.INSURER_ADMIN.code, Role.ADMIN.code, "STAFF")
