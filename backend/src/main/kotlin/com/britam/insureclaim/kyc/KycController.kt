@@ -35,7 +35,7 @@ class KycController(
 
 	@Operation(
 		summary = "Submit identity documents for verification",
-		description = "Screened automatically where possible; ambiguous submissions wait for insurer staff.",
+		description = "Automatically screened submissions await an insurer staff decision.",
 	)
 	@PostMapping(
 		"/verifications",

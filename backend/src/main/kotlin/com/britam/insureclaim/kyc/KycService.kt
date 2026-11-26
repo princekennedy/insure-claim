@@ -99,20 +99,17 @@ class KycService(
 			this.frontImagePath = storageService.store(frontImage, STORAGE_NAMESPACE, userId).storagePath
 			this.backImagePath = backImage?.let { storageService.store(it, STORAGE_NAMESPACE, userId).storagePath }
 			this.selfiePath = selfie?.let { storageService.store(it, STORAGE_NAMESPACE, userId).storagePath }
-			this.status = screening.status
+			this.status = KycStatus.PENDING
 			this.failureReason = screening.reason
 			this.confidenceScore = screening.confidence
-			this.expiresAt = screening.expiresAt
-			this.resubmissionAllowed = screening.status == KycStatus.REJECTED
+			this.expiresAt = null
+			this.resubmissionAllowed = false
 			this.verifiedBy = null
 			this.verifiedAt = null
 		}
 		val saved = kycRepository.save(verification)
 
-		if (saved.status == KycStatus.VERIFIED) {
-			releaseClaimsAwaitingKyc(saved.user)
-		}
-		log.info("KYC {} submitted for user {} and screened as {}", saved.id, userId, saved.status)
+		log.info("KYC {} submitted for user {} and awaiting review", saved.id, userId)
 		return saved.toResponse()
 	}
 
@@ -212,10 +209,8 @@ class KycService(
 	}
 
 	private data class Screening(
-		val status: KycStatus,
 		val reason: String?,
 		val confidence: BigDecimal,
-		val expiresAt: LocalDate?,
 	)
 
 	private fun applyAutomatedScreening(
@@ -234,10 +229,8 @@ class KycService(
 
 		if (!candidate.structurallyValidNumber()) {
 			return Screening(
-				status = KycStatus.REJECTED,
 				reason = "The ${documentType.displayLabel.lowercase()} number is not a valid format",
 				confidence = BigDecimal.ZERO,
-				expiresAt = null,
 			)
 		}
 
@@ -245,27 +238,23 @@ class KycService(
 			dateOfBirth.plusYears(minimumClaimantAge.toLong()).isAfter(LocalDate.now())
 		) {
 			return Screening(
-				status = KycStatus.REJECTED,
 				reason = "The policyholder must be at least $minimumClaimantAge years old",
 				confidence = BigDecimal.ZERO,
-				expiresAt = null,
 			)
 		}
 
 		if (fullName.isBlank() || user.nic.isNullOrBlank()) {
-			return Screening(KycStatus.VERIFIED, null, STRUCTURAL_PASS_CONFIDENCE, expiryFor(documentType))
+			return Screening(null, STRUCTURAL_PASS_CONFIDENCE)
 		}
 
 		if (!candidate.nameMatchesAccount(user.fullName)) {
 			return Screening(
-				status = KycStatus.PENDING,
 				reason = "Document name '$fullName' does not match the account holder",
 				confidence = NAME_MISMATCH_CONFIDENCE,
-				expiresAt = null,
 			)
 		}
 
-		return Screening(KycStatus.VERIFIED, null, STRUCTURAL_PASS_CONFIDENCE, expiryFor(documentType))
+		return Screening(null, STRUCTURAL_PASS_CONFIDENCE)
 	}
 
 	private fun releaseClaimsAwaitingKyc(customer: User) {
@@ -295,9 +284,6 @@ class KycService(
 		}
 		log.info("Released {} claim(s) from the KYC gate for user {}", waiting.size, customerId)
 	}
-
-	private fun expiryFor(documentType: KycDocumentType, from: LocalDate = LocalDate.now()): LocalDate =
-		from.plusYears(documentType.validityYears.toLong())
 
 	private fun imageContentType(path: String): String = when (path.substringAfterLast('.', "").lowercase()) {
 		"png" -> "image/png"
