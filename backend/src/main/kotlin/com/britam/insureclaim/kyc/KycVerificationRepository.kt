@@ -3,11 +3,18 @@ package com.britam.insureclaim.kyc
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.EntityGraph
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import jakarta.persistence.LockModeType
 import java.util.Optional
 
 interface KycVerificationRepository : JpaRepository<KycVerification, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT k FROM KycVerification k WHERE k.id = :id")
+	fun findForUpdate(@Param("id") id: Long): Optional<KycVerification>
 
 	fun findByUserIdAndDocumentType(userId: Long, documentType: KycDocumentType): Optional<KycVerification>
 
@@ -18,6 +25,7 @@ interface KycVerificationRepository : JpaRepository<KycVerification, Long> {
 
 	fun existsByUserIdAndStatus(userId: Long, status: KycStatus): Boolean
 
+	@EntityGraph(attributePaths = ["user"])
 	fun findByStatusOrderBySubmittedAtAsc(status: KycStatus, pageable: Pageable): Page<KycVerification>
 
 	fun countByStatusOrderBySubmittedAtAsc(status: KycStatus): Long

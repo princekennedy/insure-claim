@@ -144,11 +144,11 @@ class KycService(
 		if (!reviewer.isStaff()) {
 			throw ForbiddenException("Only insurer staff can decide a verification")
 		}
-		val verification = kycRepository.findById(verificationId)
+		val verification = kycRepository.findForUpdate(verificationId)
 			.orElseThrow { NotFoundException("KYC verification", verificationId) }
-		if (verification.status.isSettled) {
+		if (!verification.status.isBlocking) {
 			throw ConflictException(
-				"This verification is already ${verification.status.label.lowercase()}",
+				"This verification is ${verification.status.label.lowercase()} and is not awaiting review",
 				"KYC_ALREADY_SETTLED",
 			)
 		}
@@ -188,6 +188,19 @@ class KycService(
 		return PageResponse.map(kycRepository.findByStatusOrderBySubmittedAtAsc(effectiveStatus, pageable)) {
 			it.toResponse()
 		}
+	}
+
+	@Transactional(readOnly = true)
+	fun reviewDocumentNumber(verificationId: Long, reviewer: User): KycReviewDocumentNumber {
+		if (!reviewer.isStaff()) {
+			throw ForbiddenException("Only insurer staff can review identity document numbers")
+		}
+		val verification = kycRepository.findById(verificationId)
+			.orElseThrow { NotFoundException("KYC verification", verificationId) }
+		if (!verification.status.isBlocking) {
+			throw ConflictException("This verification is not awaiting review", "KYC_ALREADY_SETTLED")
+		}
+		return KycReviewDocumentNumber(verification.documentNumber)
 	}
 
 	fun image(verificationId: Long, side: KycImageSide, reviewer: User): ImagePayload {

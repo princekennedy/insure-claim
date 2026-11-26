@@ -42,9 +42,10 @@ data class KycVerificationResponse(
 	val statusLabel: String,
 	val documentType: KycDocumentType,
 	val documentLabel: String,
-	@Schema(description = "Masked so staff views cannot leak a full identity number")
+	@Schema(description = "Masked identity number for general KYC views")
 	val maskedDocumentNumber: String,
 	val fullNameOnDocument: String,
+	val customerName: String,
 	val dateOfBirth: LocalDate?,
 	val confidenceScore: BigDecimal?,
 	val failureReason: String?,
@@ -64,6 +65,9 @@ data class KycVerificationResponse(
 	val hasSelfie: Boolean,
 )
 
+@Schema(name = "KycReviewDocumentNumber", description = "Full identity number for staff review")
+data class KycReviewDocumentNumber(val documentNumber: String)
+
 /** Image sides a reviewer can open; the mapping is deliberately narrow. */
 enum class KycImageSide {
 	FRONT,
@@ -79,6 +83,7 @@ fun KycVerification.toResponse(): KycVerificationResponse = KycVerificationRespo
 	documentLabel = documentType.displayLabel,
 	maskedDocumentNumber = maskDocumentNumber(documentNumber),
 	fullNameOnDocument = fullNameOnDoc,
+	customerName = user.fullNameOrEmail(),
 	dateOfBirth = dateOfBirth,
 	confidenceScore = confidenceScore,
 	failureReason = failureReason,

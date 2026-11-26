@@ -97,6 +97,16 @@ class KycReviewController(
 		return kycService.history(customerId)
 	}
 
+	@Operation(summary = "Full identity document number for a pending review")
+	@GetMapping("/verifications/{verificationId}/document-number")
+	@Auditable(action = "KYC_DOCUMENT_NUMBER_VIEW", description = "Viewed a KYC document number", entityType = "KYC")
+	fun documentNumber(@PathVariable verificationId: Long): ResponseEntity<KycReviewDocumentNumber> {
+		val reviewer = accountService.requireUser(currentUser.requireId())
+		return ResponseEntity.ok()
+			.cacheControl(CacheControl.noStore())
+			.body(kycService.reviewDocumentNumber(verificationId, reviewer))
+	}
+
 	@Operation(summary = "Approve a submission after manual checks")
 	@PostMapping("/verifications/{verificationId}/approve")
 @Auditable(action = "KYC_APPROVE", description = "Approved a KYC submission", entityType = "KYC")
