@@ -25,8 +25,11 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Create a non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Create a non-root user and a private, writable upload directory
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && mkdir -p /app/data/uploads \
+    && chown -R appuser:appgroup /app/data \
+    && chmod 700 /app/data /app/data/uploads
 
 # Copy the built JAR from the builder stage
 COPY --from=builder /build/target/*.jar app.jar
